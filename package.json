@@ -1,0 +1,10 @@
+{
+    "name": "@basalt-ai/sdk",
+    "version": "0.0.1",
+    "dependencies": {},
+    "main": "./index.cjs",
+    "module": "./index.js",
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}
