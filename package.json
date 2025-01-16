@@ -1,6 +1,14 @@
 {
     "name": "@basalt-ai/sdk",
     "version": "0.0.1",
+	"description": "Official NodeJS package for interacting with your Basalt prompts and monitoring them.",
+	"license": "MIT",
+	"author": "Basalt AI",
+	"homepage": "https://docs.getbasalt.ai",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/basalt-ai/basalt-js"
+	},
     "dependencies": {},
     "main": "./index.cjs",
     "module": "./index.js",
