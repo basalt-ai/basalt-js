@@ -36,7 +36,7 @@ Hint: Insert your API Key when initializing the Basalt sdk:
 const basalt = new BasaltSDK({ apiKey: 'YOUR_API_KEY' })
                                ^^^^^^^^^^^^^^^^^^^^^^
 
-Hint: Create a new API Key on http://getbasalt.ai/.`
+Hint: Create a new API Key on https://app.getbasalt.ai/.`
 		})
 	}
 }

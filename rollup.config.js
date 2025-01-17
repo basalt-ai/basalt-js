@@ -19,9 +19,9 @@ module.exports = withNx(
 		plugins: [
 			replace({
 				values: {
-					__SDK_VERSION__: process.env.NODE_ENV === 'production' ? getPackageVersion() : '"dev"',
+					__SDK_VERSION__: process.env.BUILD === 'production' ? getPackageVersion() : '"dev"',
 					__SDK_TARGET__: '"nodejs"',
-					__PUBLIC_API_URL__: process.env.NODE_ENV === 'production' ? '"https://api.getbasalt.ai"' : '"http://localhost:3001"',
+					__PUBLIC_API_URL__: process.env.BUILD === 'production' ? '"https://api.getbasalt.ai"' : '"http://localhost:3001"',
 				},
 				preventAssignment: true,
 			}),

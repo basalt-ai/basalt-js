@@ -4,5 +4,29 @@
     "sourceRoot": "packages/js-sdk/src",
     "projectType": "library",
     "tags": [],
-    "targets": {}
+    "targets": {
+		"build": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cache": true,
+				"cwd": "packages/js-sdk",
+				"command": "rollup -c rollup.config.js --environment BUILD:production"
+			}
+		},
+		"serve": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cache": true,
+				"cwd": "packages/js-sdk",
+				"command": "rollup -c rollup.config.js --watch"
+			}
+		},
+		"publish": {
+			"executor": "@nx/js:release-publish",
+			"dependsOn": ["build"],
+			"options": {
+				"packageRoot": "dist/packages/js-sdk"
+			}
+		}
+	}
 }
