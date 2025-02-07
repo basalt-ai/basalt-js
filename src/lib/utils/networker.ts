@@ -1,16 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+	BadInput, BadRequest, Forbidden, NetworkBaseError, NotFound, Unauthorized
+} from './errors'
+import { err, ok } from './utils'
 
 import type {
 	AsyncResult,
 	FetchMethod,
 	FetchResponse,
 	INetworker
-} from './contract'
-
-import {
-	BadInput, BadRequest, Forbidden, NetworkBaseError, NotFound, Unauthorized
-} from './errors'
-import { err, ok } from './utils'
+} from '../contract'
 
 /**
  * Simple class to make network requests.
@@ -89,7 +89,7 @@ export default class Networker implements INetworker {
 			}
 
 			return ok(json)
-		} catch (error: any) {
+		} catch (error: unknown) {
 			if (error instanceof Error) {
 				err(error)
 			}

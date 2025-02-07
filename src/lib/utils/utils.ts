@@ -1,7 +1,4 @@
-/* eslint-disable sort-exports/sort-exports */
-/* eslint-disable @typescript-eslint/ban-types */
-
-import type { VariablesMap } from './contract'
+import type { VariablesMap } from '../contract'
 
 export function err<T>(e: T): { error: T; value: null } {
 	return { error: e, value: null }

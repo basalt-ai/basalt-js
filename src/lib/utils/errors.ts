@@ -1,5 +1,3 @@
-/* eslint-disable sort-exports/sort-exports */
-
 export class NetworkBaseError extends Error {
 	public readonly url?: URL
 

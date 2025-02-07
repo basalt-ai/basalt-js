@@ -1,4 +1,4 @@
-import type { ILogger, LogLevel } from './contract'
+import type { ILogger, LogLevel } from '../contract'
 
 export default class Logger implements ILogger {
 	constructor(private readonly logLevel: LogLevel) {}
@@ -7,9 +7,9 @@ export default class Logger implements ILogger {
 		return this.logLevel === 'all' || this.logLevel === 'warning'
 	}
 
-	warn(msg: any, ...optionals: any[]): void {
+	warn(msg: unknown, ...optionals: unknown[]): void {
 		if (this.canWarn) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, no-console
+			// eslint-disable-next-line no-console
 			console.warn(msg, ...optionals)
 		}
 	}

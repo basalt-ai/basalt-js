@@ -1,20 +1,23 @@
 import type {
 	AsyncResult,
+	DescribePromptOptions,
 	GetPromptOptions,
 	IApi,
 	ICache,
 	ILogger,
 	IPromptSDK,
+	NoSlugDescribePromptOptions,
+	NoSlugGetPromptOptions,
+	PromptDetailResponse,
+	PromptListResponse,
 	PromptResponse,
 	VariablesMap
-} from './contract'
-import { GetPromptEndpoint } from './endpoints'
+} from '../contract'
+import { DescribePromptEndpoint, GetPromptEndpoint, ListPromptsEndpoint } from '../endpoints'
 import {
 	difference,
 	err, getVariableNames, ok, replaceVariables
-} from './utils'
-
-type NoSlugOptions = Omit<GetPromptOptions, 'slug'>
+} from '../utils/utils'
 
 export default class PromptSDK implements IPromptSDK {
 	/**
@@ -35,14 +38,28 @@ export default class PromptSDK implements IPromptSDK {
 		return 5 * 60 * 1000
 	}
 
-	get(slug: string, options?: NoSlugOptions): AsyncResult<PromptResponse>
-	get(options: GetPromptOptions): AsyncResult<PromptResponse>
-	async get(arg1: string | GetPromptOptions, arg2?: NoSlugOptions): AsyncResult<PromptResponse> {
+	async get(slug: string, options?: NoSlugGetPromptOptions): AsyncResult<PromptResponse>
+	async get(options: GetPromptOptions): AsyncResult<PromptResponse>
+	async get(arg1: string | GetPromptOptions, arg2?: NoSlugGetPromptOptions): AsyncResult<PromptResponse> {
 		if (typeof arg1 === 'string') {
 			return this._getPrompt({ ...(arg2 ?? {}), slug: arg1 })
 		}
 
 		return this._getPrompt(arg1)
+	}
+
+	async list(): AsyncResult<PromptListResponse[]> {
+		return this._listPrompts()
+	}
+
+	async describe(slug: string, options?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse>
+	async describe(options: DescribePromptOptions): AsyncResult<PromptDetailResponse>
+	async describe(arg1: string | DescribePromptOptions, arg2?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse> {
+		if (typeof arg1 === 'string') {
+			return this._describePrompt({ ...(arg2 ?? {}), slug: arg1 })
+		}
+
+		return this._describePrompt(arg1)
 	}
 
 	// --
@@ -67,6 +84,10 @@ export default class PromptSDK implements IPromptSDK {
 		if (result.value) {
 			this.queryCache.set(cacheKey, result.value.prompt, this.cacheDuration)
 			this.fallbackCache.set(cacheKey, result.value.prompt, Infinity)
+
+			if (result.value.warning) {
+				this.logger.warn(`Basalt Warning: "${result.value.warning}"`)
+			}
 
 			return ok(this._insertVariables(result.value.prompt, variables))
 		}
@@ -136,5 +157,44 @@ export default class PromptSDK implements IPromptSDK {
 		}
 
 		return cacheKey
+	}
+
+	/**
+	 * Lists all prompts from the Basalt API
+	 *
+	 * @returns {Promise<PromptListResponse[]>} A promise of an array of prompt list responses
+	 */
+	private async _listPrompts(): AsyncResult<PromptListResponse[]> {
+		const result = await this.api.invoke(ListPromptsEndpoint)
+
+		if (result.error) {
+			return err(result.error)
+		}
+
+		if (result.value.warning) {
+			this.logger.warn(`Basalt Warning: "${result.value.warning}"`)
+		}
+
+		return ok(result.value.prompts)
+	}
+
+	/**
+	 * Describes a prompt from the Basalt API
+	 *
+	 * @param {DescribePromptOptions} options - Options to the select the prompt
+	 * @returns {Promise<PromptDetailResponse>} A promise of a prompt detail response
+	 */
+	private async _describePrompt(options: DescribePromptOptions): AsyncResult<PromptDetailResponse> {
+		const result = await this.api.invoke(DescribePromptEndpoint, options)
+
+		if (result.error) {
+			return err(result.error)
+		}
+
+		if (result.value.warning) {
+			this.logger.warn(`Basalt Warning: "${result.value.warning}"`)
+		}
+
+		return ok(result.value.prompt)
 	}
 }

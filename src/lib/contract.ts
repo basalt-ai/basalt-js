@@ -1,6 +1,5 @@
-/* eslint-disable sort-exports/sort-exports */
-/* eslint-disable @typescript-eslint/ban-types */
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 /**
  * Interface for the Basalt SDK.
  */
@@ -62,7 +61,7 @@ export interface IPromptSDK {
 	 *
 	 * @returns Promise of a Result object containing prompt or any ocurred error.
 	 */
-	get(slug: string, options?: Omit<GetPromptOptions, 'slug'>): AsyncResult<PromptResponse>;
+	get(slug: string, options?: NoSlugGetPromptOptions): AsyncResult<PromptResponse>;
 
 	/**
 	 * Get a prompt from the Basalt API using the full options
@@ -85,12 +84,55 @@ export interface IPromptSDK {
 	 * @returns Promise of a Result object containing prompt or any ocurred error.
 	 */
 	get(options: GetPromptOptions): AsyncResult<PromptResponse>;
+
+	/**
+	 * Get a list of prompts from the Basalt API
+	 *
+	 * @returns Promise of a Result object containing prompt or any ocurred error.
+	 */
+	list(): AsyncResult<PromptListResponse[]>;
+
+	/**
+	 * Describe a prompt from the Basalt API
+	 *
+	 * @param slug - The slug of the prompt.
+	 * @param options - Optional parameters for the request.
+	 * 		- version: The version of the prompt.
+	 * 		- tag: The tag of the prompt.
+	 *
+	 * @example
+	 * ```typescript
+	 * const result = await basalt.prompt.describe('my-prompt', { version: '1.0.0' });
+	 * ```
+	 *
+	 * @returns Promise of a Result object containing prompt or any ocurred error.
+	 */
+	describe(slug: string, options?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse>;
+
+	/**
+	 * Describe a prompt from the Basalt API
+	 *
+	 * @param {DescribePromptOptions} options - Options to the select the prompt
+	 *
+	 * @example
+	 * ```typescript
+	 * const result = await basalt.prompt.describe({ slug: 'my-prompt', tag: 'staging' });
+	 *
+	 * if (result.error) {
+	 *   console.log(result.error.message);
+	 *   return;
+	 * }
+	 * ```
+	 * @returns Promise of a Result object containing prompt or any ocurred error.
+	 */
+	describe(options: DescribePromptOptions): AsyncResult<PromptDetailResponse>;
+
 }
 
 /**
  * Options for the `get` method of the `IPromptSDK` interface.
  */
-export type GetPromptOptions = {
+export interface GetPromptOptions {
 	slug: string;
 	version?: string;
 	tag?: string;
@@ -102,6 +144,8 @@ export type GetPromptOptions = {
 	 */
 	cache?: boolean;
 }
+
+export type NoSlugGetPromptOptions = Omit<GetPromptOptions, 'slug'>
 
 export type VariablesMap = Record<string, string>
 
@@ -148,9 +192,52 @@ export type ResponseFormat = 'json' | 'text' | 'json-object'
 /**
  * Response type for the `get` method of the `IPromptSDK` interface.
  */
-export type PromptResponse = {
+export interface PromptResponse {
 	text: string;
 	model: PromptModel;
+}
+
+/**
+ * Options for the `describe` method of the `IPromptSDK` interface.
+ */
+export interface DescribePromptOptions {
+	slug: string;
+	version?: string;
+	tag?: string;
+}
+
+export interface NoSlugDescribePromptOptions {
+	version?: string;
+	tag?: string;
+}
+
+/**
+ * Response type for the `list` method of the `IPromptSDK` interface.
+ */
+export interface PromptListResponse {
+	slug: string;
+	status: 'live' | 'draft';
+	name: string;
+	description: string;
+	availableVersions: string[];
+	availableTags: string[];
+}
+
+/**
+ * Response type for the `describe` method of the `IPromptSDK` interface
+ */
+export interface PromptDetailResponse {
+	slug: string;
+	status: 'live' | 'draft';
+	name: string;
+	description: string;
+	availableVersions: string[];
+	availableTags: string[];
+	variables: {
+		label: string;
+		description: string;
+		type: string;
+	}[];
 }
 
 /**
@@ -178,7 +265,7 @@ export type FetchResponse = any
 /**
  * Error type for fetch requests
  */
-export type ErrObj = { message: string }
+export interface ErrObj { message: string }
 
 /**
  * Interface for the Networker
@@ -227,7 +314,7 @@ export type QueryParamsObject = Record<string, string | undefined>
  * Interface for the API.
  */
 export interface IApi {
-	invoke<Input, Output>(endpoint: IEndpoint<Input, Output>, dto: Input): AsyncResult<Output>;
+	invoke<Input, Output>(endpoint: IEndpoint<Input, Output>, dto?: Input): AsyncResult<Output>;
 }
 
 export interface IEndpoint<Input, Output> {
