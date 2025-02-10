@@ -230,7 +230,7 @@ export interface PromptDetailResponse {
 	slug: string;
 	status: 'live' | 'draft';
 	name: string;
-	description: string;
+	description?: string | undefined;
 	availableVersions: string[];
 	availableTags: string[];
 	variables: {
