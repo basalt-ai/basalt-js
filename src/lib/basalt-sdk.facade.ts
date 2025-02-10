@@ -1,10 +1,10 @@
-import Api from './api'
 import BasaltSDK from './basalt-sdk'
 import type { IBasaltSDK, ICache, LogLevel } from './contract'
-import Logger from './logger'
-import MemoryCache from './memorycache'
-import Networker from './networker'
-import PromptSDK from './prompt-sdk'
+import PromptSDK from './sdk/prompt-sdk'
+import Api from './utils/api'
+import Logger from './utils/logger'
+import MemoryCache from './utils/memorycache'
+import Networker from './utils/networker'
 
 /**
  * BasaltSDK is the entry point for interacting with the Basalt.

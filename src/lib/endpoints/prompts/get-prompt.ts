@@ -1,13 +1,13 @@
-import type { PromptModel, Result } from '../contract'
-import { err, ok } from '../utils'
+import type { PromptModel, Result } from '../../contract'
+import { err, ok } from '../../utils/utils'
 
-type Input = {
+interface Input {
 	slug: string;
 	version?: string;
 	tag?: string;
 }
 
-type Output = {
+interface Output {
 	warning?: string;
 
 	prompt: {
