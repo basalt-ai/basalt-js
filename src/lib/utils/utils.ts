@@ -1,4 +1,4 @@
-import type { VariablesMap } from '../contract'
+import type { VariablesMap } from '../ressources'
 
 export function err<T>(e: T): { error: T; value: null } {
 	return { error: e, value: null }

@@ -2,7 +2,7 @@ import { err } from './utils'
 
 import type {
 	AsyncResult, IApi, IEndpoint, INetworker
-} from '../contract'
+} from '../ressources/contract'
 
 /**
  * Helper class for interacting with the Basalt API using

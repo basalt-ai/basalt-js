@@ -1,4 +1,4 @@
-import type { PromptListResponse, Result } from '../../contract'
+import type { PromptListResponse, Result } from '../../ressources'
 import { err, ok } from '../../utils/utils'
 
 interface Output {

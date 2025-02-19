@@ -1,7 +1,12 @@
+import { DescribePromptEndpoint, GetPromptEndpoint, ListPromptsEndpoint } from '../endpoints'
+import { Trace } from '../objects/trace'
 import type {
+	AsyncGetPromptResult,
 	AsyncResult,
 	DescribePromptOptions,
+	Generation,
 	GetPromptOptions,
+	GetPromptResponse,
 	IApi,
 	ICache,
 	ILogger,
@@ -12,8 +17,7 @@ import type {
 	PromptListResponse,
 	PromptResponse,
 	VariablesMap
-} from '../contract'
-import { DescribePromptEndpoint, GetPromptEndpoint, ListPromptsEndpoint } from '../endpoints'
+} from '../ressources'
 import {
 	difference,
 	err, getVariableNames, ok, replaceVariables
@@ -38,14 +42,26 @@ export default class PromptSDK implements IPromptSDK {
 		return 5 * 60 * 1000
 	}
 
-	async get(slug: string, options?: NoSlugGetPromptOptions): AsyncResult<PromptResponse>
-	async get(options: GetPromptOptions): AsyncResult<PromptResponse>
-	async get(arg1: string | GetPromptOptions, arg2?: NoSlugGetPromptOptions): AsyncResult<PromptResponse> {
+	async get(slug: string, options?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse>
+	async get(options: GetPromptOptions): AsyncGetPromptResult<PromptResponse>
+	async get(arg1: string | GetPromptOptions, arg2?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse> {
+		let params: GetPromptOptions
+
 		if (typeof arg1 === 'string') {
-			return this._getPrompt({ ...(arg2 ?? {}), slug: arg1 })
+			params = { ...(arg2 ?? {}), slug: arg1 }
+		} else {
+			params = arg1
 		}
 
-		return this._getPrompt(arg1)
+		const prompt = await this._getPrompt(params)
+
+		if (prompt.error) {
+			return { ...prompt, generation: null }
+		}
+
+		const generation = this._prepareMonitoring(prompt.value, params)
+
+		return { ...prompt, generation }
 	}
 
 	async list(): AsyncResult<PromptListResponse[]> {
@@ -66,16 +82,19 @@ export default class PromptSDK implements IPromptSDK {
 	// Private methods
 	// --
 
-	private async _getPrompt(opts: GetPromptOptions): AsyncResult<PromptResponse> {
+	private async _getPrompt(opts: GetPromptOptions): AsyncResult<GetPromptResponse> {
 		// 1. Read from query cache first
 		const cacheKey = this._makePromptCacheKey(opts)
-		const cached = this.queryCache.get<PromptResponse>(cacheKey)
+		const cached = this.queryCache.get<GetPromptResponse>(cacheKey)
 
 		const cacheEnabled = opts.cache !== false
 		const variables = opts.variables ?? {}
 
 		if (cacheEnabled && cached) {
-			return ok(this._insertVariables(cached, variables))
+			return ok({
+				...this._insertVariables(cached, variables),
+				feature: cached.feature
+			})
 		}
 
 		// 2. If no cache, fetch from the API
@@ -89,16 +108,22 @@ export default class PromptSDK implements IPromptSDK {
 				this.logger.warn(`Basalt Warning: "${result.value.warning}"`)
 			}
 
-			return ok(this._insertVariables(result.value.prompt, variables))
+			return ok({
+				...this._insertVariables(result.value.prompt, variables),
+				feature: result.value.prompt.feature
+			})
 		}
 
 		// 3. Api call failed, check if there is a fallback in the cache
-		const fallback = this.fallbackCache.get<PromptResponse>(cacheKey)
+		const fallback = this.fallbackCache.get<GetPromptResponse>(cacheKey)
 
 		if (cacheEnabled && fallback) {
 			this.logger.warn(`Basalt Warning: Failed to fetch prompt from API, using last result for "${opts.slug}"`)
 
-			return ok(this._insertVariables(fallback, variables))
+			return ok({
+				...this._insertVariables(fallback, variables),
+				feature: fallback.feature
+			})
 		}
 
 		return err(result.error)
@@ -157,6 +182,39 @@ export default class PromptSDK implements IPromptSDK {
 		}
 
 		return cacheKey
+	}
+
+	private _prepareMonitoring(prompt: GetPromptResponse, params: GetPromptOptions): Generation {
+		// 1. Create the trace
+		const trace = new Trace(prompt.feature.slug, {
+			input: prompt.text,
+			startTime: new Date()
+		})
+
+		// 2. Create the generation
+		const generation = trace.createGeneration({
+			prompt: {
+				slug: params.slug,
+				version: params.version,
+				tag: params.tag
+			},
+			input: prompt.text,
+			variables: params.variables
+		})
+
+		// 3. Modify the `end` method to also end the trace
+		generation.end = (output: string) => {
+			generation.update({
+				output,
+				endTime: new Date()
+			})
+
+			trace.end(output)
+
+			return generation
+		}
+
+		return generation
 	}
 
 	/**

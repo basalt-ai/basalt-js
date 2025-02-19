@@ -1,4 +1,5 @@
-import type { IBasaltSDK, IPromptSDK } from './contract'
+import type { IBasaltSDK, IPromptSDK } from './ressources'
+import { IMonitorSDK } from './ressources/monitor/monitor.types';
 
 /**
  * The `BasaltSDK` class implements the `IBasaltSDK` interface.
@@ -6,6 +7,7 @@ import type { IBasaltSDK, IPromptSDK } from './contract'
  */
 export default class BasaltSDK implements IBasaltSDK {
 	constructor(
-		public readonly prompt: IPromptSDK
+		public readonly prompt: IPromptSDK,
+		public readonly monitor: IMonitorSDK
 	) {}
 }

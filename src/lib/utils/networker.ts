@@ -10,7 +10,7 @@ import type {
 	FetchMethod,
 	FetchResponse,
 	INetworker
-} from '../contract'
+} from '../ressources/contract'
 
 /**
  * Simple class to make network requests.

@@ -1,15 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
-/**
- * Interface for the Basalt SDK.
- */
-export interface IBasaltSDK {
-	readonly prompt: IPromptSDK;
-}
-
 /**
  * Interface for the Prompt SDK.
  */
+
+import { AsyncResult, ErrObj } from '../contract';
+import { Generation } from '../monitor';
+
+export type GetPromptResult<Wrapped, Error = ErrObj> =
+	| { error: null; value: Wrapped; generation: Generation }
+	| { error: Error; value: null; generation: null }
+
+export type AsyncGetPromptResult<Wrapped, Error = ErrObj> = Promise<GetPromptResult<Wrapped, Error>>
+
 /**
  * @preserve
  * Interface for interacting with Basalt prompts.
@@ -61,7 +62,7 @@ export interface IPromptSDK {
 	 *
 	 * @returns Promise of a Result object containing prompt or any ocurred error.
 	 */
-	get(slug: string, options?: NoSlugGetPromptOptions): AsyncResult<PromptResponse>;
+	get(slug: string, options?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse>;
 
 	/**
 	 * Get a prompt from the Basalt API using the full options
@@ -83,7 +84,7 @@ export interface IPromptSDK {
 	 *
 	 * @returns Promise of a Result object containing prompt or any ocurred error.
 	 */
-	get(options: GetPromptOptions): AsyncResult<PromptResponse>;
+	get(options: GetPromptOptions): AsyncGetPromptResult<PromptResponse>;
 
 	/**
 	 * Get a list of prompts from the Basalt API
@@ -129,6 +130,7 @@ export interface IPromptSDK {
 
 }
 
+
 /**
  * Options for the `get` method of the `IPromptSDK` interface.
  */
@@ -146,6 +148,13 @@ export interface GetPromptOptions {
 }
 
 export type NoSlugGetPromptOptions = Omit<GetPromptOptions, 'slug'>
+
+export interface Feature {
+	name: string;
+	type: 'single' | 'multi';
+	slug: string;
+	description?: string | undefined;
+}
 
 export type VariablesMap = Record<string, string>
 
@@ -174,6 +183,7 @@ export interface GeminiPromptModel extends BasePromptModel {
 export interface BasePromptModel {
 	provider: 'anthropic' | 'open-ai' | 'mistral' | 'gemini';
 	model: string;
+	// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 	version: string | 'latest';
 	parameters: {
 		temperature: number;
@@ -183,6 +193,7 @@ export interface BasePromptModel {
 		topK?: number;
 		maxLength: number;
 		responseFormat: ResponseFormat;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		jsonObject?: Record<string, any>;
 	};
 }
@@ -195,6 +206,15 @@ export type ResponseFormat = 'json' | 'text' | 'json-object'
 export interface PromptResponse {
 	text: string;
 	model: PromptModel;
+}
+
+/**
+ * Response type of the prompt returned by the API.
+ */
+export interface GetPromptResponse {
+	text: string;
+	model: PromptModel;
+	feature: Feature;
 }
 
 /**
@@ -215,10 +235,10 @@ export interface NoSlugDescribePromptOptions {
  * Response type for the `list` method of the `IPromptSDK` interface.
  */
 export interface PromptListResponse {
-	slug: string;
+	slug?: string | undefined;
 	status: 'live' | 'draft';
 	name: string;
-	description: string;
+	description?: string | undefined;
 	availableVersions: string[];
 	availableTags: string[];
 }
@@ -227,7 +247,7 @@ export interface PromptListResponse {
  * Response type for the `describe` method of the `IPromptSDK` interface
  */
 export interface PromptDetailResponse {
-	slug: string;
+	slug?: string | undefined;
 	status: 'live' | 'draft';
 	name: string;
 	description?: string | undefined;
@@ -235,101 +255,7 @@ export interface PromptDetailResponse {
 	availableTags: string[];
 	variables: {
 		label: string;
-		description: string;
+		description?: string | undefined;
 		type: string;
 	}[];
-}
-
-/**
- * Result wrapper type
- */
-export type Result<Wrapped, Error = ErrObj> =
-	| { error: null; value: Wrapped }
-	| { error: Error; value: null }
-
-/**
- * Result type for asynchronous operations
- */
-export type AsyncResult<Wrapped, Error = ErrObj> = Promise<Result<Wrapped, Error>>
-
-/**
- * HTTP methods for fetch requests
- */
-export type FetchMethod = 'get' | 'post' | 'put' | 'delete'
-
-/**
- * Response type for fetch requests
- */
-export type FetchResponse = any
-
-/**
- * Error type for fetch requests
- */
-export interface ErrObj { message: string }
-
-/**
- * Interface for the Networker
- */
-export interface INetworker {
-	/**
-	 * Fetch an endpoint over the network
-	 *
-	 * @param url - The URL to query
-	 * @param method - The HTTP method to use
-	 * @param body - Optional request body
-	 */
-	fetch(
-		url: URL,
-		method: FetchMethod,
-		body?: BodyInit,
-		headers?: HeadersInit
-	): AsyncResult<FetchResponse>;
-}
-
-/**
- * Interface for a cache
- */
-export interface ICache {
-	/**
-	 * Get a value from the cache
-	 * @param key - The key of the value to get
-	 */
-	get<T = unknown>(key: string): T | undefined;
-
-	/**
-	 * Set a value in the cache
-	 * @param key - The key of the value to set
-	 * @param value - The value to set
-	 * @param duration - Optional duration for the cache entry
-	 */
-	set(key: string, value: unknown, duration?: number): void;
-}
-
-/**
- * Type for query parameters
- */
-export type QueryParamsObject = Record<string, string | undefined>
-
-/**
- * Interface for the API.
- */
-export interface IApi {
-	invoke<Input, Output>(endpoint: IEndpoint<Input, Output>, dto?: Input): AsyncResult<Output>;
-}
-
-export interface IEndpoint<Input, Output> {
-	prepareRequest(dto: Input): {
-		path: string;
-		method: FetchMethod;
-		body?: BodyInit;
-		query?: QueryParamsObject;
-	};
-
-	decodeResponse(body: unknown): Result<Output>;
-}
-
-export type LogLevel = 'all' | 'warning' | 'none'
-
-export interface ILogger {
-	warn(msg: any, ...args: any[]): void;
 }
