@@ -29,6 +29,7 @@ export default class Api implements IApi {
 		dto: Input
 	): AsyncResult<Output> {
 		const requestInfo = endpoint.prepareRequest(dto)
+		console.log('requestInfo', requestInfo)
 
 		const result = await this.network.fetch(
 			this._buildUrl(requestInfo.path, requestInfo.query ?? {}),
@@ -36,6 +37,8 @@ export default class Api implements IApi {
 			requestInfo.body,
 			this._buildHeaders()
 		)
+
+		console.log('resultFromApi', result)
 
 		if (result.error) {
 			return err(result.error)
@@ -69,6 +72,8 @@ export default class Api implements IApi {
 		return {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			Accept: 'application/json',
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			'Content-Type': 'application/json',
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			Authorization: `Bearer ${this.apiKey}`,
 

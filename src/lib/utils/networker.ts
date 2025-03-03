@@ -31,64 +31,75 @@ export default class Networker implements INetworker {
 		headers?: HeadersInit
 	): AsyncResult<FetchResponse> {
 		try {
-			const response = await fetch(
-				url,
-				{
-					body,
-					method,
-					headers
+			console.log('fetch url', url.href)
+			console.log('fetch method', method)
+			console.log('fetch body', body)
+			try {
+				const response = await fetch(
+					url,
+					{
+						body,
+						method,
+						headers
+					}
+				)
+				console.log('fetch response', response)
+				const json = await response.json()
+
+				if (response.status === 400) {
+					return err(new BadRequest({ url, message: json.error }))
 				}
-			)
 
-			const json = await response.json()
+				if (response.status === 401) {
+					return err(
+						new Unauthorized({ url, message: json.error })
+					)
+				}
 
-			if (response.status === 400) {
-				return err(new BadRequest({ url, message: json.error }))
+				if (response.status === 403) {
+					return err(
+						new Forbidden({ url, message: json.error })
+					)
+				}
+
+				if (response.status === 404) {
+					return err(
+						new NotFound({ url, message: json.error })
+					)
+				}
+
+				if (response.status === 422) {
+					return err(
+						new BadInput({ url, message: json.error })
+					)
+				}
+
+				if (response.status >= 400 && response.status < 500) {
+					return err(
+						new NetworkBaseError({
+							url,
+							message: 'Invalid Request'
+						})
+					)
+				}
+
+				if (response.status >= 500) {
+					return err(
+						new NetworkBaseError({
+							url,
+							message: 'Server Error'
+						})
+					)
+				}
+
+				return ok(json)
+			} catch (error) {
+				console.log('error', error)
+				return err(new NetworkBaseError({
+					url,
+					message: 'Server Error'
+				}))
 			}
-
-			if (response.status === 401) {
-				return err(
-					new Unauthorized({ url, message: json.error })
-				)
-			}
-
-			if (response.status === 403) {
-				return err(
-					new Forbidden({ url, message: json.error })
-				)
-			}
-
-			if (response.status === 404) {
-				return err(
-					new NotFound({ url, message: json.error })
-				)
-			}
-
-			if (response.status === 422) {
-				return err(
-					new BadInput({ url, message: json.error })
-				)
-			}
-
-			if (response.status >= 400 && response.status < 500) {
-				return err(
-					new NetworkBaseError({
-						url,
-						message: 'Invalid Request'
-					})
-				)
-			}
-
-			if (response.status >= 500) {
-				return err(
-					new NetworkBaseError({
-						url,
-						message: 'Server Error'
-					})
-				)
-			}
-
-			return ok(json)
 		} catch (error: unknown) {
 			if (error instanceof Error) {
 				err(error)

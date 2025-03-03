@@ -43,7 +43,10 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 				BasaltSDKFacade._cache,
 				new Logger(opts.logLevel ?? 'warning')
 			),
-			new MonitorSDK(api)
+			new MonitorSDK(
+				api,
+				new Logger(opts.logLevel ?? 'warning')
+			)
 		)
 	}
 

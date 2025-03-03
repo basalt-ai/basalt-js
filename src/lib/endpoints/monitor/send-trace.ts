@@ -1,6 +1,6 @@
 import { Trace } from '../../resources'
 import type {
-	ErrObj, FetchMethod, IEndpoint, QueryParamsObject, Result 
+	ErrObj, FetchMethod, QueryParamsObject, Result 
 } from '../../resources/contract'
 import { ok } from '../../utils/utils'
 
@@ -15,13 +15,13 @@ export interface Output {
 /**
  * Endpoint for sending a trace to the API
  */
-export default class SendTraceEndpoint implements IEndpoint<Input, Output> {
+export default class SendTraceEndpoint {
 	/**
 	 * Prepares the request for sending a trace
 	 * @param dto - The trace to send
 	 * @returns The request information
 	 */
-	prepareRequest(dto: Input): {
+	static prepareRequest(dto: Input): {
 		path: string;
 		method: FetchMethod;
 		body?: BodyInit;
@@ -54,6 +54,9 @@ export default class SendTraceEndpoint implements IEndpoint<Input, Output> {
 			endTime: typeof trace.endTime === 'string' ? trace.endTime : trace.endTime?.toISOString(),
 			logs
 		})
+
+		// console.log('body', body)
+		// console.log('trace', trace)
 
 		return {
 			method: 'post',

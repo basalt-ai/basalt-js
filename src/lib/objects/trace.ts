@@ -1,5 +1,4 @@
 import Generation from './generation'
-
 import Span from './span'
 
 import {
@@ -13,6 +12,14 @@ import {
 	User,
 	hasPrompt
 } from '../resources'
+
+// Symbol to store the MonitorSDK reference
+export const monitorSDKSymbol = Symbol('monitorSDK');
+
+// Interface for the MonitorSDK reference to avoid any types
+export interface ITraceMonitor {
+	flushTrace(trace: ITrace): Promise<void>;
+}
 
 export class Trace implements ITrace {
 	private _featureSlug: string
@@ -166,5 +173,58 @@ export class Trace implements ITrace {
 		// The SDK will use the SendTraceEndpoint to send the trace to the API
 		
 		return this
+	}
+
+	/**
+	 * Manually flush the trace data to the API.
+	 * 
+	 * @returns A promise that resolves when the trace has been flushed
+	 */
+	public async flush(): Promise<void> {
+		// Get the MonitorSDK instance that created this trace
+		const sdk = this._getMonitorSDK();
+		
+		if (!sdk) {
+			// Use logger.warn if available, otherwise fall back to console.warn
+			// eslint-disable-next-line no-console
+			console.warn('Cannot flush trace: no MonitorSDK reference found');
+			return;
+		}
+		
+		// Call the flushTrace method on the MonitorSDK instance
+		await sdk.flushTrace(this);
+	}
+
+	/**
+	 * Completes the trace by setting the end time and flushing to the API.
+	 * 
+	 * @param output - Optional output to set before completing
+	 * @param metadata - Optional additional metadata to add before completing
+	 * @returns A promise that resolves when the trace has been flushed
+	 */
+	public async complete(output?: string, metadata?: Metadata): Promise<void> {
+		if (output) {
+			this._output = output;
+		}
+		
+		if (metadata) {
+			this._metadata = { ...this._metadata, ...metadata };
+		}
+		
+		this._endTime = new Date();
+		
+		// Flush the trace to the API
+		await this.flush();
+	}
+
+	/**
+	 * Gets the MonitorSDK instance that created this trace.
+	 * 
+	 * @returns The MonitorSDK instance or undefined if not found
+	 */
+	private _getMonitorSDK(): ITraceMonitor | undefined {
+		// Use type assertion to access the symbol property
+		const trace = this as unknown as Record<symbol, unknown>;
+		return trace[monitorSDKSymbol] as ITraceMonitor | undefined;
 	}
 }

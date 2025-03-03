@@ -32,16 +32,18 @@ export interface Trace extends TraceParams{
 	createSpan(params: CreateSpanParams): Span
 
 	end(output?: string): Trace
+	flush(): Promise<void>
+	complete(output?: string, metadata?: Metadata): Promise<void>
 }
 
 export interface Organization {
+	[key: string]: string;
 	id: string;
 	name: string;
-	[key: string]: string;
 }
 
 export interface User {
+	[key: string]: string;
 	id: string;
 	name: string;
-	[key: string]: string;
 }
