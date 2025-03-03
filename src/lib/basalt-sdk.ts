@@ -1,5 +1,5 @@
-import type { IBasaltSDK, IPromptSDK } from './ressources'
-import { IMonitorSDK } from './ressources/monitor/monitor.types';
+import type { IBasaltSDK, IPromptSDK } from './resources'
+import { IMonitorSDK } from './resources/monitor/monitor.types';
 
 /**
  * The `BasaltSDK` class implements the `IBasaltSDK` interface.

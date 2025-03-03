@@ -3,7 +3,7 @@ import { Log } from './log'
 import {
 	GenerationParams, GenerationPrompt, GenerationVariable, Generation as IGeneration,
 	UpdateGenerationParams
-} from '../ressources/monitor/generation.types'
+} from '../resources/monitor/generation.types'
 
 export default class Generation extends Log implements IGeneration {
 	private _prompt: GenerationPrompt | undefined

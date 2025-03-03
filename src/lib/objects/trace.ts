@@ -12,7 +12,7 @@ import {
 	TraceParams,
 	User,
 	hasPrompt
-} from '../ressources'
+} from '../resources'
 
 export class Trace implements ITrace {
 	private _featureSlug: string
@@ -69,6 +69,14 @@ export class Trace implements ITrace {
 
 	set logs(logs: Log[]) {
 		this._logs = logs
+	}
+
+	get featureSlug() {
+		return this._featureSlug
+	}
+
+	get endTime() {
+		return this._endTime
 	}
 
 	/* ----------------------------- Public methods ----------------------------- */
@@ -153,9 +161,10 @@ export class Trace implements ITrace {
 		this._output = output ?? this._output
 		this._endTime = new Date()
 
-		// TODO send to the API
-		console.log(this._endTime, this._featureSlug)
-
+		// Send to the API
+		// This is handled by the SDK instance that created this trace
+		// The SDK will use the SendTraceEndpoint to send the trace to the API
+		
 		return this
 	}
 }

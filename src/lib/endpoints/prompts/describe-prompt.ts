@@ -1,4 +1,4 @@
-import type { PromptDetailResponse, Result } from '../../ressources'
+import type { PromptDetailResponse, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
 interface Input {

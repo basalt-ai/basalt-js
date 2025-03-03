@@ -17,7 +17,7 @@ import type {
 	PromptListResponse,
 	PromptResponse,
 	VariablesMap
-} from '../ressources'
+} from '../resources'
 import {
 	difference,
 	err, getVariableNames, ok, replaceVariables

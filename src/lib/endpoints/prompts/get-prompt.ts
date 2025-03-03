@@ -1,4 +1,4 @@
-import type { Feature, PromptModel, Result } from '../../ressources'
+import type { Feature, PromptModel, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
 interface Input {

@@ -1,4 +1,4 @@
-import type { ILogger, LogLevel } from '../ressources/contract'
+import type { ILogger, LogLevel } from '../resources/contract'
 
 export default class Logger implements ILogger {
 	constructor(private readonly logLevel: LogLevel) {}

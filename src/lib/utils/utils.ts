@@ -1,4 +1,4 @@
-import type { VariablesMap } from '../ressources'
+import type { VariablesMap } from '../resources'
 
 export function err<T>(e: T): { error: T; value: null } {
 	return { error: e, value: null }

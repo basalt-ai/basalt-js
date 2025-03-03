@@ -3,7 +3,7 @@ import { Log } from './log'
 
 import {
 	CreateGenerationParams, CreateSpanParams, Log as ILog, Span as ISpan, SpanParams, hasPrompt
-} from '../ressources'
+} from '../resources'
 
 export default class Span extends Log implements ISpan {
 	private _input: string | undefined;

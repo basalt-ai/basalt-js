@@ -1,5 +1,5 @@
 import BasaltSDK from './basalt-sdk'
-import type { IBasaltSDK, ICache, LogLevel } from './ressources/contract'
+import type { IBasaltSDK, ICache, LogLevel } from './resources/contract'
 import MonitorSDK from './sdk/monitor-sdk'
 import PromptSDK from './sdk/prompt-sdk'
 import Api from './utils/api'
@@ -43,7 +43,7 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 				BasaltSDKFacade._cache,
 				new Logger(opts.logLevel ?? 'warning')
 			),
-			new MonitorSDK()
+			new MonitorSDK(api)
 		)
 	}
 

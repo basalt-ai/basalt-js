@@ -1,6 +1,6 @@
 import {
 	Log as ILog, LogParams, Metadata, Span, Trace, UpdateParams
-} from '../ressources'
+} from '../resources'
 
 
 export class Log implements ILog {
