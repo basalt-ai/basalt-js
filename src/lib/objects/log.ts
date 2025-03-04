@@ -1,12 +1,16 @@
 import {
-	Log as ILog, LogParams, Metadata, Span, Trace, UpdateParams
+	Log as ILog,
+	LogParams,
+	Metadata,
+	Span,
+	Trace,
+	UpdateParams
 } from '../resources'
 
-
 export class Log implements ILog {
-	private _id: string;
-	private _type: string;
-	private _name: string;
+	private _id: string
+	private _type: string
+	private _name: string
 	private _startTime: Date
 	private _endTime: Date | undefined
 	private _metadata: Record<string, unknown> | undefined

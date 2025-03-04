@@ -31,9 +31,6 @@ export default class Networker implements INetworker {
 		headers?: HeadersInit
 	): AsyncResult<FetchResponse> {
 		try {
-			console.log('fetch url', url.href)
-			console.log('fetch method', method)
-			console.log('fetch body', body)
 			try {
 				const response = await fetch(
 					url,
@@ -43,7 +40,6 @@ export default class Networker implements INetworker {
 						headers
 					}
 				)
-				console.log('fetch response', response)
 				const json = await response.json()
 
 				if (response.status === 400) {
@@ -93,8 +89,7 @@ export default class Networker implements INetworker {
 				}
 
 				return ok(json)
-			} catch (error) {
-				console.log('error', error)
+			} catch {
 				return err(new NetworkBaseError({
 					url,
 					message: 'Server Error'

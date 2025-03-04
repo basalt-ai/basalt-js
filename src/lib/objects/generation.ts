@@ -1,7 +1,10 @@
 import { Log } from './log'
 
 import {
-	GenerationParams, GenerationPrompt, GenerationVariable, Generation as IGeneration,
+	GenerationParams,
+	GenerationPrompt,
+	GenerationVariable,
+	Generation as IGeneration,
 	UpdateGenerationParams
 } from '../resources/monitor/generation.types'
 

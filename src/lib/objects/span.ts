@@ -2,7 +2,11 @@ import Generation from './generation';
 import { Log } from './log'
 
 import {
-	CreateGenerationParams, CreateSpanParams, Log as ILog, Span as ISpan, SpanParams, hasPrompt
+	CreateGenerationParams,
+	CreateSpanParams,
+	Span as ISpan,
+	SpanParams,
+	hasPrompt
 } from '../resources'
 
 export default class Span extends Log implements ISpan {
@@ -45,15 +49,12 @@ export default class Span extends Log implements ISpan {
 		return this
 	}
 
-	public append(child: ILog) {
+	public append(generation: Generation) {
 		// Remove child log from the list of its previous trace
-		child.trace.logs = child.trace.logs.filter(log => log.id !== child.id)
-
-		// Change reference
-		child.parent = this
+		generation.trace.logs = generation.trace.logs.filter(log => log.id !== generation.id)
 
 		// Add child to the new trace list
-		this.trace.logs.push(child)
+		this.trace.logs.push(generation)
 
 		return this
 	}

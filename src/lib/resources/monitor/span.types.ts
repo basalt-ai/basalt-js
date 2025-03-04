@@ -12,7 +12,7 @@ export interface Span extends SpanParams, Log {
 	start(input?: string): Span;
 	end(output?: string): Span;
 
-	append(log: Log): Span
+	append(generation: Generation): Span
 
 	createGeneration(params: CreateGenerationParams): Generation
 	createSpan(params: CreateSpanParams): Span
@@ -25,5 +25,5 @@ export interface SpanParams extends LogParams {
 
 // Type guards
 export function isSpan(log: Log): log is Span {
-	return log.type !== 'generation'
+	return log.type === 'span'
 }

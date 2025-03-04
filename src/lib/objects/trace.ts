@@ -40,6 +40,8 @@ export class Trace implements ITrace {
 		this._user = params.user
 		this._organization = params.organization
 		this._metadata = params.metadata
+		this._input = params.input
+		this._output = params.output
 
 		this._startTime = params.startTime ? new Date(params.startTime) : new Date()
 		this._endTime = params.endTime ? new Date(params.endTime) : undefined
@@ -131,15 +133,12 @@ export class Trace implements ITrace {
 		return this
 	}
 
-	public append(log: Log) {
+	public append(generation: Generation) {
 		// Remove child log from the list of its previous trace
-		log.trace.logs = log.trace.logs.filter(l => l.id !== log.id)
-
-		// Change reference
-		log.trace = this
+		generation.trace.logs = generation.trace.logs.filter(l => l.id !== generation.id)
 
 		// Add child to the new trace list
-		this._logs.push(log)
+		this._logs.push(generation)
 
 		return this
 	}
