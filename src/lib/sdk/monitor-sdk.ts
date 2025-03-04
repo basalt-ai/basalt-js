@@ -1,8 +1,7 @@
-// import Generation from '../objects/generation'
 import SendTraceEndpoint from '../endpoints/monitor/send-trace'
 import Generation from '../objects/generation'
 import Span from '../objects/span'
-import { ITraceMonitor, Trace, monitorSDKSymbol } from '../objects/trace'
+import { ITraceMonitor, Trace } from '../objects/trace'
 import { GenerationParams, SpanParams } from '../resources'
 import type { IApi, IEndpoint, ILogger } from '../resources/contract'
 import { IMonitorSDK } from '../resources/monitor/monitor.types'
@@ -93,32 +92,25 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 	private _createTrace(slug: string, params: TraceParams = {}): Trace {
 		const trace = new Trace(slug, params);
 		
-		// Store a reference to the SDK in the trace for flushing
-		// Using the exported symbol to avoid property name collisions
-		// Use type assertion to safely set the symbol property
-		const traceWithSymbol = trace as unknown as Record<symbol, unknown>;
-		traceWithSymbol[monitorSDKSymbol] = this;
-		
 		// Override the end method to automatically flush the trace
-		const originalEnd = trace.end.bind(trace);
-		const boundFlushTrace = this.flushTrace.bind(this);
+		// const originalEnd = trace.end.bind(trace);
+		// const boundFlushTrace = this.flushTrace.bind(this);
 		
-		// Use an arrow function to avoid 'this' binding issues
-		trace.end = (output?: string): Trace => {
-			// Call the original end method
-			const result = originalEnd(output);
-			console.log('end trace called', result)
+		// // Use an arrow function to avoid 'this' binding issues
+		// trace.end = (output?: string): Trace => {
+		// 	// Call the original end method
+		// 	const result = originalEnd(output);
 
-			// Flush the trace to the API
-			boundFlushTrace(trace).catch((error: unknown) => {
-				this.logger.warn('Failed to auto-flush trace on end', {
-					error,
-					traceSlug: trace.featureSlug
-				});
-			});
+		// 	// Flush the trace to the API
+		// 	boundFlushTrace(trace).catch((error: unknown) => {
+		// 		this.logger.warn('Failed to auto-flush trace on end', {
+		// 			error,
+		// 			traceSlug: trace.featureSlug
+		// 		});
+		// 	});
 
-			return result;
-		};
+		// 	return result;
+		// };
 
 		return trace;
 	}

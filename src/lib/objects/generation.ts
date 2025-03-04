@@ -20,6 +20,7 @@ export default class Generation extends Log implements IGeneration {
 		this._prompt = params.prompt
 		this._input = params.input
 		this._output = params.output
+		this._variables = params.variables
 	}
 
 	/* --------------------------------- Getters -------------------------------- */

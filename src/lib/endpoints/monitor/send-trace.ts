@@ -1,4 +1,4 @@
-import { Trace } from '../../resources'
+import { Trace, isGeneration } from '../../resources'
 import type {
 	ErrObj, FetchMethod, QueryParamsObject, Result 
 } from '../../resources/contract'
@@ -36,7 +36,9 @@ export default class SendTraceEndpoint {
 			parentId: log.parent?.id,
 			input: 'input' in log ? log.input : undefined,
 			output: 'output' in log ? log.output : undefined,
-			prompt: 'prompt' in log ? log.prompt : undefined
+			prompt: isGeneration(log) && 'prompt' in log ? log.prompt : undefined,
+			variables: isGeneration(log) && 'variables' in log ? Object.entries(log.variables ?? {})
+				.map(([key, value]) => ({ label: key, value })) : []
 		}))
 
 		// Convert the body to a JSON string to match BodyInit type

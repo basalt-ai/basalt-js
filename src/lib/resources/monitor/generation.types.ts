@@ -20,7 +20,7 @@ export interface CreateGenerationWithoutPromptParams extends Omit<LogParams, 'tr
 	output?: string;
 }
 
-export type UpdateGenerationParams = Partial<Omit<GenerationParams, 'trace' | 'prompt'>>
+export type UpdateGenerationParams = Partial<Omit<GenerationParams, 'trace'>>
 
 export interface Generation extends GenerationParams, Log {
 	start(input?: string): Generation;

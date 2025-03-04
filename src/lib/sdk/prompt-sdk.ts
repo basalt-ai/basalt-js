@@ -20,7 +20,10 @@ import type {
 } from '../resources'
 import {
 	difference,
-	err, getVariableNames, ok, replaceVariables
+	err,
+	getVariableNames,
+	ok,
+	replaceVariables
 } from '../utils/utils'
 
 export default class PromptSDK implements IPromptSDK {

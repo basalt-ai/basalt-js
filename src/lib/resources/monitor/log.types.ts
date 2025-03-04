@@ -1,4 +1,3 @@
-import { GenerationPrompt } from './generation.types';
 import { Metadata } from './monitor.types'
 import { Span } from './span.types';
 import { Trace } from './trace.types'
@@ -25,7 +24,6 @@ export interface Log extends LogParams {
 	id: string;
 	type: string
 	metadata?: Record<string, unknown> | undefined
-	prompt?: GenerationPrompt | undefined
 
 	start(): Log
 	setMetadata(metadata: Metadata): Log
