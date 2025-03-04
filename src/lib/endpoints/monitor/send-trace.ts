@@ -2,14 +2,10 @@ import { Trace } from '../../resources'
 import type {
 	ErrObj, FetchMethod, QueryParamsObject, Result 
 } from '../../resources/contract'
-import { ok } from '../../utils/utils'
+import { err, ok } from '../../utils/utils'
 
 export interface Input {
 	trace: Trace
-}
-
-export interface Output {
-	id: string
 }
 
 /**
@@ -39,7 +35,8 @@ export default class SendTraceEndpoint {
 			metadata: log.metadata,
 			parentId: log.parent?.id,
 			input: 'input' in log ? log.input : undefined,
-			output: 'output' in log ? log.output : undefined
+			output: 'output' in log ? log.output : undefined,
+			prompt: 'prompt' in log ? log.prompt : undefined
 		}))
 
 		// Convert the body to a JSON string to match BodyInit type
@@ -55,9 +52,6 @@ export default class SendTraceEndpoint {
 			logs
 		})
 
-		// console.log('body', body)
-		// console.log('trace', trace)
-
 		return {
 			method: 'post',
 			path: '/monitor/trace',
@@ -70,12 +64,11 @@ export default class SendTraceEndpoint {
 	 * @param body - The response from the API
 	 * @returns The decoded response
 	 */
-	decodeResponse(body: unknown): Result<Output, ErrObj> {
+	decodeResponse(body: unknown): Result<undefined, ErrObj> {
 		if (typeof body !== 'object' || body === null) {
-			return ok({ id: '' })
+			return err({ message: 'Failed to decode response (invalid body format)' })
 		}
 
-		const { id } = body as { id: string }
-		return ok({ id })
+		return ok(undefined)
 	}
 }

@@ -63,6 +63,7 @@ export default class Generation extends Log implements IGeneration {
 	public override update(params: UpdateGenerationParams) {
 		this._input = params.input ?? this._input
 		this._output = params.output ?? this._output
+		this._prompt = params.prompt ?? this._prompt
 
 		super.update(params)
 

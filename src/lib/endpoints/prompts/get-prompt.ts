@@ -35,7 +35,6 @@ export default class GetPromptEndpoint {
 	}
 
 	static decodeResponse(body: unknown): Result<Output> {
-		console.log('body', body)
 		if (
 			body === null
 			|| typeof body !== 'object'

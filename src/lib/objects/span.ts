@@ -5,8 +5,7 @@ import {
 	CreateGenerationParams,
 	CreateSpanParams,
 	Span as ISpan,
-	SpanParams,
-	hasPrompt
+	SpanParams
 } from '../resources'
 
 export default class Span extends Log implements ISpan {
@@ -62,7 +61,7 @@ export default class Span extends Log implements ISpan {
 	public createGeneration(params: CreateGenerationParams) {
 		const generation = new Generation({
 			...params,
-			name: hasPrompt(params) ? params.prompt.slug : params.name,
+			name: params.name ?? params.prompt?.slug,
 			trace: this.trace,
 			parent: this
 		})

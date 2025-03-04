@@ -41,7 +41,6 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 	 * @returns A promise that resolves when the trace has been successfully sent
 	 */
 	public async flushTrace(trace: Trace): Promise<void> {
-		// this.logger.warn('flushTrace', trace)
 		try {
 			if (!this.api) {
 				this.logger.warn('No API instance available to flush trace', {
@@ -68,7 +67,6 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 			const result = await this.api.invoke(endpoint, { trace });
 			
 			if (result.error) {
-				this.logger.warn('result', result)
 				this.logger.warn('Failed to flush trace', { 
 					error: result.error,
 					traceSlug: trace.featureSlug
@@ -109,9 +107,10 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 		trace.end = (output?: string): Trace => {
 			// Call the original end method
 			const result = originalEnd(output);
+			console.log('end trace called', result)
 
 			// Flush the trace to the API
-			boundFlushTrace(trace).catch(error => {
+			boundFlushTrace(trace).catch((error: unknown) => {
 				this.logger.warn('Failed to auto-flush trace on end', {
 					error,
 					traceSlug: trace.featureSlug

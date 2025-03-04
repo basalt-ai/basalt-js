@@ -166,6 +166,11 @@ export class Trace implements ITrace {
 	public end(output?: string) {
 		this._output = output ?? this._output
 		this._endTime = new Date()
+		this._logs.forEach(log => {
+			if (!log.endTime) {
+				log.end()
+			}
+		})
 
 		// Send to the API
 		// This is handled by the SDK instance that created this trace
