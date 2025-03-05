@@ -1,4 +1,4 @@
-import type { PromptModel, Result } from '../../contract'
+import type { PromptModel, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
 interface Input {
@@ -16,6 +16,7 @@ interface Output {
 		text: string;
 		model: PromptModel;
 	};
+
 }
 
 export default class GetPromptEndpoint {
@@ -26,8 +27,8 @@ export default class GetPromptEndpoint {
 				version: dto.version,
 				tag: dto.tag
 			},
-			method: 'get'
-		} as const
+			method: 'get' as const
+		}
 	}
 
 	static decodeResponse(body: unknown): Result<Output> {

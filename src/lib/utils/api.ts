@@ -2,7 +2,7 @@ import { err } from './utils'
 
 import type {
 	AsyncResult, IApi, IEndpoint, INetworker
-} from '../contract'
+} from '../resources/contract'
 
 /**
  * Helper class for interacting with the Basalt API using
@@ -69,6 +69,8 @@ export default class Api implements IApi {
 		return {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			Accept: 'application/json',
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			'Content-Type': 'application/json',
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			Authorization: `Bearer ${this.apiKey}`,
 

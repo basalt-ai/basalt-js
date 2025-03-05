@@ -1,4 +1,4 @@
-import type { ICache } from '../contract'
+import type { ICache } from '../resources/contract'
 
 /**
  * In-memory implementation of the ICache interface.
