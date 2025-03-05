@@ -5,6 +5,7 @@ import {
 	CreateGenerationParams,
 	CreateSpanParams,
 	Trace as ITrace,
+	IdentifyParams,
 	Log,
 	Metadata,
 	Organization,
@@ -12,11 +13,9 @@ import {
 	User,
 	hasPrompt
 } from '../resources'
-import MonitorSDK from '../sdk/monitor-sdk'
+import Flusher from '../utils/flusher'
 
 export class Trace implements ITrace {
-	_sdk: MonitorSDK | undefined
-	
 	private _featureSlug: string
 
 	private _input: string | undefined
@@ -31,8 +30,9 @@ export class Trace implements ITrace {
 
 	private _logs: Log[] = []
 
+	private _flusher: Flusher
 
-	constructor(slug: string, params: TraceParams = {}) {
+	constructor(slug: string, params: TraceParams = {}, flusher: Flusher) {
 		this._featureSlug = slug
 
 		this._user = params.user
@@ -43,6 +43,8 @@ export class Trace implements ITrace {
 		this._name = params.name
 		this._startTime = params.startTime ? new Date(params.startTime) : new Date()
 		this._endTime = params.endTime ? new Date(params.endTime) : undefined
+
+		this._flusher = flusher
 	}
 
 	/* --------------------------------- Getters -------------------------------- */
@@ -97,18 +99,9 @@ export class Trace implements ITrace {
 		return this
 	}
 
-	public identify(id: string, params: Omit<User, 'id'>): Trace
-	public identify(user: User): Trace
-	public identify(arg1: string | User, arg2?: Omit<User, 'id'>): Trace {
-		if (typeof arg1 === 'string') {
-			this._user = {
-				id: arg1,
-				name: arg1,
-				...arg2
-			}
-		} else {
-			this._user = arg1
-		}
+	public identify(params: IdentifyParams): Trace {
+		this._user = params.user
+		this._organization = params.organization
 
 		return this
 	}
@@ -169,44 +162,9 @@ export class Trace implements ITrace {
 		// This is handled by the SDK instance that created this trace
 		// The SDK will use the SendTraceEndpoint to send the trace to the API
 		if (!this._flushedPromise) {
-			void this.flush()
+			void this._flusher.flushTrace(this)
 		}
-		
+
 		return this
-	}
-
-	/**
-	 * Manually flush the trace data to the API.
-	 * 
-	 * @returns void
-	 */
-	public flush(): void {
-		// Get the MonitorSDK instance that created this trace
-		const sdk = this._sdk;
-		
-		if (!sdk) {
-			// Use logger.warn if available, otherwise fall back to console.warn
-			// eslint-disable-next-line no-console
-			console.warn('Cannot flush trace: no MonitorSDK reference found');
-			this._flushedPromise = undefined; // Reset flag to allow retrying
-			throw new Error('Cannot flush trace: no MonitorSDK reference found')
-		}
-
-		if (this._flushedPromise) {
-			return;
-		}
-
-		this._flushedPromise = sdk.flush(this);
-		
-		this._flushedPromise
-			.then(() => {
-				this._flushedPromise = undefined; // Reset flag to allow retrying
-			})
-			.catch(() => {
-				this._flushedPromise = undefined; // Reset flag to allow retrying
-			})
-			.finally(() => {
-				this._flushedPromise = undefined; // Reset flag to allow retrying
-			})
 	}
 }

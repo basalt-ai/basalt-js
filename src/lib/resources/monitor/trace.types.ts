@@ -186,38 +186,26 @@ export interface Trace extends TraceParams{
 	/**
 	 * Associates user information with this trace.
 	 * 
-	 * @param id - The user's unique identifier.
-	 * @param params - Additional user information excluding the ID.
+	 * @param params - The user and organization information to associate with this trace.
 	 * @returns The trace instance for method chaining.
 	 * 
 	 * @example
 	 * ```typescript
-	 * // Identify a user with ID and additional information
-	 * trace.identify('user-123', {
-	 *   name: 'John Doe',
-	 *   email: 'john@example.com'
-	 * });
-	 * ```
-	 */
-	identify(id: string, params: Omit<User, 'id'>): Trace
-	
-	/**
-	 * Associates user information with this trace.
-	 * 
-	 * @param user - The complete user object including ID.
-	 * @returns The trace instance for method chaining.
-	 * 
-	 * @example
-	 * ```typescript
-	 * // Identify a user with a complete user object
+	 * // Identify a user with user and organization information
 	 * trace.identify({
-	 *   id: 'user-123',
-	 *   name: 'John Doe',
-	 *   email: 'john@example.com'
+	 *   user: {
+	 *     id: 'user-123',
+	 *     name: 'John Doe',
+	 *     email: 'john@example.com'
+	 *   },
+	 *   organization: {
+	 *     id: 'org-123',
+	 *     name: 'Acme Corporation'
+	 *   }
 	 * });
 	 * ```
 	 */
-	identify(user: User): Trace
+	identify(params: IdentifyParams): Trace
 
 	/**
 	 * Creates a new generation within this trace.
@@ -286,18 +274,6 @@ export interface Trace extends TraceParams{
 	 * ```
 	 */
 	end(output?: string): Trace
-	
-	/**
-	 * Sends all pending logs to the monitoring backend.
-	 * This is automatically called when the trace is ended.
-	 * 
-	 * @example
-	 * ```typescript
-	 * // Manually flush logs to the backend
-	 * trace.flush();
-	 * ```
-	 */
-	flush(): void
 }
 
 /**
@@ -377,4 +353,12 @@ export interface User {
 	 * Display name of the user.
 	 */
 	name: string;
+}
+
+/**
+ * Parameters for identifying a user in a trace.
+*/
+export interface IdentifyParams {
+	user?: User;
+	organization?: Organization;
 }

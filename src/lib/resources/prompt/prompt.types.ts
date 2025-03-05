@@ -149,13 +149,6 @@ export interface GetPromptOptions {
 
 export type NoSlugGetPromptOptions = Omit<GetPromptOptions, 'slug'>
 
-export interface Feature {
-	name: string;
-	type: 'single' | 'multi';
-	slug: string;
-	description?: string | undefined;
-}
-
 export type VariablesMap = Record<string, string>
 
 export type PromptModel = AnthropicPromptModel | OpenAIPromptModel | MistralPromptModel
@@ -214,7 +207,6 @@ export interface PromptResponse {
 export interface GetPromptResponse {
 	text: string;
 	model: PromptModel;
-	feature: Feature;
 }
 
 /**

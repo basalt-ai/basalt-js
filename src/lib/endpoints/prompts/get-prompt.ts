@@ -1,4 +1,4 @@
-import type { Feature, PromptModel, Result } from '../../resources'
+import type { PromptModel, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
 interface Input {
@@ -15,8 +15,6 @@ interface Output {
 		// that still include the variables ex: "Greet {name}"
 		text: string;
 		model: PromptModel;
-
-		feature: Feature;
 	};
 
 }
@@ -27,8 +25,7 @@ export default class GetPromptEndpoint {
 			path: `/prompts/${dto.slug}`,
 			query: {
 				version: dto.version,
-				tag: dto.tag,
-				includes: ['feature']
+				tag: dto.tag
 			},
 			method: 'get' as const
 		}
@@ -58,10 +55,6 @@ export default class GetPromptEndpoint {
 			return err({ message: 'Get Prompt: Failed to decode response (missing prompt.model)' })
 		}
 
-		if (!('feature' in body.prompt)) {
-			return err({ message: 'Get Prompt: Failed to decode response' })
-		}
-
 		const warning = 'warning' in body && typeof body.warning === 'string'
 			? body.warning
 			: undefined
@@ -71,9 +64,7 @@ export default class GetPromptEndpoint {
 
 			prompt: {
 				text: body.prompt.text,
-				model: body.prompt.model as PromptModel,
-
-				feature: body.prompt.feature as Feature
+				model: body.prompt.model as PromptModel
 			}
 		})
 	}

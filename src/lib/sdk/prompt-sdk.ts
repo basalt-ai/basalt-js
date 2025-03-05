@@ -18,6 +18,7 @@ import type {
 	PromptResponse,
 	VariablesMap
 } from '../resources'
+import Flusher from '../utils/flusher'
 import {
 	difference,
 	err,
@@ -94,10 +95,7 @@ export default class PromptSDK implements IPromptSDK {
 		const variables = opts.variables ?? {}
 
 		if (cacheEnabled && cached) {
-			return ok({
-				...this._insertVariables(cached, variables),
-				feature: cached.feature
-			})
+			return ok(this._insertVariables(cached, variables))
 		}
 
 		// 2. If no cache, fetch from the API
@@ -111,10 +109,7 @@ export default class PromptSDK implements IPromptSDK {
 				this.logger.warn(`Basalt Warning: "${result.value.warning}"`)
 			}
 
-			return ok({
-				...this._insertVariables(result.value.prompt, variables),
-				feature: result.value.prompt.feature
-			})
+			return ok(this._insertVariables(result.value.prompt, variables))
 		}
 
 		// 3. Api call failed, check if there is a fallback in the cache
@@ -123,10 +118,7 @@ export default class PromptSDK implements IPromptSDK {
 		if (cacheEnabled && fallback) {
 			this.logger.warn(`Basalt Warning: Failed to fetch prompt from API, using last result for "${opts.slug}"`)
 
-			return ok({
-				...this._insertVariables(fallback, variables),
-				feature: fallback.feature
-			})
+			return ok(this._insertVariables(fallback, variables),)
 		}
 
 		return err(result.error)
@@ -189,10 +181,12 @@ export default class PromptSDK implements IPromptSDK {
 
 	private _prepareMonitoring(prompt: GetPromptResponse, params: GetPromptOptions): Generation {
 		// 1. Create the trace
-		const trace = new Trace(prompt.feature.slug, {
+		const flusher = new Flusher(this.api, this.logger)
+
+		const trace = new Trace(params.slug, {
 			input: prompt.text,
 			startTime: new Date()
-		})
+		}, flusher)
 
 		// 2. Create the generation
 		const generation = new Generation({

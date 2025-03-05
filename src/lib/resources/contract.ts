@@ -103,4 +103,6 @@ export type LogLevel = 'all' | 'warning' | 'none'
 
 export interface ILogger {
 	warn(msg: any, ...args: any[]): void;
+	info(msg: any, ...args: any[]): void;
+	error(msg: any, ...args: any[]): void;
 }
