@@ -4,6 +4,7 @@ import { Metadata } from './monitor.types';
 import { CreateSpanParams, Span } from './span.types';
 
 export interface TraceParams {
+	name?: string | undefined;
 	input?: string | undefined;
 	output?: string | undefined;
 	startTime?: Date | string | undefined;
@@ -32,8 +33,7 @@ export interface Trace extends TraceParams{
 	createSpan(params: CreateSpanParams): Span
 
 	end(output?: string): Trace
-	flush(): Promise<void>
-	complete(output?: string, metadata?: Metadata): Promise<void>
+	flush(): void
 }
 
 export interface Organization {

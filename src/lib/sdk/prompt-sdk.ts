@@ -1,10 +1,10 @@
 import { DescribePromptEndpoint, GetPromptEndpoint, ListPromptsEndpoint } from '../endpoints'
+import Generation from '../objects/generation'
 import { Trace } from '../objects/trace'
 import type {
 	AsyncGetPromptResult,
 	AsyncResult,
 	DescribePromptOptions,
-	Generation,
 	GetPromptOptions,
 	GetPromptResponse,
 	IApi,
@@ -195,7 +195,9 @@ export default class PromptSDK implements IPromptSDK {
 		})
 
 		// 2. Create the generation
-		const generation = trace.createGeneration({
+		const generation = new Generation({
+			name: params.slug,
+			trace,
 			prompt: {
 				slug: params.slug,
 				version: params.version,
@@ -203,19 +205,7 @@ export default class PromptSDK implements IPromptSDK {
 			},
 			input: prompt.text,
 			variables: params.variables
-		})
-
-		// 3. Modify the `end` method to also end the trace
-		generation.end = (output: string) => {
-			generation.update({
-				output,
-				endTime: new Date()
-			})
-
-			trace.end(output)
-
-			return generation
-		}
+		}, { type: 'single' })
 
 		return generation
 	}

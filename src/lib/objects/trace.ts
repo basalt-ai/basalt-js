@@ -12,27 +12,25 @@ import {
 	User,
 	hasPrompt
 } from '../resources'
-
-// Symbol to store the MonitorSDK reference
-export const monitorSDKSymbol = Symbol('monitorSDK');
-
-// Interface for the MonitorSDK reference to avoid any types
-export interface ITraceMonitor {
-	flushTrace(trace: ITrace): Promise<void>;
-}
+import MonitorSDK from '../sdk/monitor-sdk'
 
 export class Trace implements ITrace {
+	_sdk: MonitorSDK | undefined
+	
 	private _featureSlug: string
 
 	private _input: string | undefined
 	private _output: string | undefined
+	private _name: string | undefined
 	private _startTime: Date
 	private _endTime: Date | undefined
 	private _user: User | undefined
 	private _organization: Organization | undefined
 	private _metadata: Metadata | undefined
+	private _flushedPromise: Promise<void> | undefined
 
 	private _logs: Log[] = []
+
 
 	constructor(slug: string, params: TraceParams = {}) {
 		this._featureSlug = slug
@@ -42,7 +40,7 @@ export class Trace implements ITrace {
 		this._metadata = params.metadata
 		this._input = params.input
 		this._output = params.output
-
+		this._name = params.name
 		this._startTime = params.startTime ? new Date(params.startTime) : new Date()
 		this._endTime = params.endTime ? new Date(params.endTime) : undefined
 	}
@@ -129,6 +127,7 @@ export class Trace implements ITrace {
 		this._user = params.user ?? this._user
 		this._startTime = params.startTime ? new Date(params.startTime) : this._startTime
 		this._endTime = params.endTime ? new Date(params.endTime) : this._endTime
+		this._name = params.name ?? this._name
 
 		return this
 	}
@@ -170,6 +169,9 @@ export class Trace implements ITrace {
 		// Send to the API
 		// This is handled by the SDK instance that created this trace
 		// The SDK will use the SendTraceEndpoint to send the trace to the API
+		if (!this._flushedPromise) {
+			void this.flush()
+		}
 		
 		return this
 	}
@@ -177,59 +179,35 @@ export class Trace implements ITrace {
 	/**
 	 * Manually flush the trace data to the API.
 	 * 
-	 * @returns A promise that resolves when the trace has been flushed
+	 * @returns void
 	 */
-	public async flush(): Promise<void> {
+	public flush(): void {
 		// Get the MonitorSDK instance that created this trace
-		const sdk = this._getMonitorSDK();
+		const sdk = this._sdk;
 		
 		if (!sdk) {
 			// Use logger.warn if available, otherwise fall back to console.warn
 			// eslint-disable-next-line no-console
 			console.warn('Cannot flush trace: no MonitorSDK reference found');
+			this._flushedPromise = undefined; // Reset flag to allow retrying
+			throw new Error('Cannot flush trace: no MonitorSDK reference found')
+		}
+
+		if (this._flushedPromise) {
 			return;
 		}
-		
-		// Call the flushTrace method on the MonitorSDK instance
-		await sdk.flushTrace(this);
-	}
 
-	/**
-	 * Completes the trace by setting the end time and flushing to the API.
-	 * 
-	 * @param output - Optional output to set before completing
-	 * @param metadata - Optional additional metadata to add before completing
-	 * @returns A promise that resolves when the trace has been flushed
-	 */
-	public async complete(output?: string, metadata?: Metadata): Promise<void> {
-		if (output) {
-			this._output = output;
-		}
+		this._flushedPromise = sdk.flush(this);
 		
-		if (metadata) {
-			this._metadata = { ...this._metadata, ...metadata };
-		}
-
-		this._logs.forEach(log => {
-			if (!log.endTime) {
-				log.end()
-			}
-		})
-		
-		this._endTime = new Date();
-		
-		// Flush the trace to the API
-		await this.flush();
-	}
-
-	/**
-	 * Gets the MonitorSDK instance that created this trace.
-	 * 
-	 * @returns The MonitorSDK instance or undefined if not found
-	 */
-	private _getMonitorSDK(): ITraceMonitor | undefined {
-		// Use type assertion to access the symbol property
-		const trace = this as unknown as Record<symbol, unknown>;
-		return trace[monitorSDKSymbol] as ITraceMonitor | undefined;
+		this._flushedPromise
+			.then(() => {
+				this._flushedPromise = undefined; // Reset flag to allow retrying
+			})
+			.catch(() => {
+				this._flushedPromise = undefined; // Reset flag to allow retrying
+			})
+			.finally(() => {
+				this._flushedPromise = undefined; // Reset flag to allow retrying
+			})
 	}
 }

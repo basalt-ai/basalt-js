@@ -36,6 +36,10 @@ export interface GenerationParams extends LogParams {
 	output?: string;
 }
 
+export interface GenerationOptions {
+	type: 'single' | 'multi'
+} 
+
 export interface GenerationPrompt {
 	slug: string;
 	version?: string | undefined;

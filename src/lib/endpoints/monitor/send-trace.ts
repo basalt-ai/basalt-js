@@ -66,7 +66,7 @@ export default class SendTraceEndpoint {
 	 * @param body - The response from the API
 	 * @returns The decoded response
 	 */
-	decodeResponse(body: unknown): Result<undefined, ErrObj> {
+	static decodeResponse(body: unknown): Result<undefined, ErrObj> {
 		if (typeof body !== 'object' || body === null) {
 			return err({ message: 'Failed to decode response (invalid body format)' })
 		}

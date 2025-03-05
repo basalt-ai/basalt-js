@@ -1,6 +1,7 @@
 import { Log } from './log'
 
 import {
+	GenerationOptions,
 	GenerationParams,
 	GenerationPrompt,
 	GenerationVariable,
@@ -13,14 +14,16 @@ export default class Generation extends Log implements IGeneration {
 	private _input: string | undefined
 	private _variables: GenerationVariable | undefined
 	private _output: string | undefined
+	private _options: GenerationOptions | undefined
 
-	constructor(params: GenerationParams) {
+	constructor(params: GenerationParams, options?: GenerationOptions) {
 		super('generation', params)
 
 		this._prompt = params.prompt
 		this._input = params.input
 		this._output = params.output
 		this._variables = params.variables
+		this._options = options
 	}
 
 	/* --------------------------------- Getters -------------------------------- */
@@ -56,6 +59,10 @@ export default class Generation extends Log implements IGeneration {
 
 		if (output) {
 			this._output = output
+		}
+		
+		if (this._options?.type === 'single') {
+			this.trace.end(output)
 		}
 
 		return this

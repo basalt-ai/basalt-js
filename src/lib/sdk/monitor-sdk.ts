@@ -1,13 +1,13 @@
 import SendTraceEndpoint from '../endpoints/monitor/send-trace'
 import Generation from '../objects/generation'
 import Span from '../objects/span'
-import { ITraceMonitor, Trace } from '../objects/trace'
+import { Trace } from '../objects/trace'
 import { GenerationParams, SpanParams } from '../resources'
-import type { IApi, IEndpoint, ILogger } from '../resources/contract'
+import type { IApi, ILogger } from '../resources/contract'
 import { IMonitorSDK } from '../resources/monitor/monitor.types'
 import { TraceParams } from '../resources/monitor/trace.types'
 
-export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
+export default class MonitorSDK implements IMonitorSDK {
 	/**
 	 * @param api - The API interface for making requests.
 	 * @param logger - The logger interface for logging information.
@@ -22,7 +22,9 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 	// --
 
 	public createTrace(slug: string, params: TraceParams = {}): Trace {
-		return this._createTrace(slug, params)
+		const trace = this._createTrace(slug, params)
+		trace._sdk = this
+		return trace
 	}
 
 	public createGeneration(params: GenerationParams) {
@@ -39,7 +41,7 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 	 * @param trace - The trace to flush to the API
 	 * @returns A promise that resolves when the trace has been successfully sent
 	 */
-	public async flushTrace(trace: Trace): Promise<void> {
+	public async flush(trace: Trace): Promise<void> {
 		try {
 			if (!this.api) {
 				this.logger.warn('No API instance available to flush trace', {
@@ -52,16 +54,8 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 			const endpoint = {
 				prepareRequest: () => SendTraceEndpoint.prepareRequest({ trace }),
 				// Use an arrow function to avoid 'this' binding issues
-				decodeResponse: (body: unknown): { error: null; value: { id: string } } => {
-					if (typeof body !== 'object' || body === null) {
-						return { error: null, value: { id: '' } };
-					}
-					const { id } = body as { id: string };
-					return { error: null, value: { id } };
-				}
-			} as IEndpoint<{ trace: Trace }, { id: string }>;
-
-			// this.logger.warn('endpoint', endpoint)
+				decodeResponse: (body: unknown) => SendTraceEndpoint.decodeResponse(body)
+			};
 
 			const result = await this.api.invoke(endpoint, { trace });
 			
@@ -74,9 +68,10 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 			}
 			
 			this.logger.warn('Successfully flushed trace', { 
-				traceId: result.value.id,
 				traceSlug: trace.featureSlug
 			});
+
+			return result.value
 		} catch (error) {
 			this.logger.warn('Exception while flushing trace', { 
 				error,
@@ -92,26 +87,6 @@ export default class MonitorSDK implements IMonitorSDK, ITraceMonitor {
 	private _createTrace(slug: string, params: TraceParams = {}): Trace {
 		const trace = new Trace(slug, params);
 		
-		// Override the end method to automatically flush the trace
-		// const originalEnd = trace.end.bind(trace);
-		// const boundFlushTrace = this.flushTrace.bind(this);
-		
-		// // Use an arrow function to avoid 'this' binding issues
-		// trace.end = (output?: string): Trace => {
-		// 	// Call the original end method
-		// 	const result = originalEnd(output);
-
-		// 	// Flush the trace to the API
-		// 	boundFlushTrace(trace).catch((error: unknown) => {
-		// 		this.logger.warn('Failed to auto-flush trace on end', {
-		// 			error,
-		// 			traceSlug: trace.featureSlug
-		// 		});
-		// 	});
-
-		// 	return result;
-		// };
-
 		return trace;
 	}
 
