@@ -35,14 +35,14 @@ export default class Flusher {
 			if (result.error) {
 				this.logger.error('Failed to flush trace', {
 					error: result.error,
-					traceSlug: trace.featureSlug
+					traceSlug: trace.chainSlug
 				});
 				return;
 			}
 		} catch (error) {
 			this.logger.error('Exception while flushing trace', {
 				error,
-				traceSlug: trace.featureSlug
+				traceSlug: trace.chainSlug
 			});
 		}
 	}

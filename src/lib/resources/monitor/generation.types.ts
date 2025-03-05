@@ -1,4 +1,4 @@
-import { Log, LogParams } from './log.types'
+import { BaseLog, BaseLogParams } from './base-log.types'
 
 /**
  * Variables used in prompt templates for AI model generations.
@@ -67,7 +67,7 @@ export function hasPrompt(params: CreateGenerationParams): params is CreateGener
  * 
  * @preserve
  */
-export interface CreateGenerationWithPromptParams extends Partial<Omit<LogParams, 'trace'>> {
+export interface CreateGenerationWithPromptParams extends Partial<Omit<BaseLogParams, 'trace'>> {
 	/**
 	 * Information about the prompt used for generation.
 	 */
@@ -106,7 +106,7 @@ export interface CreateGenerationWithPromptParams extends Partial<Omit<LogParams
  * 
  * @preserve
  */
-export interface CreateGenerationWithoutPromptParams extends Omit<LogParams, 'trace'> {
+export interface CreateGenerationWithoutPromptParams extends Omit<BaseLogParams, 'trace'> {
 	/**
 	 * The input provided to the model.
 	 */
@@ -158,7 +158,7 @@ export type UpdateGenerationParams = Partial<Omit<GenerationParams, 'trace'>>
  * 
  * @preserve
  */
-export interface Generation extends GenerationParams, Log {
+export interface Generation extends GenerationParams, BaseLog {
 	/**
 	 * Marks the generation as started and sets the input if provided.
 	 * 
@@ -220,7 +220,7 @@ export interface Generation extends GenerationParams, Log {
  * 
  * @preserve
  */
-export interface GenerationParams extends LogParams {
+export interface GenerationParams extends BaseLogParams {
 	/**
 	 * Information about the prompt used for generation.
 	 */
@@ -322,6 +322,6 @@ export interface GenerationPrompt {
  * }
  * ```
  */
-export function isGeneration(log: Log): log is Generation {
+export function isGeneration(log: BaseLog): log is Generation {
 	return log.type === 'generation'
 }

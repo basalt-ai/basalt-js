@@ -1,14 +1,14 @@
-import { CreateGenerationParams, Generation } from './generation.types';
-import { Log } from './log.types';
-import { Metadata } from './monitor.types';
-import { CreateSpanParams, Span } from './span.types';
+import { BaseLog } from './base-log.types'
+import { CreateGenerationParams, Generation } from './generation.types'
+import { CreateLogParams, Log } from './log'
+import { Metadata } from './monitor.types'
 
 /**
  * Parameters for creating or updating a trace.
- * 
+ *
  * A trace represents a complete user interaction or process flow and serves
  * as the top-level container for all monitoring activities.
- * 
+ *
  * @preserve
  */
 export interface TraceParams {
@@ -75,13 +75,13 @@ export interface TraceParams {
  * trace.start('What is the capital of France?');
  * 
  * // Create a span within the trace
- * const processingSpan = trace.createSpan({
+ * const processingLog = trace.createLog({
  *   name: 'query-processing',
  *   type: 'process'
  * });
  * 
  * // Create a generation within the span
- * const generation = processingSpan.createGeneration({
+ * const generation = processingLog.createGeneration({
  *   name: 'answer-generation',
  *   prompt: { slug: 'qa-prompt', version: '1.0.0' },
  *   input: 'What is the capital of France?'
@@ -91,7 +91,7 @@ export interface TraceParams {
  * generation.end('The capital of France is Paris.');
  * 
  * // End the span
- * processingSpan.end();
+ * processingLog.end();
  * 
  * // End the trace with final output
  * trace.end('Paris is the capital of France.');
@@ -108,7 +108,7 @@ export interface Trace extends TraceParams{
 	/**
 	 * Collection of all logs (spans and generations) associated with this trace.
 	 */
-	logs: Log[]
+	logs: BaseLog[]
 
 	/* --------------------------------- Methods -------------------------------- */
 	/**
@@ -181,7 +181,7 @@ export interface Trace extends TraceParams{
 	 * trace.append(generation);
 	 * ```
 	 */
-	append(log: Log): Trace
+	append(log: BaseLog): Trace
 
 	/**
 	 * Associates user information with this trace.
@@ -238,25 +238,25 @@ export interface Trace extends TraceParams{
 	 * Creates a new span within this trace.
 	 * 
 	 * @param params - Parameters for the span.
-	 * @returns A new Span instance associated with this trace.
+	 * @returns A new Log instance associated with this trace.
 	 * 
 	 * @example
 	 * ```typescript
 	 * // Create a basic span
-	 * const basicSpan = trace.createSpan({
+	 * const basicLog = trace.createLog({
 	 *   name: 'data-fetching',
 	 *   type: 'io'
 	 * });
 	 * 
 	 * // Create a detailed span
-	 * const detailedSpan = trace.createSpan({
+	 * const detailedLog = trace.createLog({
 	 *   name: 'user-validation',
 	 *   input: 'user credentials',
 	 *   metadata: { validationRules: ['password-strength', 'email-format'] }
 	 * });
 	 * ```
 	 */
-	createSpan(params: CreateSpanParams): Span
+	createLog(params: CreateLogParams): Log
 
 	/**
 	 * Marks the trace as ended and sets the output if provided.

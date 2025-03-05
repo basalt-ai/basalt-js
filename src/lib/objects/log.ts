@@ -1,102 +1,89 @@
+import { BaseLog } from './base-log'
+import Generation from './generation';
+
 import {
+	CreateGenerationParams,
+	CreateLogParams,
 	Log as ILog,
 	LogParams,
-	Metadata,
-	Span,
-	Trace,
-	UpdateParams
+	hasPrompt
 } from '../resources'
 
-export class Log implements ILog {
-	private _id: string
-	private _type: 'span' | 'generation' | 'function' | 'tool' | 'retrieval' | 'event'
-	private _name: string
-	private _startTime: Date
-	private _endTime: Date | undefined
-	private _metadata: Record<string, unknown> | undefined
+export default class Log extends BaseLog implements ILog {
+	private _input: string | undefined;
+	private _output: string | undefined
 
-	private _parent: Span | undefined
-	private _trace: Trace
+	constructor(params: LogParams) {
+		super(params)
 
-	constructor(type: 'span' | 'generation' | 'function' | 'tool' | 'retrieval' | 'event', params: LogParams) {
-		this._id = 'log-' + Math.random().toString(36).substring(2)
-		this._type = type
-		this._name = params.name
-		this._startTime = params.startTime ? new Date(params.startTime) : new Date()
-		this._endTime = params.endTime ? new Date(params.endTime) : undefined
-		this._metadata = params.metadata
-		this._trace = params.trace
-		this._parent = params.parent
-
-		params.trace.logs.push(this)
+		this._input = params.input
 	}
 
-	/* --------------------------------- Getters & Setters -------------------------------- */
-	get id() {
-		return this._id
+	/* --------------------------------- Getters -------------------------------- */
+	public get input() {
+		return this._input
 	}
 
-	get parent(): Span | undefined {
-		return this._parent
+	public get output() {
+		return this._output
 	}
 
-	set parent(parent: Span) {
-		this._parent = parent
-	}
+	/* ----------------------------- Public methods ----------------------------- */
+	public override start(input?: string) {
+		if (input) {
+			this._input = input
+		}
 
-	public get type() {
-		return this._type
-	}
-
-	public get name() {
-		return this._name
-	}
-
-	public get startTime() {
-		return this._startTime
-	}
-
-	public get endTime() {
-		return this._endTime
-	}
-
-	public get metadata() {
-		return this._metadata
-	}
-
-	public get trace() {
-		return this._trace
-	}
-
-	protected set trace(trace: Trace) {
-		this._trace = trace
-	}
-
-	/* --------------------------------- Methods -------------------------------- */
-	start() {
-		this._startTime = new Date()
+		super.start()
 
 		return this
 	}
 
-	setMetadata(metadata: Metadata) {
-		this._metadata = metadata
+	public override end(output?: string) {
+		super.end()
+
+		if (output) {
+			this._output = output
+		}
 
 		return this
 	}
 
-	update(params: UpdateParams) {
-		this._name = params.name ?? this._name
-		this._metadata = params.metadata ?? this._metadata
-		this._startTime = params.startTime ? new Date(params.startTime) : this._startTime
-		this._endTime = params.endTime ? new Date(params.endTime) : this._endTime
+	public append(generation: Generation) {
+		// Remove child log from the list of its previous trace
+		generation.trace.logs = generation.trace.logs.filter(log => log.id !== generation.id)
+
+		// Add child to the new trace list
+		this.trace.logs.push(generation)
+
+		// Set the trace of the generation to the current log
+		generation.trace = this.trace
+		generation.options = { type: 'multi' }
+
+		// Set the parent of the generation to the current log
+		generation.parent = this
 
 		return this
 	}
 
-	end() {
-		this._endTime = new Date()
+	public createGeneration(params: CreateGenerationParams) {
+		const generation = new Generation({
+			...params,
+			name: hasPrompt(params) ? params.prompt.slug : params.name,
+			trace: this.trace,
+			parent: this
+		})
 
-		return this
+		return generation
+	}
+
+	public createLog(params: CreateLogParams) {
+		const log = new Log({
+			...params,
+			trace: this.trace,
+			parent: this
+		})
+
+		return log
 	}
 }

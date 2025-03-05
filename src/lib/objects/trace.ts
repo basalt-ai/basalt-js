@@ -1,12 +1,12 @@
+import { BaseLog } from './base-log'
 import Generation from './generation'
-import Span from './span'
+import Log from './log'
 
 import {
 	CreateGenerationParams,
-	CreateSpanParams,
+	CreateLogParams,
 	Trace as ITrace,
 	IdentifyParams,
-	Log,
 	Metadata,
 	Organization,
 	TraceParams,
@@ -14,9 +14,8 @@ import {
 	hasPrompt
 } from '../resources'
 import Flusher from '../utils/flusher'
-
 export class Trace implements ITrace {
-	private _featureSlug: string
+	private _chainSlug: string
 
 	private _input: string | undefined
 	private _output: string | undefined
@@ -28,12 +27,12 @@ export class Trace implements ITrace {
 	private _metadata: Metadata | undefined
 	private _flushedPromise: Promise<void> | undefined
 
-	private _logs: Log[] = []
+	private _logs: BaseLog[] = []
 
 	private _flusher: Flusher
 
 	constructor(slug: string, params: TraceParams = {}, flusher: Flusher) {
-		this._featureSlug = slug
+		this._chainSlug = slug
 
 		this._user = params.user
 		this._organization = params.organization
@@ -76,12 +75,12 @@ export class Trace implements ITrace {
 		return this._logs
 	}
 
-	set logs(logs: Log[]) {
+	set logs(logs: BaseLog[]) {
 		this._logs = logs
 	}
 
-	get featureSlug() {
-		return this._featureSlug
+	get chainSlug() {
+		return this._chainSlug
 	}
 
 	get endTime() {
@@ -145,13 +144,13 @@ export class Trace implements ITrace {
 		return generation
 	}
 
-	public createSpan(params: CreateSpanParams) {
-		const span = new Span({
+	public createLog(params: CreateLogParams) {
+		const log = new Log({
 			...params,
 			trace: this
 		})
 
-		return span
+		return log
 	}
 
 	public end(output?: string) {

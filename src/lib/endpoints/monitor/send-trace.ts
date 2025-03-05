@@ -43,7 +43,7 @@ export default class SendTraceEndpoint {
 
 		// Convert the body to a JSON string to match BodyInit type
 		const body = JSON.stringify({
-			featureSlug: 'featureSlug' in trace ? trace.featureSlug : undefined,
+			chainSlug: 'chainSlug' in trace ? trace.chainSlug : undefined,
 			input: trace.input,
 			output: trace.output,
 			metadata: trace.metadata,

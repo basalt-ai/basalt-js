@@ -1,7 +1,7 @@
 import Generation from '../objects/generation'
-import Span from '../objects/span'
+import Log from '../objects/log'
 import { Trace } from '../objects/trace'
-import { GenerationParams, SpanParams } from '../resources'
+import { GenerationParams, LogParams } from '../resources'
 import type { IApi, ILogger } from '../resources/contract'
 import { IMonitorSDK } from '../resources/monitor/monitor.types'
 import { TraceParams } from '../resources/monitor/trace.types'
@@ -29,8 +29,8 @@ export default class MonitorSDK implements IMonitorSDK {
 		return this._createGeneration(params)
 	}
 
-	public createSpan(params: SpanParams) {
-		return this._createSpan(params)
+	public createLog(params: LogParams) {
+		return this._createLog(params)
 	}
 
 	// --
@@ -48,7 +48,7 @@ export default class MonitorSDK implements IMonitorSDK {
 		return new Generation(params);
 	}
 
-	private _createSpan(params: SpanParams) {
-		return new Span(params);
+	private _createLog(params: LogParams) {
+		return new Log(params);
 	}
 }

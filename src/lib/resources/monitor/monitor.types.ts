@@ -1,12 +1,12 @@
 import { Generation, GenerationParams } from './generation.types';
-import { Span, SpanParams } from './span.types';
+import { Log, LogParams } from './log';
 import { Trace, TraceParams } from './trace.types'
 
 /**
  * @preserve
  * Interface for interacting with Basalt monitoring.
  * 
- * The MonitorSDK provides methods to create and manage traces, generations, and spans
+ * The MonitorSDK provides methods to create and manage traces, generations, and logs
  * for monitoring and tracking AI application flows.
  * 
  * @example
@@ -27,8 +27,8 @@ import { Trace, TraceParams } from './trace.types'
  *   trace: trace
  * });
  * 
- * // Example 3: Creating a span for a processing step
- * const span = monitorSDK.createSpan({
+ * // Example 3: Creating a log for a processing step
+ * const log = monitorSDK.createLog({
  *   name: 'data-processing',
  *   trace: trace,
  *   metadata: { processingType: 'text-analysis' }
@@ -83,7 +83,7 @@ export interface IMonitorSDK {
 	 *    - startTime: When the generation started.
 	 *    - endTime: When the generation completed.
 	 *    - metadata: Additional contextual information.
-	 *    - parent: Optional parent span if this generation is part of a span.
+	 *    - parent: Optional parent log if this generation is part of a log.
 	 * 
 	 * @example
 	 * ```typescript
@@ -111,38 +111,38 @@ export interface IMonitorSDK {
 	createGeneration(params: GenerationParams): Generation;
 
 	/**
-	 * Creates a new span to track a specific operation or step within a trace.
+	 * Creates a new log to track a specific operation or step within a trace.
 	 * 
-	 * @param params - Parameters for the span.
-	 *    - name: Name of the span (required).
-	 *    - trace: The parent trace this span belongs to (required).
+	 * @param params - Parameters for the log.
+	 *    - name: Name of the log (required).
+	 *    - trace: The parent trace this log belongs to (required).
 	 *    - input: The input data for this operation.
-	 *    - startTime: When the span started.
-	 *    - endTime: When the span completed.
+	 *    - startTime: When the log started.
+	 *    - endTime: When the log completed.
 	 *    - metadata: Additional contextual information.
-	 *    - parent: Optional parent span if this is a nested span.
+	 *    - parent: Optional parent log if this is a nested log.
 	 * 
 	 * @example
 	 * ```typescript
-	 * // Create a basic span
-	 * const basicSpan = monitorSDK.createSpan({
+	 * // Create a basic log
+	 * const basicLog = monitorSDK.createLog({
 	 *   name: 'data-fetching',
 	 *   trace: trace,
 	 * });
 	 * 
-	 * // Create a detailed span
-	 * const detailedSpan = monitorSDK.createSpan({
+	 * // Create a detailed log
+	 * const detailedLog = monitorSDK.createLog({
 	 *   name: 'user-validation',
 	 *   trace: trace,
 	 *   input: 'user credentials',
 	 *   metadata: { validationRules: ['password-strength', 'email-format'] },
-	 *   parent: parentSpan // Another span this is nested under
+	 *   parent: parentLog // Another log this is nested under
 	 * });
 	 * ```
 	 * 
-	 * @returns A Span object that can be used to track the operation.
+	 * @returns A Log object that can be used to track the operation.
 	 */
-	createSpan(params: SpanParams): Span;
+	createLog(params: LogParams): Log;
 }
 
 export type Metadata = Record<string, unknown>
