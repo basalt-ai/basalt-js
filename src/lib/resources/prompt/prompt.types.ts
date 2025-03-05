@@ -198,6 +198,7 @@ export type ResponseFormat = 'json' | 'text' | 'json-object'
  */
 export interface PromptResponse {
 	text: string;
+	systemText: string | undefined;
 	model: PromptModel;
 }
 
@@ -207,6 +208,7 @@ export interface PromptResponse {
 export interface GetPromptResponse {
 	text: string;
 	model: PromptModel;
+	systemText: string | undefined;
 }
 
 /**
