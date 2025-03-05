@@ -155,7 +155,6 @@ export class Trace implements ITrace {
 	public createSpan(params: CreateSpanParams) {
 		const span = new Span({
 			...params,
-			type: params.type ?? 'span',
 			trace: this
 		})
 

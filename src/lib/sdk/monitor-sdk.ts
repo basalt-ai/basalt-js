@@ -21,7 +21,7 @@ export default class MonitorSDK implements IMonitorSDK {
 	// Public methods
 	// --
 
-	public createTrace(slug: string, params: TraceParams = {}): Trace {
+	public createTrace(slug: string, params: TraceParams = {}) {
 		const trace = this._createTrace(slug, params)
 		trace._sdk = this
 		return trace
@@ -84,7 +84,7 @@ export default class MonitorSDK implements IMonitorSDK {
 	// Private methods
 	// --
 
-	private _createTrace(slug: string, params: TraceParams = {}): Trace {
+	private _createTrace(slug: string, params: TraceParams = {}) {
 		const trace = new Trace(slug, params);
 		
 		return trace;

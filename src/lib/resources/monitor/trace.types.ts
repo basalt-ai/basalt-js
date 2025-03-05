@@ -263,7 +263,6 @@ export interface Trace extends TraceParams{
 	 * // Create a detailed span
 	 * const detailedSpan = trace.createSpan({
 	 *   name: 'user-validation',
-	 *   type: 'validation',
 	 *   input: 'user credentials',
 	 *   metadata: { validationRules: ['password-strength', 'email-format'] }
 	 * });

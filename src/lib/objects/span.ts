@@ -14,7 +14,7 @@ export default class Span extends Log implements ISpan {
 	private _output: string | undefined
 
 	constructor(params: SpanParams) {
-		super(params.type ?? 'span', params)
+		super('span', params)
 
 		this._input = params.input
 	}
@@ -73,7 +73,6 @@ export default class Span extends Log implements ISpan {
 	public createSpan(params: CreateSpanParams) {
 		const span = new Span({
 			...params,
-			type: params.type ?? 'span',
 			trace: this.trace,
 			parent: this
 		})

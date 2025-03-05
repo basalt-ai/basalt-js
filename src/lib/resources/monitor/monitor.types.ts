@@ -30,7 +30,6 @@ import { Trace, TraceParams } from './trace.types'
  * // Example 3: Creating a span for a processing step
  * const span = monitorSDK.createSpan({
  *   name: 'data-processing',
- *   type: 'process',
  *   trace: trace,
  *   metadata: { processingType: 'text-analysis' }
  * });
@@ -117,7 +116,6 @@ export interface IMonitorSDK {
 	 * @param params - Parameters for the span.
 	 *    - name: Name of the span (required).
 	 *    - trace: The parent trace this span belongs to (required).
-	 *    - type: Type of operation being performed (e.g., 'process', 'validation').
 	 *    - input: The input data for this operation.
 	 *    - startTime: When the span started.
 	 *    - endTime: When the span completed.
@@ -130,14 +128,12 @@ export interface IMonitorSDK {
 	 * const basicSpan = monitorSDK.createSpan({
 	 *   name: 'data-fetching',
 	 *   trace: trace,
-	 *   type: 'io'
 	 * });
 	 * 
 	 * // Create a detailed span
 	 * const detailedSpan = monitorSDK.createSpan({
 	 *   name: 'user-validation',
 	 *   trace: trace,
-	 *   type: 'validation',
 	 *   input: 'user credentials',
 	 *   metadata: { validationRules: ['password-strength', 'email-format'] },
 	 *   parent: parentSpan // Another span this is nested under
@@ -149,5 +145,4 @@ export interface IMonitorSDK {
 	createSpan(params: SpanParams): Span;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Metadata = Record<string, any>
+export type Metadata = Record<string, unknown>

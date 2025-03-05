@@ -9,7 +9,7 @@ import {
 
 export class Log implements ILog {
 	private _id: string
-	private _type: string
+	private _type: 'span' | 'generation' | 'function' | 'tool' | 'retrieval' | 'event'
 	private _name: string
 	private _startTime: Date
 	private _endTime: Date | undefined
@@ -18,7 +18,7 @@ export class Log implements ILog {
 	private _parent: Span | undefined
 	private _trace: Trace
 
-	constructor(type: string, params: LogParams) {
+	constructor(type: 'span' | 'generation' | 'function' | 'tool' | 'retrieval' | 'event', params: LogParams) {
 		this._id = 'log-' + Math.random().toString(36).substring(2)
 		this._type = type
 		this._name = params.name
