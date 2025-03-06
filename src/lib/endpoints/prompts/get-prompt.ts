@@ -14,6 +14,7 @@ interface Output {
 		// At this level, the prompt is a "raw" string
 		// that still include the variables ex: "Greet {name}"
 		text: string;
+		systemText: string | undefined;
 		model: PromptModel;
 	};
 
@@ -47,6 +48,12 @@ export default class GetPromptEndpoint {
 			return err({ message: 'Get Prompt: Failed to decode response (missing prompt.text)' })
 		}
 
+		if (!('systemText' in body.prompt) || 
+			(typeof body.prompt.systemText !== 'string' && body.prompt.systemText !== undefined)
+		) {
+			return err({ message: 'Get Prompt: Failed to decode response (missing prompt.systemText)' })
+		}
+
 		if (
 			!('model' in body.prompt)
 			|| typeof body.prompt.model !== 'object'
@@ -64,7 +71,8 @@ export default class GetPromptEndpoint {
 
 			prompt: {
 				text: body.prompt.text,
-				model: body.prompt.model as PromptModel
+				model: body.prompt.model as PromptModel,
+				systemText: body.prompt.systemText ?? undefined
 			}
 		})
 	}

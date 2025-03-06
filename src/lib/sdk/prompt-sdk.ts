@@ -42,11 +42,29 @@ export default class PromptSDK implements IPromptSDK {
 		private readonly logger: ILogger
 	) {}
 
+	/**
+	 * Gets the cache duration in milliseconds.
+	 * 
+	 * @returns The cache duration in milliseconds.
+	 */
 	private get cacheDuration() {
 		return 5 * 60 * 1000
 	}
 
+	/**
+	 * Retrieves a prompt by slug with optional parameters.
+	 * 
+	 * @param slug - The unique identifier for the prompt.
+	 * @param options - Optional parameters for retrieving the prompt.
+	 * @returns A promise with the prompt response and generation.
+	 */
 	async get(slug: string, options?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse>
+	/**
+	 * Retrieves a prompt using options object.
+	 * 
+	 * @param options - Options for retrieving the prompt.
+	 * @returns A promise with the prompt response and generation.
+	 */
 	async get(options: GetPromptOptions): AsyncGetPromptResult<PromptResponse>
 	async get(arg1: string | GetPromptOptions, arg2?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse> {
 		let params: GetPromptOptions
@@ -68,11 +86,29 @@ export default class PromptSDK implements IPromptSDK {
 		return { ...prompt, generation }
 	}
 
+	/**
+	 * Lists all available prompts.
+	 * 
+	 * @returns A promise with an array of prompt list responses.
+	 */
 	async list(): AsyncResult<PromptListResponse[]> {
 		return this._listPrompts()
 	}
 
+	/**
+	 * Describes a prompt by slug with optional parameters.
+	 * 
+	 * @param slug - The unique identifier for the prompt.
+	 * @param options - Optional parameters for describing the prompt.
+	 * @returns A promise with the prompt detail response.
+	 */
 	async describe(slug: string, options?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse>
+	/**
+	 * Describes a prompt using options object.
+	 * 
+	 * @param options - Options for describing the prompt.
+	 * @returns A promise with the prompt detail response.
+	 */
 	async describe(options: DescribePromptOptions): AsyncResult<PromptDetailResponse>
 	async describe(arg1: string | DescribePromptOptions, arg2?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse> {
 		if (typeof arg1 === 'string') {
@@ -86,6 +122,12 @@ export default class PromptSDK implements IPromptSDK {
 	// Private methods
 	// --
 
+	/**
+	 * Internal implementation for retrieving a prompt.
+	 * 
+	 * @param opts - Options for retrieving the prompt.
+	 * @returns A promise with the prompt response.
+	 */
 	private async _getPrompt(opts: GetPromptOptions): AsyncResult<GetPromptResponse> {
 		// 1. Read from query cache first
 		const cacheKey = this._makePromptCacheKey(opts)
@@ -125,10 +167,11 @@ export default class PromptSDK implements IPromptSDK {
 	}
 
 	/**
-	 * Inserts variables into the given prompt's text
+	 * Inserts variables into the given prompt's text.
 	 *
-	 * @param prompt - The prompt response (w/ raw prompt text)
-	 * @param variables - A record of variables to be inserted into the prompt text
+	 * @param prompt - The prompt response (w/ raw prompt text).
+	 * @param variables - A record of variables to be inserted into the prompt text.
+	 * @returns The prompt response with variables inserted.
 	 */
 	private _insertVariables(prompt: PromptResponse, variables: VariablesMap): PromptResponse {
 		// From the arbitrary variables passed by the user, pick all those present in the prompt.
@@ -147,23 +190,23 @@ export default class PromptSDK implements IPromptSDK {
 		const diff: Set<string> = difference(promptVariables, passedVariables)
 
 		if (diff.size) {
-			this.logger.warn(`Basalt Warning: Some variables are missing in the prompt text:
-    ${[...diff].join(', ')}`)
+			this.logger.warn(`Basalt Warning: Some variables are missing in the prompt text: ${[...diff].join(', ')}`)
 		}
 
 		const filledPrompt = replaceVariables(prompt.text, variables)
 
 		return {
 			text: filledPrompt,
-			model: prompt.model
+			model: prompt.model,
+			systemText: prompt.systemText
 		}
 	}
 
 	/**
-	 * Generates a cache key for the given options
+	 * Generates a cache key for the given options.
 	 *
-	 * @param {GetPromptOptions} opts - The prompt fetch options
-	 * @returns {string} The cache key for given options
+	 * @param opts - The prompt fetch options.
+	 * @returns The cache key for given options.
 	 */
 	private _makePromptCacheKey(opts: GetPromptOptions): string {
 		let cacheKey = opts.slug
@@ -179,6 +222,13 @@ export default class PromptSDK implements IPromptSDK {
 		return cacheKey
 	}
 
+	/**
+	 * Prepares monitoring for a prompt.
+	 *
+	 * @param prompt - The prompt response.
+	 * @param params - The parameters used to retrieve the prompt.
+	 * @returns A new Generation instance.
+	 */
 	private _prepareMonitoring(prompt: GetPromptResponse, params: GetPromptOptions): Generation {
 		// 1. Create the trace
 		const flusher = new Flusher(this.api, this.logger)
@@ -205,9 +255,9 @@ export default class PromptSDK implements IPromptSDK {
 	}
 
 	/**
-	 * Lists all prompts from the Basalt API
+	 * Lists all prompts from the Basalt API.
 	 *
-	 * @returns {Promise<PromptListResponse[]>} A promise of an array of prompt list responses
+	 * @returns A promise with an array of prompt list responses.
 	 */
 	private async _listPrompts(): AsyncResult<PromptListResponse[]> {
 		const result = await this.api.invoke(ListPromptsEndpoint)
@@ -224,10 +274,10 @@ export default class PromptSDK implements IPromptSDK {
 	}
 
 	/**
-	 * Describes a prompt from the Basalt API
+	 * Describes a prompt from the Basalt API.
 	 *
-	 * @param {DescribePromptOptions} options - Options to the select the prompt
-	 * @returns {Promise<PromptDetailResponse>} A promise of a prompt detail response
+	 * @param options - Options to select the prompt.
+	 * @returns A promise with a prompt detail response.
 	 */
 	private async _describePrompt(options: DescribePromptOptions): AsyncResult<PromptDetailResponse> {
 		const result = await this.api.invoke(DescribePromptEndpoint, options)
