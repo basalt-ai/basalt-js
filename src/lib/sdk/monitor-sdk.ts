@@ -13,7 +13,7 @@ export default class MonitorSDK implements IMonitorSDK {
 	 */
 	constructor(
 		private readonly api: IApi,
-		private readonly logger: ILogger
+		private readonly logger: ILogger,
 	) {}
 
 	// --
@@ -22,7 +22,7 @@ export default class MonitorSDK implements IMonitorSDK {
 
 	/**
 	 * Creates a new trace for monitoring.
-	 * 
+	 *
 	 * @param slug - The unique identifier for the trace.
 	 * @param params - Optional parameters for the trace.
 	 * @returns A new Trace instance.
@@ -34,7 +34,7 @@ export default class MonitorSDK implements IMonitorSDK {
 
 	/**
 	 * Creates a new generation for monitoring.
-	 * 
+	 *
 	 * @param params - Parameters for the generation.
 	 * @returns A new Generation instance.
 	 */
@@ -44,7 +44,7 @@ export default class MonitorSDK implements IMonitorSDK {
 
 	/**
 	 * Creates a new log for monitoring.
-	 * 
+	 *
 	 * @param params - Parameters for the log.
 	 * @returns A new Log instance.
 	 */
@@ -58,7 +58,7 @@ export default class MonitorSDK implements IMonitorSDK {
 
 	/**
 	 * Internal implementation for creating a trace.
-	 * 
+	 *
 	 * @param slug - The unique identifier for the trace.
 	 * @param params - Optional parameters for the trace.
 	 * @returns A new Trace instance.
@@ -67,26 +67,26 @@ export default class MonitorSDK implements IMonitorSDK {
 		const flusher = new Flusher(this.api, this.logger)
 		const trace = new Trace(slug, params, flusher)
 
-		return trace;
+		return trace
 	}
 
 	/**
 	 * Internal implementation for creating a generation.
-	 * 
+	 *
 	 * @param params - Parameters for the generation.
 	 * @returns A new Generation instance.
 	 */
 	private _createGeneration(params: GenerationParams) {
-		return new Generation(params);
+		return new Generation(params)
 	}
 
 	/**
 	 * Internal implementation for creating a log.
-	 * 
+	 *
 	 * @param params - Parameters for the log.
 	 * @returns A new Log instance.
 	 */
 	private _createLog(params: LogParams) {
-		return new Log(params);
+		return new Log(params)
 	}
 }

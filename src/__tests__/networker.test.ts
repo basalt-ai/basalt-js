@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/promise-function-async */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import fixtures from '../__fixtures__/networker.json'
-import { NetworkBaseError } from '../lib/errors'
+import { NetworkBaseError } from '../lib/utils/errors'
 
-import Networker from '../lib/networker'
+import Networker from '../lib/utils/networker'
 
 const mockedFetch = jest.fn()
 const n = new Networker()
@@ -34,15 +32,15 @@ describe('Networker', () => {
 		expect(mockedFetch.mock.calls).toHaveLength(1)
 		expect(result.value).toBe(null)
 		expect(result.error).not.toBe(null)
-		expect(result.error?.message).toBe('Unexpected error')
+		expect(result.error?.message).toBe('Server Error')
 	})
 
 	test('rejects non-json response with failure object', async () => {
 		mockedFetch.mockImplementationOnce(
 			() => makeMockedResponse(
 				200,
-				() => Promise.reject(new Error('Failed to parse JSON'))
-			)
+				() => Promise.reject(new Error('Failed to parse JSON')),
+			),
 		)
 
 		const result = await n.fetch(url, 'get')
@@ -54,7 +52,7 @@ describe('Networker', () => {
 
 	test.each(fixtures.badHttpStatuses)(
 		'rejects %i http status with failure object',
-		async fixture => {
+		async (fixture) => {
 			mockedFetch.mockImplementationOnce(() => makeMockedResponse(fixture, {}))
 
 			const result = await n.fetch(url, 'get')
@@ -62,13 +60,13 @@ describe('Networker', () => {
 			expect(mockedFetch.mock.calls).toHaveLength(1)
 			expect(result.value).toBe(null)
 			expect(result.error).toBeInstanceOf(NetworkBaseError)
-		}
+		},
 	)
 
 	test('returns response body in result object', async () => {
 		mockedFetch.mockImplementationOnce(() => makeMockedResponse(
 			fixtures.jsonResponse.status,
-			fixtures.jsonResponse.body
+			fixtures.jsonResponse.body,
 		))
 
 		const result = await n.fetch(url, 'get')
@@ -107,5 +105,5 @@ const makeMockedResponse = <T>(status: number, json: (() => Promise<T>) | T) => 
 	},
 	bytes(): Promise<Uint8Array> {
 		throw new Error('Function not implemented.')
-	}
+	},
 })

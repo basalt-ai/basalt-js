@@ -1,7 +1,7 @@
 export class NetworkBaseError extends Error {
 	public readonly url?: URL
 
-	constructor(opts: { url?: URL; message?: string }) {
+	constructor(opts: { url?: URL, message?: string }) {
 		const m = opts.message ?? (
 			opts.url
 				? `Network Error on ${opts.url?.toString()}`
@@ -14,15 +14,15 @@ export class NetworkBaseError extends Error {
 }
 
 export class Forbidden extends NetworkBaseError {
-	constructor(opts: { url?: URL; message?: string }) {
+	constructor(opts: { url?: URL, message?: string }) {
 		super({
-			message: `Forbidden: ${opts.message ?? ''}`
+			message: `Forbidden: ${opts.message ?? ''}`,
 		})
 	}
 }
 
 export class Unauthorized extends NetworkBaseError {
-	constructor(opts: { url?: URL; message?: string }) {
+	constructor(opts: { url?: URL, message?: string }) {
 		super({
 			message: `Unauthorized: "${opts.message ?? ''}".
 
@@ -34,7 +34,7 @@ Hint: Insert your API Key when initializing the Basalt sdk:
 const basalt = new BasaltSDK({ apiKey: 'YOUR_API_KEY' })
                                ^^^^^^^^^^^^^^^^^^^^^^
 
-Hint: Create a new API Key on https://app.getbasalt.ai/.`
+Hint: Create a new API Key on https://app.getbasalt.ai/.`,
 		})
 	}
 }
@@ -43,13 +43,13 @@ export class BadInput extends NetworkBaseError {
 	public readonly details: Record<string, string[]>
 
 	constructor(opts: {
-		url?: URL;
-		message?: string;
-		details?: Record<string, string[]>;
+		url?: URL
+		message?: string
+		details?: Record<string, string[]>
 	}) {
 		super({
 			message: 'Bad Input',
-			...opts
+			...opts,
 		})
 
 		this.details = opts.details ?? {}
@@ -61,19 +61,19 @@ export class BadInput extends NetworkBaseError {
 }
 
 export class NotFound extends NetworkBaseError {
-	constructor(opts: { url?: URL; message?: string }) {
+	constructor(opts: { url?: URL, message?: string }) {
 		super({
 			message: `Not found: "${opts.message ?? ''}"`,
-			...opts
+			...opts,
 		})
 	}
 }
 
 export class BadRequest extends NetworkBaseError {
-	constructor(opts: { url?: URL; message?: string }) {
+	constructor(opts: { url?: URL, message?: string }) {
 		super({
 			message: 'Bad Request',
-			...opts
+			...opts,
 		})
 	}
 }

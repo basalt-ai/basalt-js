@@ -2,21 +2,21 @@ import type { PromptModel, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
 interface Input {
-	slug: string;
-	version?: string;
-	tag?: string;
+	slug: string
+	version?: string
+	tag?: string
 }
 
 interface Output {
-	warning?: string;
+	warning?: string
 
 	prompt: {
 		// At this level, the prompt is a "raw" string
 		// that still include the variables ex: "Greet {name}"
-		text: string;
-		systemText: string | undefined;
-		model: PromptModel;
-	};
+		text: string
+		systemText: string | undefined
+		model: PromptModel
+	}
 
 }
 
@@ -26,9 +26,9 @@ export default class GetPromptEndpoint {
 			path: `/prompts/${dto.slug}`,
 			query: {
 				version: dto.version,
-				tag: dto.tag
+				tag: dto.tag,
 			},
-			method: 'get' as const
+			method: 'get' as const,
 		}
 	}
 
@@ -48,8 +48,8 @@ export default class GetPromptEndpoint {
 			return err({ message: 'Get Prompt: Failed to decode response (missing prompt.text)' })
 		}
 
-		if (!('systemText' in body.prompt) || 
-			(typeof body.prompt.systemText !== 'string' && body.prompt.systemText !== undefined)
+		if (!('systemText' in body.prompt)
+			|| (typeof body.prompt.systemText !== 'string' && body.prompt.systemText !== undefined)
 		) {
 			return err({ message: 'Get Prompt: Failed to decode response (missing prompt.systemText)' })
 		}
@@ -72,8 +72,8 @@ export default class GetPromptEndpoint {
 			prompt: {
 				text: body.prompt.text,
 				model: body.prompt.model as PromptModel,
-				systemText: body.prompt.systemText ?? undefined
-			}
+				systemText: body.prompt.systemText ?? undefined,
+			},
 		})
 	}
 }

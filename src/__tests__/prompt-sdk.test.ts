@@ -1,7 +1,7 @@
 import fixtures from '../__fixtures__/get-prompt.json'
 
 import { GetPromptEndpoint } from '../lib/endpoints'
-import PromptSDK from '../lib/prompt-sdk'
+import PromptSDK from '../lib/sdk/prompt-sdk'
 
 const mockedCache = {
 	set: jest.fn(),
@@ -19,7 +19,7 @@ const prompt = new PromptSDK(
 	mockedApi,
 	mockedCache,
 	fallbackCache,
-	{ warn: console.warn }
+	console
 )
 
 describe('PromptSDK', () => {

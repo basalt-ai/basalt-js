@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
-	BadInput, BadRequest, Forbidden, NetworkBaseError, NotFound, Unauthorized
+	BadInput, BadRequest, Forbidden, NetworkBaseError, NotFound, Unauthorized,
 } from './errors'
 import { err, ok } from './utils'
 
@@ -9,7 +9,7 @@ import type {
 	AsyncResult,
 	FetchMethod,
 	FetchResponse,
-	INetworker
+	INetworker,
 } from '../resources/contract'
 
 /**
@@ -28,7 +28,7 @@ export default class Networker implements INetworker {
 		url: URL,
 		method: FetchMethod,
 		body?: BodyInit,
-		headers?: HeadersInit
+		headers?: HeadersInit,
 	): AsyncResult<FetchResponse> {
 		try {
 			try {
@@ -37,8 +37,8 @@ export default class Networker implements INetworker {
 					{
 						body,
 						method,
-						headers
-					}
+						headers,
+					},
 				)
 				const json = await response.json()
 
@@ -48,25 +48,25 @@ export default class Networker implements INetworker {
 
 				if (response.status === 401) {
 					return err(
-						new Unauthorized({ url, message: json.error })
+						new Unauthorized({ url, message: json.error }),
 					)
 				}
 
 				if (response.status === 403) {
 					return err(
-						new Forbidden({ url, message: json.error })
+						new Forbidden({ url, message: json.error }),
 					)
 				}
 
 				if (response.status === 404) {
 					return err(
-						new NotFound({ url, message: json.error })
+						new NotFound({ url, message: json.error }),
 					)
 				}
 
 				if (response.status === 422) {
 					return err(
-						new BadInput({ url, message: json.error })
+						new BadInput({ url, message: json.error }),
 					)
 				}
 
@@ -74,8 +74,8 @@ export default class Networker implements INetworker {
 					return err(
 						new NetworkBaseError({
 							url,
-							message: 'Invalid Request'
-						})
+							message: 'Invalid Request',
+						}),
 					)
 				}
 
@@ -83,19 +83,21 @@ export default class Networker implements INetworker {
 					return err(
 						new NetworkBaseError({
 							url,
-							message: 'Server Error'
-						})
+							message: 'Server Error',
+						}),
 					)
 				}
 
 				return ok(json)
-			} catch {
+			}
+			catch {
 				return err(new NetworkBaseError({
 					url,
-					message: 'Server Error'
+					message: 'Server Error',
 				}))
 			}
-		} catch (error: unknown) {
+		}
+		catch (error: unknown) {
 			if (error instanceof Error) {
 				err(error)
 			}

@@ -1,4 +1,4 @@
-import { Log } from './log';
+import { Log } from './log'
 import { Metadata } from './monitor.types'
 import { Trace } from './trace.types'
 
@@ -12,13 +12,13 @@ export interface BaseLogParams {
 	/**
 	 * Name of the log entry, describing what it represents.
 	 */
-	name: string;
+	name: string
 
 	/**
 	 * When the log entry started, can be a Date object or ISO string.
 	 * If not provided, defaults to the current time when created.
 	 */
-	startTime?: Date | string | undefined;
+	startTime?: Date | string | undefined
 
 	/**
 	 * When the log entry ended, can be a Date object or ISO string.
@@ -36,13 +36,13 @@ export interface BaseLogParams {
 	 * Optional parent span if this log is part of a larger operation.
 	 * Used to establish hierarchical relationships between operations.
 	 */
-	parent?: Log | undefined;
+	parent?: Log | undefined
 
 	/**
 	 * The trace this log belongs to, providing the overall context.
 	 * Every log must be associated with a trace.
 	 */
-	trace: Trace;
+	trace: Trace
 }
 
 export type LogType = 'span' | 'generation' | 'function' | 'tool' | 'retrieval' | 'event'
@@ -54,7 +54,7 @@ export interface BaseLog extends BaseLogParams {
 	 * Unique identifier for this log entry.
 	 * Automatically generated when the log is created.
 	 */
-	id: string;
+	id: string
 
 	/**
 	 * The type of log entry (e.g., 'span', 'generation').

@@ -3,10 +3,11 @@
 		"status": 200,
 		"body": {
 			"prompt": {
+				"systemText": "System text",
 				"text": "Valid prompt text",
 				"model": {
 					"provider": "open-ai",
-            		"model": "gpt-4o",
+					"model": "gpt-4o",
 					"version": "latest",
 					"parameters": {
 						"temperature": 0.7,

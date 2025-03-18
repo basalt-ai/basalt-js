@@ -2,15 +2,15 @@ import type { PromptListResponse, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
 interface Output {
-	warning?: string;
-	prompts: PromptListResponse[];
+	warning?: string
+	prompts: PromptListResponse[]
 }
 
 export default class ListPromptsEndpoint {
 	static prepareRequest() {
 		return {
 			path: '/prompts',
-			method: 'get'
+			method: 'get',
 		} as const
 	}
 
@@ -26,9 +26,8 @@ export default class ListPromptsEndpoint {
 			return err({ message: 'Get Prompt: Failed to decode response (missing prompt)' })
 		}
 
-
 		return ok({
-			prompts: body.prompts as PromptListResponse[]
+			prompts: body.prompts as PromptListResponse[],
 		})
 	}
 }

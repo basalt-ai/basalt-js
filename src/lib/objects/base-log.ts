@@ -5,7 +5,7 @@ import {
 	LogType,
 	Metadata,
 	Trace,
-	UpdateParams
+	UpdateParams,
 } from '../resources'
 
 export class BaseLog implements IBaseLog {

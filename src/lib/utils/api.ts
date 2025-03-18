@@ -1,7 +1,7 @@
 import { err } from './utils'
 
 import type {
-	AsyncResult, IApi, IEndpoint, INetworker
+	AsyncResult, IApi, IEndpoint, INetworker,
 } from '../resources/contract'
 
 /**
@@ -14,7 +14,7 @@ export default class Api implements IApi {
 		private readonly network: INetworker,
 		private readonly apiKey: string,
 		private readonly sdkVersion = '',
-		private readonly sdkType = ''
+		private readonly sdkType = '',
 	) {}
 
 	/**
@@ -26,7 +26,7 @@ export default class Api implements IApi {
 	 */
 	async invoke<Input, Output>(
 		endpoint: IEndpoint<Input, Output>,
-		dto: Input
+		dto: Input,
 	): AsyncResult<Output> {
 		const requestInfo = endpoint.prepareRequest(dto)
 
@@ -34,7 +34,7 @@ export default class Api implements IApi {
 			this._buildUrl(requestInfo.path, requestInfo.query ?? {}),
 			requestInfo.method,
 			requestInfo.body,
-			this._buildHeaders()
+			this._buildHeaders(),
 		)
 
 		if (result.error) {
@@ -56,7 +56,7 @@ export default class Api implements IApi {
 
 		url.pathname = pathname
 
-		Object.keys(queries).forEach(key => {
+		Object.keys(queries).forEach((key) => {
 			if (queries[key] !== undefined) {
 				url.searchParams.append(key, queries[key])
 			}
@@ -68,16 +68,16 @@ export default class Api implements IApi {
 	private _buildHeaders() {
 		return {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			Accept: 'application/json',
+			'Accept': 'application/json',
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			'Content-Type': 'application/json',
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			Authorization: `Bearer ${this.apiKey}`,
+			'Authorization': `Bearer ${this.apiKey}`,
 
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			'X-BASALT-SDK-VERSION': this.sdkVersion,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			'X-BASALT-SDK-TYPE': this.sdkType
+			'X-BASALT-SDK-TYPE': this.sdkType,
 		}
 	}
 }

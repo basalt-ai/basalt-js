@@ -1,4 +1,4 @@
-import { getVariableNames, pickVariables, replaceVariables } from '../lib/utils'
+import { getVariableNames, replaceVariables } from '../lib/utils/utils'
 
 describe('getVariableNames', () => {
 	it.each([
@@ -34,39 +34,6 @@ describe('getVariableNames', () => {
 		const r = getVariableNames(testCase.input)
 
 		expect(r).toEqual(testCase.expected)
-	})
-})
-
-describe('pickVariables', () => {
-	it('fails when a variable is missing', () => {
-		const r = pickVariables(['a'], { b: '2' })
-
-		expect(r.error).not.toBeNull()
-		expect(r.value).toBeNull()
-	})
-
-	it('fails when a variable is explicitly undefined', () => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		const r = pickVariables(['a'], { b: '2', a: undefined } as unknown as any)
-
-		expect(r.error).not.toBeNull()
-		expect(r.value).toBeNull()
-	})
-
-	it('succeeds when all variables are defined', () => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		const r = pickVariables(['a', 'b'], { a: '2', b: '112' } as unknown as any)
-
-		expect(r.error).toBeNull()
-		expect(r.value).toMatchObject({ a: '2', b: '112' })
-	})
-
-	it('omits other keys', () => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		const r = pickVariables(['a', 'b'], { a: '2', b: '112', c: 'unnecessary variable' } as unknown as any)
-
-		expect(r.error).toBeNull()
-		expect(r.value).toEqual({ a: '2', b: '112' })
 	})
 })
 

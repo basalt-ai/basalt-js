@@ -2,14 +2,14 @@ import type { PromptDetailResponse, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
 interface Input {
-	slug: string;
-	version?: string;
-	tag?: string;
+	slug: string
+	version?: string
+	tag?: string
 }
 
 interface Output {
-	warning?: string;
-	prompt: PromptDetailResponse;
+	warning?: string
+	prompt: PromptDetailResponse
 }
 
 export default class DescribePromptEndpoint {
@@ -18,9 +18,9 @@ export default class DescribePromptEndpoint {
 			path: `/prompts/${dto.slug}/describe`,
 			query: {
 				version: dto.version,
-				tag: dto.tag
+				tag: dto.tag,
 			},
-			method: 'get'
+			method: 'get',
 		} as const
 	}
 
@@ -40,10 +40,9 @@ export default class DescribePromptEndpoint {
 			? body.warning
 			: undefined
 
-
 		return ok({
 			warning,
-			prompt: body.prompt as PromptDetailResponse
+			prompt: body.prompt as PromptDetailResponse,
 		})
 	}
 }

@@ -16,7 +16,7 @@ import type {
 	PromptDetailResponse,
 	PromptListResponse,
 	PromptResponse,
-	VariablesMap
+	VariablesMap,
 } from '../resources'
 import Flusher from '../utils/flusher'
 import {
@@ -24,7 +24,7 @@ import {
 	err,
 	getVariableNames,
 	ok,
-	replaceVariables
+	replaceVariables,
 } from '../utils/utils'
 
 export default class PromptSDK implements IPromptSDK {
@@ -39,12 +39,12 @@ export default class PromptSDK implements IPromptSDK {
 		private readonly api: IApi,
 		private readonly queryCache: ICache,
 		private readonly fallbackCache: ICache,
-		private readonly logger: ILogger
+		private readonly logger: ILogger,
 	) {}
 
 	/**
 	 * Gets the cache duration in milliseconds.
-	 * 
+	 *
 	 * @returns The cache duration in milliseconds.
 	 */
 	private get cacheDuration() {
@@ -53,7 +53,7 @@ export default class PromptSDK implements IPromptSDK {
 
 	/**
 	 * Retrieves a prompt by slug with optional parameters.
-	 * 
+	 *
 	 * @param slug - The unique identifier for the prompt.
 	 * @param options - Optional parameters for retrieving the prompt.
 	 * @returns A promise with the prompt response and generation.
@@ -61,7 +61,7 @@ export default class PromptSDK implements IPromptSDK {
 	async get(slug: string, options?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse>
 	/**
 	 * Retrieves a prompt using options object.
-	 * 
+	 *
 	 * @param options - Options for retrieving the prompt.
 	 * @returns A promise with the prompt response and generation.
 	 */
@@ -71,7 +71,8 @@ export default class PromptSDK implements IPromptSDK {
 
 		if (typeof arg1 === 'string') {
 			params = { ...(arg2 ?? {}), slug: arg1 }
-		} else {
+		}
+		else {
 			params = arg1
 		}
 
@@ -88,7 +89,7 @@ export default class PromptSDK implements IPromptSDK {
 
 	/**
 	 * Lists all available prompts.
-	 * 
+	 *
 	 * @returns A promise with an array of prompt list responses.
 	 */
 	async list(): AsyncResult<PromptListResponse[]> {
@@ -97,7 +98,7 @@ export default class PromptSDK implements IPromptSDK {
 
 	/**
 	 * Describes a prompt by slug with optional parameters.
-	 * 
+	 *
 	 * @param slug - The unique identifier for the prompt.
 	 * @param options - Optional parameters for describing the prompt.
 	 * @returns A promise with the prompt detail response.
@@ -105,7 +106,7 @@ export default class PromptSDK implements IPromptSDK {
 	async describe(slug: string, options?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse>
 	/**
 	 * Describes a prompt using options object.
-	 * 
+	 *
 	 * @param options - Options for describing the prompt.
 	 * @returns A promise with the prompt detail response.
 	 */
@@ -124,7 +125,7 @@ export default class PromptSDK implements IPromptSDK {
 
 	/**
 	 * Internal implementation for retrieving a prompt.
-	 * 
+	 *
 	 * @param opts - Options for retrieving the prompt.
 	 * @returns A promise with the prompt response.
 	 */
@@ -160,7 +161,7 @@ export default class PromptSDK implements IPromptSDK {
 		if (cacheEnabled && fallback) {
 			this.logger.warn(`Basalt Warning: Failed to fetch prompt from API, using last result for "${opts.slug}"`)
 
-			return ok(this._insertVariables(fallback, variables),)
+			return ok(this._insertVariables(fallback, variables))
 		}
 
 		return err(result.error)
@@ -175,9 +176,6 @@ export default class PromptSDK implements IPromptSDK {
 	 */
 	private _insertVariables(prompt: PromptResponse, variables: VariablesMap): PromptResponse {
 		// From the arbitrary variables passed by the user, pick all those present in the prompt.
-		// If any variable of the prompt is missing, the pickVariables function will
-		// return an error and we can simply forward it.
-		//
 		// This approach seems better than counting the remaining variables after replacing.
 		// The counting method would not allow user to insert variable syntax
 		// as a value (ex: replacing "Hello {{name}}" with { name: "{{something}}"})
@@ -198,7 +196,7 @@ export default class PromptSDK implements IPromptSDK {
 		return {
 			text: filledPrompt,
 			model: prompt.model,
-			systemText: prompt.systemText
+			systemText: prompt.systemText,
 		}
 	}
 
@@ -235,7 +233,7 @@ export default class PromptSDK implements IPromptSDK {
 
 		const trace = new Trace(params.slug, {
 			input: prompt.text,
-			startTime: new Date()
+			startTime: new Date(),
 		}, flusher)
 
 		// 2. Create the generation
@@ -245,10 +243,10 @@ export default class PromptSDK implements IPromptSDK {
 			prompt: {
 				slug: params.slug,
 				version: params.version,
-				tag: params.tag
+				tag: params.tag,
 			},
 			input: prompt.text,
-			variables: params.variables
+			variables: params.variables,
 		}, { type: 'single' })
 
 		return generation
