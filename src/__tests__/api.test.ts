@@ -1,21 +1,21 @@
-import Api from '../lib/api'
-import type { FetchMethod, Result } from '../lib/contract'
-import { err, ok } from '../lib/utils'
+import Api from '../lib/utils/api'
+import type { FetchMethod, Result } from '../lib/resources/contract'
+import { err, ok } from '../lib/utils/utils'
 
 const mockedNetwork = {
-	fetch: jest.fn()
+	fetch: jest.fn(),
 }
 
 const fakeEndpoint = {
 	prepareRequest: jest.fn(() => ({
 		method: 'get' as FetchMethod,
-		path: 'test-path'
+		path: 'test-path',
 	})),
 	decodeResponse: jest.fn(() => {
 		const response = ok({})
 
 		return response as Result<unknown>
-	})
+	}),
 }
 
 describe('API', () => {
@@ -33,7 +33,7 @@ describe('API', () => {
 		const api = new Api(
 			new URL('http://test/'),
 			mockedNetwork,
-			'some-api-key'
+			'some-api-key',
 		)
 
 		await api.invoke(fakeEndpoint, {})
@@ -47,8 +47,8 @@ describe('API', () => {
 	})
 
 	test.each(
-		['get', 'post', 'put', 'delete'] as FetchMethod[]
-	)('does network request with endpoint-defined http method (%s)', async method => {
+		['get', 'post', 'put', 'delete'] as FetchMethod[],
+	)('does network request with endpoint-defined http method (%s)', async (method) => {
 		mockedNetwork.fetch.mockImplementationOnce(() => ok({}))
 		fakeEndpoint.decodeResponse.mockImplementationOnce(() => ok({}))
 		fakeEndpoint.prepareRequest.mockImplementationOnce(() => ({	path: '', method }))
@@ -56,7 +56,7 @@ describe('API', () => {
 		const api = new Api(
 			new URL('http://test/'),
 			mockedNetwork,
-			'some-api-key'
+			'some-api-key',
 		)
 
 		await api.invoke(fakeEndpoint, {})
@@ -70,7 +70,7 @@ describe('API', () => {
 		{ query: { tag: 'abc', version: '1' }, expected: 'tag=abc&version=1' },
 		{ query: { tag: '', version: '1' }, expected: 'tag=&version=1' },
 		{ query: { version: '1' }, expected: 'version=1' },
-		{ query: { tag: undefined, version: '1' }, expected: 'version=1' }
+		{ query: { tag: undefined, version: '1' }, expected: 'version=1' },
 	])('includes query parameters in final url', async ({ query, expected }) => {
 		mockedNetwork.fetch.mockImplementationOnce(() => ok({}))
 		fakeEndpoint.decodeResponse.mockImplementationOnce(() => ok({}))
@@ -79,7 +79,7 @@ describe('API', () => {
 		const api = new Api(
 			new URL('http://test/'),
 			mockedNetwork,
-			'some-api-key'
+			'some-api-key',
 		)
 
 		await api.invoke(fakeEndpoint, {})
@@ -99,7 +99,7 @@ describe('API', () => {
 		const api = new Api(
 			new URL('http://test/'),
 			mockedNetwork,
-			'some-api-key'
+			'some-api-key',
 		)
 
 		const result = await api.invoke(fakeEndpoint, {})
@@ -118,7 +118,7 @@ describe('API', () => {
 		const api = new Api(
 			new URL('http://test/'),
 			mockedNetwork,
-			'some-api-key'
+			'some-api-key',
 		)
 
 		const result = await api.invoke(fakeEndpoint, {})
@@ -137,34 +137,14 @@ describe('API', () => {
 		const api = new Api(
 			new URL('http://test/'),
 			mockedNetwork,
-			'some-api-key'
-		)
-
-		await api.invoke(fakeEndpoint, {})
-
-		expect(mockedNetwork.fetch.mock.calls[0][3]).toMatchObject({
-			// eslint-disable-next-line quote-props, @typescript-eslint/naming-convention
-			'Authorization': 'Bearer some-api-key'
-		})
-	})
-
-	test('passes SDK vesion as header on requests', async () => {
-		fakeEndpoint.prepareRequest.mockImplementationOnce(() => ({	path: '', method: 'get' }))
-		fakeEndpoint.decodeResponse.mockImplementationOnce(() => err({ message: 'Some decoding problem' }))
-		mockedNetwork.fetch.mockImplementationOnce(() => ok({}))
-
-		const api = new Api(
-			new URL('http://test/'),
-			mockedNetwork,
 			'some-api-key',
-			'1.0.0'
 		)
 
 		await api.invoke(fakeEndpoint, {})
 
 		expect(mockedNetwork.fetch.mock.calls[0][3]).toMatchObject({
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			'X-BASALT-SDK-VERSION': '1.0.0'
+			Authorization: 'Bearer some-api-key',
 		})
 	})
 
@@ -178,14 +158,34 @@ describe('API', () => {
 			mockedNetwork,
 			'some-api-key',
 			'1.0.0',
-			'test-runner'
 		)
 
 		await api.invoke(fakeEndpoint, {})
 
 		expect(mockedNetwork.fetch.mock.calls[0][3]).toMatchObject({
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			'X-BASALT-SDK-TYPE': 'test-runner'
+			'X-BASALT-SDK-VERSION': '1.0.0',
+		})
+	})
+
+	test('passes SDK vesion as header on requests', async () => {
+		fakeEndpoint.prepareRequest.mockImplementationOnce(() => ({	path: '', method: 'get' }))
+		fakeEndpoint.decodeResponse.mockImplementationOnce(() => err({ message: 'Some decoding problem' }))
+		mockedNetwork.fetch.mockImplementationOnce(() => ok({}))
+
+		const api = new Api(
+			new URL('http://test/'),
+			mockedNetwork,
+			'some-api-key',
+			'1.0.0',
+			'test-runner',
+		)
+
+		await api.invoke(fakeEndpoint, {})
+
+		expect(mockedNetwork.fetch.mock.calls[0][3]).toMatchObject({
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			'X-BASALT-SDK-TYPE': 'test-runner',
 		})
 	})
 })

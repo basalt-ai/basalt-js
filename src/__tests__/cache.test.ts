@@ -1,4 +1,4 @@
-import MemoryCache from '../lib/memorycache'
+import MemoryCache from '../lib/utils/memorycache'
 
 const nowMock = jest.fn(() => 1000)
 

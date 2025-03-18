@@ -1,7 +1,7 @@
 import fixtures from '../__fixtures__/networker.json'
-import { NetworkBaseError } from '../lib/errors'
+import { NetworkBaseError } from '../lib/utils/errors'
 
-import Networker from '../lib/networker'
+import Networker from '../lib/utils/networker'
 
 const mockedFetch = jest.fn()
 const n = new Networker()
@@ -32,7 +32,7 @@ describe('Networker', () => {
 		expect(mockedFetch.mock.calls).toHaveLength(1)
 		expect(result.value).toBe(null)
 		expect(result.error).not.toBe(null)
-		expect(result.error?.message).toBe('Unexpected error')
+		expect(result.error?.message).toBe('Server Error')
 	})
 
 	test('rejects non-json response with failure object', async () => {

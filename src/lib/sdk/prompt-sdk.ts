@@ -176,9 +176,6 @@ export default class PromptSDK implements IPromptSDK {
 	 */
 	private _insertVariables(prompt: PromptResponse, variables: VariablesMap): PromptResponse {
 		// From the arbitrary variables passed by the user, pick all those present in the prompt.
-		// If any variable of the prompt is missing, the pickVariables function will
-		// return an error and we can simply forward it.
-		//
 		// This approach seems better than counting the remaining variables after replacing.
 		// The counting method would not allow user to insert variable syntax
 		// as a value (ex: replacing "Hello {{name}}" with { name: "{{something}}"})

@@ -9,10 +9,20 @@
     "type": "git",
     "url": "https://github.com/basalt-ai/basalt-js"
   },
-  "dependencies": {},
   "main": "./index.cjs",
   "module": "./index.js",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.11.11",
+    "@swc/helpers": "^0.5.15",
+    "@swc/jest": "^0.2.37",
+    "jest": "^29.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   }
 }

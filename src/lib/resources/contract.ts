@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { IMonitorSDK } from './monitor/monitor.types'
 import { IPromptSDK } from './prompt/prompt.types'
 
