@@ -140,6 +140,7 @@ export class Trace implements ITrace {
 			name: hasPrompt(params) ? params.prompt.slug : params.name,
 			trace: this,
 		})
+		generation.start(params.input)
 
 		return generation
 	}
@@ -149,6 +150,7 @@ export class Trace implements ITrace {
 			...params,
 			trace: this,
 		})
+		log.start(params.input)
 
 		return log
 	}

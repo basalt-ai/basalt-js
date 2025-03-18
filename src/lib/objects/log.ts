@@ -73,6 +73,7 @@ export default class Log extends BaseLog implements ILog {
 			trace: this.trace,
 			parent: this,
 		})
+		generation.start(params.input)
 
 		return generation
 	}
@@ -83,6 +84,7 @@ export default class Log extends BaseLog implements ILog {
 			trace: this.trace,
 			parent: this,
 		})
+		log.start(params.input)
 
 		return log
 	}
