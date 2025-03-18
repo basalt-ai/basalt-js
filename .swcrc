@@ -24,7 +24,6 @@
 		".*\\.spec.tsx?$",
 		".*\\.test.tsx?$",
 		"./src/jest-setup.ts$",
-		"./**/jest-setup.ts$",
-		".*.js$"
+		"./**/jest-setup.ts$"
 	]
 }
