@@ -3,6 +3,10 @@ import { NetworkBaseError } from '../lib/utils/errors'
 
 import Networker from '../lib/utils/networker'
 
+declare global {
+	var fetch: jest.Mock
+}
+
 const mockedFetch = jest.fn()
 const n = new Networker()
 const url = new URL('http://localhost:3000')
@@ -80,13 +84,13 @@ describe('Networker', () => {
 const makeMockedResponse = <T>(status: number, json: (() => Promise<T>) | T) => ({
 	status,
 	json: typeof json === 'function' ? json : async () => json,
-	headers: {} as unknown as Headers,
+	headers: {},
 	ok: false,
 	redirected: false,
 	statusText: '',
 	type: 'error',
 	url: '',
-	clone(): Response {
+	clone() {
 		throw new Error('Function not implemented.')
 	},
 	body: null,
