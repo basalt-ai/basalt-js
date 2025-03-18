@@ -1,6 +1,6 @@
 import { Trace, isGeneration } from '../../resources'
 import type {
-	ErrObj, FetchMethod, QueryParamsObject, Result 
+	ErrObj, FetchMethod, QueryParamsObject, Result,
 } from '../../resources/contract'
 import { err, ok } from '../../utils/utils'
 
@@ -18,10 +18,10 @@ export default class SendTraceEndpoint {
 	 * @returns The request information
 	 */
 	static prepareRequest(dto: Input): {
-		path: string;
-		method: FetchMethod;
-		body?: BodyInit;
-		query?: QueryParamsObject;
+		path: string
+		method: FetchMethod
+		body?: BodyInit
+		query?: QueryParamsObject
 	} {
 		const { trace } = dto
 
@@ -37,8 +37,10 @@ export default class SendTraceEndpoint {
 			input: 'input' in log ? log.input : undefined,
 			output: 'output' in log ? log.output : undefined,
 			prompt: isGeneration(log) && 'prompt' in log ? log.prompt : undefined,
-			variables: isGeneration(log) && 'variables' in log ? Object.entries(log.variables ?? {})
-				.map(([key, value]) => ({ label: key, value })) : []
+			variables: isGeneration(log) && 'variables' in log
+				? Object.entries(log.variables ?? {})
+						.map(([key, value]) => ({ label: key, value }))
+				: [],
 		}))
 
 		// Convert the body to a JSON string to match BodyInit type
@@ -51,13 +53,13 @@ export default class SendTraceEndpoint {
 			user: trace.user,
 			startTime: typeof trace.startTime === 'string' ? trace.startTime : trace.startTime.toISOString(),
 			endTime: typeof trace.endTime === 'string' ? trace.endTime : trace.endTime?.toISOString(),
-			logs
+			logs,
 		})
 
 		return {
 			method: 'post',
 			path: '/monitor/trace',
-			body
+			body,
 		}
 	}
 

@@ -1,12 +1,11 @@
-import SendTraceEndpoint from '../endpoints/monitor/send-trace';
+import SendTraceEndpoint from '../endpoints/monitor/send-trace'
 import { Trace } from '../objects/trace'
 import { IApi, ILogger } from '../resources/contract'
-
 
 export default class Flusher {
 	constructor(
 		private readonly api: IApi,
-		private readonly logger: ILogger
+		private readonly logger: ILogger,
 	) {}
 
 	/**
@@ -19,31 +18,32 @@ export default class Flusher {
 		try {
 			if (!this.api) {
 				// eslint-disable-next-line no-console
-				console.warn('Cannot flush trace: no API instance available');
-				return;
+				console.warn('Cannot flush trace: no API instance available')
+				return
 			}
 
 			// Create an instance of the endpoint to use its decodeResponse method
 			const endpoint = {
 				prepareRequest: () => SendTraceEndpoint.prepareRequest({ trace }),
 				// Use an arrow function to avoid 'this' binding issues
-				decodeResponse: (body: unknown) => SendTraceEndpoint.decodeResponse(body)
-			};
+				decodeResponse: (body: unknown) => SendTraceEndpoint.decodeResponse(body),
+			}
 
-			const result = await this.api.invoke(endpoint, { trace });
+			const result = await this.api.invoke(endpoint, { trace })
 
 			if (result.error) {
 				this.logger.error('Failed to flush trace', {
 					error: result.error,
-					traceSlug: trace.chainSlug
-				});
-				return;
+					traceSlug: trace.chainSlug,
+				})
+				return
 			}
-		} catch (error) {
+		}
+		catch (error) {
 			this.logger.error('Exception while flushing trace', {
 				error,
-				traceSlug: trace.chainSlug
-			});
+				traceSlug: trace.chainSlug,
+			})
 		}
 	}
 }

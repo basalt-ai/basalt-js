@@ -35,8 +35,8 @@ describe('GetPromptEndpoint', () => {
 		[],
 		100,
 		true,
-		fixtures.falsePositive.body
-	])('rejects invalid responses', async body => {
+		fixtures.falsePositive.body,
+	])('rejects invalid responses', async (body) => {
 		const result = GetPromptEndpoint.decodeResponse(body)
 
 		expect(result.error).not.toBeNull()

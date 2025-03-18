@@ -23,7 +23,7 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 	private static readonly _cache: ICache = new MemoryCache()
 	private readonly _basaltSdk: IBasaltSDK
 
-	constructor(opts: { apiKey: string; logLevel?: LogLevel }) {
+	constructor(opts: { apiKey: string, logLevel?: LogLevel }) {
 		const networker = new Networker()
 
 		const api = new Api(
@@ -31,7 +31,7 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 			networker,
 			opts.apiKey,
 			__SDK_VERSION__,
-			__SDK_TARGET__
+			__SDK_TARGET__,
 		)
 
 		const queryCache = new MemoryCache()
@@ -41,12 +41,12 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 				api,
 				queryCache,
 				BasaltSDKFacade._cache,
-				new Logger(opts.logLevel ?? 'warning')
+				new Logger(opts.logLevel ?? 'warning'),
 			),
 			new MonitorSDK(
 				api,
-				new Logger(opts.logLevel ?? 'warning')
-			)
+				new Logger(opts.logLevel ?? 'warning'),
+			),
 		)
 	}
 

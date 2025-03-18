@@ -1,16 +1,16 @@
 import { BaseLog } from './base-log'
-import Generation from './generation';
+import Generation from './generation'
 
 import {
 	CreateGenerationParams,
 	CreateLogParams,
 	Log as ILog,
 	LogParams,
-	hasPrompt
+	hasPrompt,
 } from '../resources'
 
 export default class Log extends BaseLog implements ILog {
-	private _input: string | undefined;
+	private _input: string | undefined
 	private _output: string | undefined
 
 	constructor(params: LogParams) {
@@ -71,7 +71,7 @@ export default class Log extends BaseLog implements ILog {
 			...params,
 			name: hasPrompt(params) ? params.prompt.slug : params.name,
 			trace: this.trace,
-			parent: this
+			parent: this,
 		})
 
 		return generation
@@ -81,7 +81,7 @@ export default class Log extends BaseLog implements ILog {
 		const log = new Log({
 			...params,
 			trace: this.trace,
-			parent: this
+			parent: this,
 		})
 
 		return log

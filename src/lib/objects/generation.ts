@@ -6,7 +6,7 @@ import {
 	GenerationPrompt,
 	GenerationVariable,
 	Generation as IGeneration,
-	UpdateGenerationParams
+	UpdateGenerationParams,
 } from '../resources/monitor/generation.types'
 
 export default class Generation extends BaseLog implements IGeneration {
@@ -19,7 +19,7 @@ export default class Generation extends BaseLog implements IGeneration {
 	constructor(params: Omit<GenerationParams, 'type'>, options?: GenerationOptions) {
 		super({
 			type: 'generation',
-			...params
+			...params,
 		})
 
 		this._prompt = params.prompt
@@ -67,7 +67,7 @@ export default class Generation extends BaseLog implements IGeneration {
 		if (output) {
 			this._output = output
 		}
-		
+
 		if (this._options?.type === 'single') {
 			this.trace.end(output)
 		}

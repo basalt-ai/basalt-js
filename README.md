@@ -94,3 +94,49 @@ The `prompt` attribute provides methods to interact with your Basalt prompts:
     messages: [{ role: 'User', content: result.value.text }]
   })
   ```
+
+### In-Memory Cache
+
+The Basalt SDK includes an in-memory caching mechanism to improve performance by reducing redundant API calls. When you request a prompt multiple times with the same parameters, the SDK can serve it from the cache instead of making additional network requests.
+
+#### How the Cache Works
+
+The SDK implements a simple but effective in-memory cache through the `MemoryCache` class that:
+
+- Stores key-value pairs in memory
+- Supports configurable time-to-live (TTL) for each cached entry
+- Automatically invalidates expired entries
+
+```typescript
+// Example of how caching works internally
+// (You don't need to implement this yourself)
+
+// First request fetches from API and caches the result
+const result1 = await basalt.prompt.get('my-prompt');
+
+// Subsequent identical requests within the TTL period 
+// will be served from cache
+const result2 = await basalt.prompt.get('my-prompt');
+```
+
+#### Cache Configuration
+
+By default, the cache is enabled with reasonable defaults. You can configure the cache behavior when initializing the SDK:
+
+```typescript
+const basalt = new Basalt({
+    apiKey: process.env.BASALT_API_KEY,
+    cache: {
+        enabled: true,     // Enable/disable caching (default: true)
+        ttl: 60000,        // Default TTL in milliseconds (default: 60000 - 1 minute)
+    }
+});
+```
+
+#### Cache Benefits
+
+- **Improved Performance**: Reduces latency for frequently accessed prompts
+- **Reduced API Usage**: Minimizes the number of API calls to the Basalt service
+- **Offline Resilience**: Previously cached prompts remain available even during temporary network issues
+
+The cache is particularly useful in high-throughput applications where the same prompts are requested multiple times in a short period.

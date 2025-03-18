@@ -11,7 +11,7 @@ import {
 	Organization,
 	TraceParams,
 	User,
-	hasPrompt
+	hasPrompt,
 } from '../resources'
 import Flusher from '../utils/flusher'
 export class Trace implements ITrace {
@@ -138,7 +138,7 @@ export class Trace implements ITrace {
 		const generation = new Generation({
 			...params,
 			name: hasPrompt(params) ? params.prompt.slug : params.name,
-			trace: this
+			trace: this,
 		})
 
 		return generation
@@ -147,7 +147,7 @@ export class Trace implements ITrace {
 	public createLog(params: CreateLogParams) {
 		const log = new Log({
 			...params,
-			trace: this
+			trace: this,
 		})
 
 		return log

@@ -1,22 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { IMonitorSDK } from './monitor/monitor.types';
+import { IMonitorSDK } from './monitor/monitor.types'
 import { IPromptSDK } from './prompt/prompt.types'
 
 /**
  * Interface for the Basalt SDK.
  */
 export interface IBasaltSDK {
-	readonly prompt: IPromptSDK;
-	readonly monitor: IMonitorSDK;
+	readonly prompt: IPromptSDK
+	readonly monitor: IMonitorSDK
 }
 
 /**
  * Result wrapper type
  */
 export type Result<Wrapped, Error = ErrObj> =
-	| { error: null; value: Wrapped }
-	| { error: Error; value: null }
+	| { error: null, value: Wrapped }
+	| { error: Error, value: null }
 
 /**
  * Result type for asynchronous operations
@@ -54,7 +54,7 @@ export interface INetworker {
 		method: FetchMethod,
 		body?: BodyInit,
 		headers?: HeadersInit
-	): AsyncResult<FetchResponse>;
+	): AsyncResult<FetchResponse>
 }
 
 /**
@@ -65,7 +65,7 @@ export interface ICache {
 	 * Get a value from the cache
 	 * @param key - The key of the value to get
 	 */
-	get<T = unknown>(key: string): T | undefined;
+	get<T = unknown>(key: string): T | undefined
 
 	/**
 	 * Set a value in the cache
@@ -73,36 +73,36 @@ export interface ICache {
 	 * @param value - The value to set
 	 * @param duration - Optional duration for the cache entry
 	 */
-	set(key: string, value: unknown, duration?: number): void;
+	set(key: string, value: unknown, duration?: number): void
 }
 
 /**
  * Type for query parameters
  */
-export type QueryParamsObject = Record<string, any>;
+export type QueryParamsObject = Record<string, any>
 
 /**
  * Interface for the API.
  */
 export interface IApi {
-	invoke<Input, Output>(endpoint: IEndpoint<Input, Output>, dto?: Input): AsyncResult<Output>;
+	invoke<Input, Output>(endpoint: IEndpoint<Input, Output>, dto?: Input): AsyncResult<Output>
 }
 
 export interface IEndpoint<Input, Output> {
 	prepareRequest(dto: Input): {
-		path: string;
-		method: FetchMethod;
-		body?: BodyInit;
-		query?: QueryParamsObject;
-	};
+		path: string
+		method: FetchMethod
+		body?: BodyInit
+		query?: QueryParamsObject
+	}
 
-	decodeResponse(body: unknown): Result<Output>;
+	decodeResponse(body: unknown): Result<Output>
 }
 
 export type LogLevel = 'all' | 'warning' | 'none'
 
 export interface ILogger {
-	warn(msg: any, ...args: any[]): void;
-	info(msg: any, ...args: any[]): void;
-	error(msg: any, ...args: any[]): void;
+	warn(msg: any, ...args: any[]): void
+	info(msg: any, ...args: any[]): void
+	error(msg: any, ...args: any[]): void
 }

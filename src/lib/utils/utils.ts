@@ -1,10 +1,10 @@
 import type { VariablesMap } from '../resources'
 
-export function err<T>(e: T): { error: T; value: null } {
+export function err<T>(e: T): { error: T, value: null } {
 	return { error: e, value: null }
 }
 
-export function ok<T>(v: T): { error: null; value: T } {
+export function ok<T>(v: T): { error: null, value: T } {
 	return { error: null, value: v }
 }
 
@@ -16,7 +16,7 @@ export function ok<T>(v: T): { error: null; value: T } {
  * @returns A new string with variables filled in. (Not all variables may be replaced, depending on the input)
  */
 export function replaceVariables(str: string, variables: VariablesMap) {
-	Object.keys(variables).forEach(label => {
+	Object.keys(variables).forEach((label) => {
 		const value = variables[label]
 
 		str = value === undefined ? str : str.replaceAll(`{{${label}}}`, value)
