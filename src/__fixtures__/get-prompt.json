@@ -5,6 +5,7 @@
 			"prompt": {
 				"systemText": "System text",
 				"text": "Valid prompt text",
+				"version": "latest",
 				"model": {
 					"provider": "open-ai",
 					"model": "gpt-4o",

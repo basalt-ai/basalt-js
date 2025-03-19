@@ -48,6 +48,10 @@ export default class GetPromptEndpoint {
 			return err({ message: 'Get Prompt: Failed to decode response (missing prompt.text)' })
 		}
 
+		if (!('version' in body.prompt) || typeof body.prompt.version !== 'string') {
+			return err({ message: 'Get Prompt: Failed to decode response (missing prompt.version)' })
+		}
+
 		if (!('systemText' in body.prompt)
 			|| (typeof body.prompt.systemText !== 'string' && body.prompt.systemText !== undefined)
 		) {
@@ -73,6 +77,7 @@ export default class GetPromptEndpoint {
 				text: body.prompt.text,
 				model: body.prompt.model as PromptModel,
 				systemText: body.prompt.systemText ?? undefined,
+				version: body.prompt.version,
 			},
 		})
 	}
