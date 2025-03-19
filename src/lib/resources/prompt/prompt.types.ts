@@ -251,4 +251,6 @@ export interface PromptDetailResponse {
 		description?: string | undefined
 		type: string
 	}[]
+	version: string
+	tag?: string
 }
