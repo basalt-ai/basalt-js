@@ -15,6 +15,9 @@ export default class Generation extends BaseLog implements IGeneration {
 	private _variables: GenerationVariable | undefined
 	private _output: string | undefined
 	private _options: GenerationOptions | undefined
+	private _inputTokens: number | undefined
+	private _outputTokens: number | undefined
+	private _cost: number | undefined
 
 	constructor(params: Omit<GenerationParams, 'type'>, options?: GenerationOptions) {
 		super({
@@ -26,6 +29,9 @@ export default class Generation extends BaseLog implements IGeneration {
 		this._input = params.input
 		this._output = params.output
 		this._variables = params.variables
+		this._inputTokens = params.inputTokens
+		this._outputTokens = params.outputTokens
+		this._cost = params.cost
 		this._options = options
 	}
 
@@ -48,6 +54,30 @@ export default class Generation extends BaseLog implements IGeneration {
 
 	public set options(options: GenerationOptions) {
 		this._options = options
+	}
+
+	public get inputTokens() {
+		return this._inputTokens
+	}
+
+	public set inputTokens(inputTokens: number | undefined) {
+		this._inputTokens = inputTokens
+	}
+
+	public get outputTokens() {
+		return this._outputTokens
+	}
+
+	public set outputTokens(outputTokens: number | undefined) {
+		this._outputTokens = outputTokens
+	}
+
+	public get cost() {
+		return this._cost ?? 0
+	}
+
+	public set cost(cost: number) {
+		this._cost = cost
 	}
 
 	/* ----------------------------- Public methods ----------------------------- */
@@ -79,6 +109,9 @@ export default class Generation extends BaseLog implements IGeneration {
 		this._input = params.input ?? this._input
 		this._output = params.output ?? this._output
 		this._prompt = params.prompt ?? this._prompt
+		this._inputTokens = params.inputTokens ?? this._inputTokens
+		this._outputTokens = params.outputTokens ?? this._outputTokens
+		this._cost = params.cost ?? this._cost
 
 		super.update(params)
 
