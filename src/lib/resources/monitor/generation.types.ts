@@ -217,11 +217,19 @@ export interface Generation extends GenerationParams, BaseLog {
 	 * // End a generation without output
 	 * generation.end();
 	 *
-	 * // End a generation with output
+	 * // End a generation with output as string
 	 * generation.end('The capital of France is Paris.');
+	 * // End a generation with output params
+	 * generation.end({
+	 *   output: 'The capital of France is Paris.',
+	 *   inputTokens: 10,
+	 *   outputTokens: 10,
+	 *   cost: 0.01
+	 * });
 	 * ```
 	 */
 	end(output?: string): Generation
+	end(params?: UpdateGenerationParams): Generation
 
 	/**
 	 * Updates the generation with new parameters.

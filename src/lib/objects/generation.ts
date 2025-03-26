@@ -91,15 +91,20 @@ export default class Generation extends BaseLog implements IGeneration {
 		return this
 	}
 
-	public override end(output?: string) {
+	public override end(param?: string | UpdateGenerationParams) {
 		super.end()
 
-		if (output) {
-			this._output = output
+		if (typeof param === 'string') {
+			this._output = param
+			if (this._options?.type === 'single') {
+				this.trace.end(param)
+			}
 		}
-
-		if (this._options?.type === 'single') {
-			this.trace.end(output)
+		else if (param) {
+			this.update(param)
+			if (this._options?.type === 'single') {
+				this.trace.end(param.output)
+			}
 		}
 
 		return this
