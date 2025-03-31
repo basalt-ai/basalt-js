@@ -75,10 +75,10 @@ The `prompt` attribute provides methods to interact with your Basalt prompts:
   // in the options.
   // Example prompt: "Hello {{name}}"
   const result = await basalt.prompt.get({
-	slug: 'prompt-slug',
-	variables: {
-		name: "John Doe"
-	}
+		slug: 'prompt-slug',
+		variables: {
+			name: "John Doe"
+		}
   })
 
   // Handle the result by unwrapping the error / value
@@ -90,9 +90,9 @@ The `prompt` attribute provides methods to interact with your Basalt prompts:
   // Use the prompt with your AI provider of choice
   // Example: OpenAI
   openaiClient.chat.completion.create({
-	model: 'gpt-4o'
-    messages: [{ role: 'User', content: result.value.text }]
-  })
+		model: 'gpt-4o'
+		messages: [{ role: 'User', content: result.value.text }]
+	})
   ```
 
 ### In-Memory Cache

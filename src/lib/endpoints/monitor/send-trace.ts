@@ -37,6 +37,9 @@ export default class SendTraceEndpoint {
 			input: 'input' in log ? log.input : undefined,
 			output: 'output' in log ? log.output : undefined,
 			prompt: isGeneration(log) && 'prompt' in log ? log.prompt : undefined,
+			inputTokens: isGeneration(log) && 'inputTokens' in log ? log.inputTokens : undefined,
+			outputTokens: isGeneration(log) && 'outputTokens' in log ? log.outputTokens : undefined,
+			cost: isGeneration(log) && 'cost' in log ? log.cost : undefined,
 			variables: isGeneration(log) && 'variables' in log
 				? Object.entries(log.variables ?? {})
 						.map(([key, value]) => ({ label: key, value }))
