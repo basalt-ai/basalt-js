@@ -1,4 +1,6 @@
 import { BaseLog } from './base-log.types'
+import { Evaluator } from './evaluator.types'
+import { Experiment } from './experiment.types'
 import { CreateGenerationParams, Generation } from './generation.types'
 import { CreateLogParams, Log } from './log'
 import { Metadata } from './monitor.types'
@@ -58,6 +60,18 @@ export interface TraceParams {
 	 * Can be any structured data relevant to the process being traced.
 	 */
 	metadata?: Metadata | undefined
+
+	/**
+	 * Experiment to attach the trace to.
+	 * This is used to log the trace into a specific experiment instead of in the monitoring.
+	 */
+	experiment?: Experiment | undefined
+
+	/**
+	 * Evaluators to attach the trace to.
+	 * This is used to log the trace into a specific evaluator instead of in the monitoring.
+	 */
+	evaluators?: Evaluator[] | undefined
 }
 
 /**
@@ -148,6 +162,7 @@ export interface Trace extends TraceParams {
 
 	/**
 	 * Updates the trace with new parameters.
+	 * The new parameters given in this method will override the existing ones.
 	 *
 	 * @param params - The parameters to update.
 	 * @returns The trace instance for method chaining.
@@ -162,6 +177,14 @@ export interface Trace extends TraceParams {
 	 * ```
 	 */
 	update(params: Partial<TraceParams>): Trace
+
+	/**
+	 * Adds an evaluator to the trace.
+	 *
+	 * @param evaluator - The evaluator to add to the trace.
+	 * @returns The trace instance for method chaining.
+	 */
+	addEvaluator(evaluator: Evaluator): Trace
 
 	/**
 	 * Adds a log (span or generation) to this trace.

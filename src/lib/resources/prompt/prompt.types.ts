@@ -154,22 +154,22 @@ export type PromptModel = AnthropicPromptModel | OpenAIPromptModel | MistralProm
 
 export interface AnthropicPromptModel extends BasePromptModel {
 	provider: 'anthropic'
-	model: '3.5-sonnet' | '3-sonnet' | '3-haiku'
+	model: '3.7-sonnet' | '3.5-sonnet' | '3-sonnet' | '3-haiku' | '3.5-sonnet-v2' | '3.5-haiku'
 }
 
 export interface OpenAIPromptModel extends BasePromptModel {
 	provider: 'open-ai'
-	model: 'gpt-4o' | 'gpt-4o-mini' | 'gpt-3.5-turbo' | 'o1-preview' | 'o1-mini'
+	model: 'gpt-4.5-preview' | 'gpt-4o' | 'gpt-4o-mini' | 'o3-mini' | 'o1' | 'o1-mini'
 }
 
 export interface MistralPromptModel extends BasePromptModel {
 	provider: 'mistral'
-	model: 'mistral-large' | 'mistral-8x7B' | 'mistral-7b'
+	model: 'mistral-large' | 'mistral-8x7B' | 'mistral-8x22B' | 'mistral-7b' | 'ministral-3b' | 'ministral-8b' | 'mistral-nemo' | 'mistral-medium' | 'mistral-small' | 'codestral' | 'codestral-mamba'
 }
 
 export interface GeminiPromptModel extends BasePromptModel {
 	provider: 'gemini'
-	model: 'gemini-1.5-flash' | 'gemini-1.5-flash-8b' | 'gemini-1.5-pro'
+	model: 'gemini-2.0-flash' | 'gemini-2.0-flash-lite-preview-02-05' | 'gemini-1.5-flash' | 'gemini-1.5-flash-8b' | 'gemini-1.5-pro' | 'gemini-2.5-pro-exp-03-25'
 }
 
 export interface BasePromptModel {

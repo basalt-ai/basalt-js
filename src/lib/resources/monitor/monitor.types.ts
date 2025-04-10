@@ -1,6 +1,10 @@
+import { ExperimentParams } from './experiment.types'
 import { Generation, GenerationParams } from './generation.types'
 import { Log, LogParams } from './log'
 import { Trace, TraceParams } from './trace.types'
+
+import { Experiment } from '../../objects/experiment'
+import { AsyncResult } from '../contract'
 
 /**
  * @preserve
@@ -11,24 +15,23 @@ import { Trace, TraceParams } from './trace.types'
  *
  * @example
  * ```typescript
- * const monitorSDK: IMonitorSDK = ...; // Assume this is initialized
- *
  * // Example 1: Creating a trace
- * const trace = monitorSDK.createTrace('user-session', {
+ * const trace = basalt.monitor.createTrace('user-session', {
  *   input: 'User started a new session',
  *   metadata: { userId: '123', sessionType: 'web' }
  * });
  *
  * // Example 2: Creating a generation within a trace
- * const generation = monitorSDK.createGeneration({
+ * const generation = basalt.monitor.createGeneration({
  *   name: 'text-completion',
  *   prompt: { slug: 'text-completion-prompt', version: '1.0.0' },
  *   input: 'Tell me a joke',
  *   trace: trace
  * });
  *
- * // Example 3: Creating a log for a processing step
- * const log = monitorSDK.createLog({
+ * // Example 3: Creating a span for a processing step
+ * const span = basalt.monitor.createLog({
+ *   type: 'span',
  *   name: 'data-processing',
  *   trace: trace,
  *   metadata: { processingType: 'text-analysis' }
@@ -37,11 +40,31 @@ import { Trace, TraceParams } from './trace.types'
  */
 export interface IMonitorSDK {
 	/**
+	 * Creates a new experiment to bundle multiple traces together in.
+	 * You can pass this experiment to the `createTrace` method to add the generated traces to the experiment.
+	 * It's used mostly for local experimentations, to compare the performance between different versions of a workflow.
+	 *
+	 * @param featureSlug - The unique identifier of the feature to which the experiment belongs.
+	 * @param params - Parameters for the experiment.
+	 *    - name: Name of the experiment (required).
+	 *
+	 * @example
+	 * ```typescript
+	 * const experiment = basalt.monitor.createExperiment('user-query', { name: 'my-experiment' })
+	 *
+	 * // Create a trace and add it to the experiment
+	 * const trace = basalt.monitor.createTrace('user-query', { experiment })
+	 * ```
+	 *
+	 * @returns A Experiment object that can be used to track the AI generation.
+	 */
+	createExperiment(featureSlug: string, params: ExperimentParams): AsyncResult<Experiment>
+
+	/**
 	 * Creates a new trace to monitor a complete user interaction or process flow.
 	 *
-	 * @param slug - A unique identifier for the trace, typically representing the type of interaction.
+	 * @param featureSlug - The unique identifier of the feature to which the trace belongs.
 	 * @param params - Optional parameters for the trace.
-	 *    - input: Initial input data for the trace.
 	 *    - output: Final output data for the trace.
 	 *    - startTime: When the trace started (defaults to now if not provided).
 	 *    - endTime: When the trace ended.
@@ -52,10 +75,10 @@ export interface IMonitorSDK {
 	 * @example
 	 * ```typescript
 	 * // Create a basic trace
-	 * const basicTrace = monitorSDK.createTrace('user-query');
+	 * const basicTrace = basalt.monitor.createTrace('user-query');
 	 *
 	 * // Create a trace with parameters
-	 * const detailedTrace = monitorSDK.createTrace('document-processing', {
+	 * const detailedTrace = basalt.monitor.createTrace('document-processing', {
 	 *   input: 'Raw document text',
 	 *   startTime: new Date(),
 	 *   user: { id: 'user-123', name: 'John Doe' },
@@ -88,7 +111,7 @@ export interface IMonitorSDK {
 	 * @example
 	 * ```typescript
 	 * // Create a generation with a prompt reference
-	 * const generation = monitorSDK.createGeneration({
+	 * const generation = basalt.monitor.createGeneration({
 	 *   name: 'answer-generation',
 	 *   trace: trace,
 	 *   prompt: { slug: 'qa-prompt', version: '2.1.0' },
@@ -98,7 +121,7 @@ export interface IMonitorSDK {
 	 * });
 	 *
 	 * // Create a generation without a prompt reference
-	 * const simpleGeneration = monitorSDK.createGeneration({
+	 * const simpleGeneration = basalt.monitor.createGeneration({
 	 *   name: 'text-completion',
 	 *   trace: trace,
 	 *   input: 'Complete this sentence: The sky is',
@@ -125,13 +148,13 @@ export interface IMonitorSDK {
 	 * @example
 	 * ```typescript
 	 * // Create a basic log
-	 * const basicLog = monitorSDK.createLog({
+	 * const basicLog = basalt.monitor.createLog({
 	 *   name: 'data-fetching',
 	 *   trace: trace,
 	 * });
 	 *
 	 * // Create a detailed log
-	 * const detailedLog = monitorSDK.createLog({
+	 * const detailedLog = basalt.monitor.createLog({
 	 *   name: 'user-validation',
 	 *   trace: trace,
 	 *   input: 'user credentials',

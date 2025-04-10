@@ -1,4 +1,4 @@
-import { BaseLog, BaseLogParams } from './base-log.types'
+import { BaseLog, BaseLogParams, LogType } from './base-log.types'
 import { CreateGenerationParams, Generation } from './generation.types'
 import { Trace } from './trace.types'
 
@@ -168,6 +168,12 @@ export interface Log extends LogParams, BaseLog {
  * @preserve
  */
 export interface LogParams extends BaseLogParams {
+	/**
+	 * The type of log entry (e.g., 'span', 'generation').
+	 * Used to distinguish between different kinds of logs.
+	 */
+	type: LogType
+
 	/**
 	 * The input data for this operation.
 	 */

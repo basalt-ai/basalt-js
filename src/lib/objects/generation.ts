@@ -19,7 +19,7 @@ export default class Generation extends BaseLog implements IGeneration {
 	private _outputTokens: number | undefined
 	private _cost: number | undefined
 
-	constructor(params: Omit<GenerationParams, 'type'>, options?: GenerationOptions) {
+	constructor(params: GenerationParams, options?: GenerationOptions) {
 		super({
 			type: 'generation',
 			...params,
