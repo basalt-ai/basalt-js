@@ -1,14 +1,9 @@
+import { Evaluator } from './evaluator.types'
 import { Log } from './log'
 import { Metadata } from './monitor.types'
 import { Trace } from './trace.types'
 
 export interface BaseLogParams {
-	/**
-	 * The type of log entry (e.g., 'span', 'generation').
-	 * Used to distinguish between different kinds of logs.
-	 */
-	type: LogType
-
 	/**
 	 * Name of the log entry, describing what it represents.
 	 */
@@ -43,6 +38,11 @@ export interface BaseLogParams {
 	 * Every log must be associated with a trace.
 	 */
 	trace: Trace
+
+	/**
+	 * The evaluators to attach to the log.
+	 */
+	evaluators?: Evaluator[] | undefined
 }
 
 export type LogType = 'span' | 'generation' | 'function' | 'tool' | 'retrieval' | 'event'
@@ -68,8 +68,42 @@ export interface BaseLog extends BaseLogParams {
 	 */
 	metadata?: Record<string, unknown> | undefined
 
+	/**
+	 * Marks the log as started and sets the input if provided.
+	 *
+	 * @param input - Optional input data to associate with the log.
+	 * @returns The log instance for method chaining.
+	 */
 	start(): BaseLog
+
+	/**
+	 * Sets the metadata for the log.
+	 *
+	 * @param metadata - The metadata to set for the log.
+	 * @returns The log instance for method chaining.
+	 */
 	setMetadata(metadata: Metadata): BaseLog
+
+	/**
+	 * Adds an evaluator to the log.
+	 *
+	 * @param evaluator - The evaluator to add to the log.
+	 * @returns The log instance for method chaining.
+	 */
+	addEvaluator(evaluator: Evaluator): BaseLog
+
+	/**
+	 * Updates the log with new parameters.
+	 *
+	 * @param params - The parameters to update.
+	 * @returns The log instance for method chaining.
+	 */
 	update(params: UpdateParams): BaseLog
+
+	/**
+	 * Marks the log as ended.
+	 *
+	 * @returns The log instance for method chaining.
+	 */
 	end(): BaseLog
 }

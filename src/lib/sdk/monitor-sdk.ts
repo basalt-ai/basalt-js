@@ -1,11 +1,16 @@
+import CreateExperimentEndpoint from '../endpoints/monitor/create-experiment'
+import { Experiment } from '../objects/experiment'
 import Generation from '../objects/generation'
 import Log from '../objects/log'
 import { Trace } from '../objects/trace'
 import { GenerationParams, LogParams } from '../resources'
-import type { IApi, ILogger } from '../resources/contract'
+import type { AsyncResult, IApi, Logger } from '../resources/contract'
+import { ExperimentParams } from '../resources/monitor/experiment.types'
 import { IMonitorSDK } from '../resources/monitor/monitor.types'
 import { TraceParams } from '../resources/monitor/trace.types'
 import Flusher from '../utils/flusher'
+import { ok } from '../utils/utils'
+import { err } from '../utils/utils'
 export default class MonitorSDK implements IMonitorSDK {
 	/**
 	 * @param api - The API interface for making requests.
@@ -13,7 +18,7 @@ export default class MonitorSDK implements IMonitorSDK {
 	 */
 	constructor(
 		private readonly api: IApi,
-		private readonly logger: ILogger,
+		private readonly logger: Logger,
 	) {}
 
 	// --
@@ -21,14 +26,30 @@ export default class MonitorSDK implements IMonitorSDK {
 	// --
 
 	/**
+	 * Creates a new experiment for monitoring.
+	 *
+	 * @param params - Parameters for the experiment.
+	 * @returns A new Experiment instance.
+	 */
+	public async createExperiment(featureSlug: string, params: ExperimentParams): AsyncResult<Experiment> {
+		const result = await this.api.invoke(CreateExperimentEndpoint, { featureSlug, ...params })
+
+		if (result.error) {
+			return err(result.error)
+		}
+
+		return ok(result.value.experiment)
+	}
+
+	/**
 	 * Creates a new trace for monitoring.
 	 *
-	 * @param slug - The unique identifier for the trace.
+	 * @param featureSlug - The unique identifier of the feature.
 	 * @param params - Optional parameters for the trace.
 	 * @returns A new Trace instance.
 	 */
-	public createTrace(slug: string, params: TraceParams = {}) {
-		const trace = this._createTrace(slug, params)
+	public createTrace(featureSlug: string, params: TraceParams = {}) {
+		const trace = this._createTrace(featureSlug, params)
 		return trace
 	}
 
@@ -59,13 +80,13 @@ export default class MonitorSDK implements IMonitorSDK {
 	/**
 	 * Internal implementation for creating a trace.
 	 *
-	 * @param slug - The unique identifier for the trace.
+	 * @param featureSlug - The unique identifier of the feature.
 	 * @param params - Optional parameters for the trace.
 	 * @returns A new Trace instance.
 	 */
-	private _createTrace(slug: string, params: TraceParams = {}) {
+	private _createTrace(featureSlug: string, params: TraceParams = {}) {
 		const flusher = new Flusher(this.api, this.logger)
-		const trace = new Trace(slug, params, flusher)
+		const trace = new Trace(featureSlug, params, flusher, this.logger)
 
 		return trace
 	}

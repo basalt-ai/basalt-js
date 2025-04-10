@@ -1,11 +1,11 @@
 import SendTraceEndpoint from '../endpoints/monitor/send-trace'
 import { Trace } from '../objects/trace'
-import { IApi, ILogger } from '../resources/contract'
+import { IApi, Logger } from '../resources/contract'
 
 export default class Flusher {
 	constructor(
 		private readonly api: IApi,
-		private readonly logger: ILogger,
+		private readonly logger: Logger,
 	) {}
 
 	/**
@@ -34,7 +34,7 @@ export default class Flusher {
 			if (result.error) {
 				this.logger.error('Failed to flush trace', {
 					error: result.error,
-					traceSlug: trace.chainSlug,
+					featureSlug: trace.featureSlug,
 				})
 				return
 			}
@@ -42,7 +42,7 @@ export default class Flusher {
 		catch (error) {
 			this.logger.error('Exception while flushing trace', {
 				error,
-				traceSlug: trace.chainSlug,
+				featureSlug: trace.featureSlug,
 			})
 		}
 	}

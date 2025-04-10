@@ -7,6 +7,7 @@ import {
 	Trace,
 	UpdateParams,
 } from '../resources'
+import { Evaluator } from '../resources/monitor/evaluator.types'
 
 export class BaseLog implements IBaseLog {
 	private _id: string
@@ -18,8 +19,9 @@ export class BaseLog implements IBaseLog {
 
 	private _parent: Log | undefined
 	private _trace: Trace
+	private _evaluators: Evaluator[] | undefined
 
-	constructor(params: BaseLogParams) {
+	constructor(params: BaseLogParams & { type: LogType }) {
 		this._id = 'log-' + Math.random().toString(36).substring(2)
 		this._type = params.type
 		this._name = params.name
@@ -28,7 +30,7 @@ export class BaseLog implements IBaseLog {
 		this._metadata = params.metadata
 		this._trace = params.trace
 		this._parent = params.parent
-
+		this._evaluators = params.evaluators
 		params.trace.logs.push(this)
 	}
 
@@ -82,6 +84,13 @@ export class BaseLog implements IBaseLog {
 
 	setMetadata(metadata: Metadata) {
 		this._metadata = metadata
+
+		return this
+	}
+
+	addEvaluator(evaluator: Evaluator) {
+		this._evaluators = this._evaluators ?? []
+		this._evaluators.push(evaluator)
 
 		return this
 	}
