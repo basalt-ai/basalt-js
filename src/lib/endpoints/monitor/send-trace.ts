@@ -44,6 +44,7 @@ export default class SendTraceEndpoint {
 				? Object.entries(log.variables ?? {})
 						.map(([key, value]) => ({ label: key, value }))
 				: [],
+			evaluators: log.evaluators,
 		}))
 
 		// Convert the body to a JSON string to match BodyInit type
@@ -60,6 +61,8 @@ export default class SendTraceEndpoint {
 			startTime: typeof trace.startTime === 'string' ? trace.startTime : trace.startTime.toISOString(),
 			endTime: typeof trace.endTime === 'string' ? trace.endTime : trace.endTime?.toISOString(),
 			logs,
+			evaluators: trace.evaluators,
+			evaluationConfig: trace.evaluationConfig,
 		})
 
 		return {

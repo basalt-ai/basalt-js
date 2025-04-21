@@ -14,7 +14,7 @@ import {
 	User,
 	hasPrompt,
 } from '../resources'
-import { Evaluator } from '../resources/monitor/evaluator.types'
+import { EvaluationConfig, Evaluator } from '../resources/monitor/evaluator.types'
 import { Experiment } from '../resources/monitor/experiment.types'
 import Flusher from '../utils/flusher'
 
@@ -30,6 +30,7 @@ export class Trace implements ITrace {
 	private _flushedPromise: Promise<void> | undefined
 	private _experiment: Experiment | undefined
 	private _evaluators: Evaluator[] | undefined
+	private _evaluationConfig: EvaluationConfig | undefined
 
 	private _logs: BaseLog[] = []
 
@@ -50,6 +51,7 @@ export class Trace implements ITrace {
 		this._startTime = params.startTime ? new Date(params.startTime) : new Date()
 		this._endTime = params.endTime ? new Date(params.endTime) : undefined
 		this._evaluators = params.evaluators
+		this._evaluationConfig = params.evaluationConfig
 
 		if (params.experiment && params.experiment.featureSlug !== this._featureSlug) {
 			this._logger.warn('Experiment feature slug does not match trace feature slug. This experiment will be ignored.')
@@ -102,6 +104,14 @@ export class Trace implements ITrace {
 
 	get experiment() {
 		return this._experiment
+	}
+
+	get evaluationConfig() {
+		return this._evaluationConfig
+	}
+
+	get evaluators() {
+		return this._evaluators
 	}
 
 	/* ----------------------------- Public methods ----------------------------- */

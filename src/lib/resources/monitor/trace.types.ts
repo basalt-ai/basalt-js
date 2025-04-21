@@ -1,5 +1,5 @@
 import { BaseLog } from './base-log.types'
-import { Evaluator } from './evaluator.types'
+import { EvaluationConfig, Evaluator } from './evaluator.types'
 import { Experiment } from './experiment.types'
 import { CreateGenerationParams, Generation } from './generation.types'
 import { CreateLogParams, Log } from './log'
@@ -68,10 +68,16 @@ export interface TraceParams {
 	experiment?: Experiment | undefined
 
 	/**
-	 * Evaluators to attach the trace to.
-	 * This is used to log the trace into a specific evaluator instead of in the monitoring.
+	 * Evaluators that will run on the trace (only on the trace, not on the logs).
+	 *
+	 * To run evaluators on the logs, use the `evaluators` property of the log.
 	 */
 	evaluators?: Evaluator[] | undefined
+
+	/**
+	 * Configuration for the evaluation of the trace and its logs.
+	 */
+	evaluationConfig?: EvaluationConfig | undefined
 }
 
 /**

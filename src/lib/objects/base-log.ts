@@ -75,6 +75,10 @@ export class BaseLog implements IBaseLog {
 		this._trace = trace
 	}
 
+	public get evaluators() {
+		return this._evaluators
+	}
+
 	/* --------------------------------- Methods -------------------------------- */
 	start() {
 		this._startTime = new Date()
