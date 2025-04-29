@@ -62,6 +62,11 @@ export class Trace implements ITrace {
 	}
 
 	/* --------------------------------- Getters -------------------------------- */
+
+	get name() {
+		return this._name
+	}
+
 	get input() {
 		return this._input
 	}
