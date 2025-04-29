@@ -192,11 +192,12 @@ export default class PromptSDK implements IPromptSDK {
 		}
 
 		const filledPrompt = replaceVariables(prompt.text, variables)
+		const filledSystemText = replaceVariables(prompt.systemText ?? '', variables)
 
 		return {
 			text: filledPrompt,
 			model: prompt.model,
-			systemText: prompt.systemText,
+			systemText: filledSystemText,
 		}
 	}
 
