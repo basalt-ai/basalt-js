@@ -44,11 +44,16 @@ export default class SendTraceEndpoint {
 				? Object.entries(log.variables ?? {})
 						.map(([key, value]) => ({ label: key, value }))
 				: [],
+			evaluators: log.evaluators,
 		}))
 
 		// Convert the body to a JSON string to match BodyInit type
 		const body = JSON.stringify({
-			chainSlug: 'chainSlug' in trace ? trace.chainSlug : undefined,
+			name: trace.name,
+			featureSlug: 'featureSlug' in trace ? trace.featureSlug : undefined,
+			experiment: trace.experiment
+				? { id: trace.experiment.id }
+				: undefined,
 			input: trace.input,
 			output: trace.output,
 			metadata: trace.metadata,
@@ -57,6 +62,8 @@ export default class SendTraceEndpoint {
 			startTime: typeof trace.startTime === 'string' ? trace.startTime : trace.startTime.toISOString(),
 			endTime: typeof trace.endTime === 'string' ? trace.endTime : trace.endTime?.toISOString(),
 			logs,
+			evaluators: trace.evaluators,
+			evaluationConfig: trace.evaluationConfig,
 		})
 
 		return {

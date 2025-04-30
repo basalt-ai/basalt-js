@@ -9,8 +9,8 @@ import type {
 	GetPromptResponse,
 	IApi,
 	ICache,
-	ILogger,
 	IPromptSDK,
+	Logger,
 	NoSlugDescribePromptOptions,
 	NoSlugGetPromptOptions,
 	PromptDetailResponse,
@@ -39,7 +39,7 @@ export default class PromptSDK implements IPromptSDK {
 		private readonly api: IApi,
 		private readonly queryCache: ICache,
 		private readonly fallbackCache: ICache,
-		private readonly logger: ILogger,
+		private readonly logger: Logger,
 	) {}
 
 	/**
@@ -192,11 +192,12 @@ export default class PromptSDK implements IPromptSDK {
 		}
 
 		const filledPrompt = replaceVariables(prompt.text, variables)
+		const filledSystemText = replaceVariables(prompt.systemText ?? '', variables)
 
 		return {
 			text: filledPrompt,
 			model: prompt.model,
-			systemText: prompt.systemText,
+			systemText: filledSystemText,
 		}
 	}
 
@@ -234,7 +235,7 @@ export default class PromptSDK implements IPromptSDK {
 		const trace = new Trace(params.slug, {
 			input: prompt.text,
 			startTime: new Date(),
-		}, flusher)
+		}, flusher, this.logger)
 
 		// 2. Create the generation
 		const generation = new Generation({

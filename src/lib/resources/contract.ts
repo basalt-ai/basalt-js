@@ -29,6 +29,7 @@ export type FetchMethod = 'get' | 'post' | 'put' | 'delete'
 /**
  * Response type for fetch requests
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type FetchResponse = any
 
 /**
@@ -77,6 +78,7 @@ export interface ICache {
 /**
  * Type for query parameters
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type QueryParamsObject = Record<string, any>
 
 /**
@@ -99,8 +101,8 @@ export interface IEndpoint<Input, Output> {
 
 export type LogLevel = 'all' | 'warning' | 'none'
 
-export interface ILogger {
-	warn(msg: any, ...args: any[]): void
-	info(msg: any, ...args: any[]): void
-	error(msg: any, ...args: any[]): void
+export interface Logger {
+	warn(msg: string, ...args: unknown[]): void
+	info(msg: string, ...args: unknown[]): void
+	error(msg: string, ...args: unknown[]): void
 }

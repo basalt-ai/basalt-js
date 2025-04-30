@@ -7,16 +7,18 @@ import {
 	CreateLogParams,
 	Trace as ITrace,
 	IdentifyParams,
+	Logger,
 	Metadata,
 	Organization,
 	TraceParams,
 	User,
 	hasPrompt,
 } from '../resources'
+import { EvaluationConfig, Evaluator } from '../resources/monitor/evaluator.types'
+import { Experiment } from '../resources/monitor/experiment.types'
 import Flusher from '../utils/flusher'
-export class Trace implements ITrace {
-	private _chainSlug: string
 
+export class Trace implements ITrace {
 	private _input: string | undefined
 	private _output: string | undefined
 	private _name: string | undefined
@@ -26,14 +28,20 @@ export class Trace implements ITrace {
 	private _organization: Organization | undefined
 	private _metadata: Metadata | undefined
 	private _flushedPromise: Promise<void> | undefined
+	private _experiment: Experiment | undefined
+	private _evaluators: Evaluator[] | undefined
+	private _evaluationConfig: EvaluationConfig | undefined
 
 	private _logs: BaseLog[] = []
 
-	private _flusher: Flusher
+	private _isEnded = false
 
-	constructor(slug: string, params: TraceParams = {}, flusher: Flusher) {
-		this._chainSlug = slug
-
+	constructor(
+		private _featureSlug: string,
+		params: TraceParams = {},
+		private _flusher: Flusher,
+		private _logger: Logger,
+	) {
 		this._user = params.user
 		this._organization = params.organization
 		this._metadata = params.metadata
@@ -42,11 +50,23 @@ export class Trace implements ITrace {
 		this._name = params.name
 		this._startTime = params.startTime ? new Date(params.startTime) : new Date()
 		this._endTime = params.endTime ? new Date(params.endTime) : undefined
+		this._evaluators = params.evaluators
+		this._evaluationConfig = params.evaluationConfig
 
-		this._flusher = flusher
+		if (params.experiment && params.experiment.featureSlug !== this._featureSlug) {
+			this._logger.warn('Experiment feature slug does not match trace feature slug. This experiment will be ignored.')
+		}
+		else {
+			this._experiment = params.experiment
+		}
 	}
 
 	/* --------------------------------- Getters -------------------------------- */
+
+	get name() {
+		return this._name
+	}
+
 	get input() {
 		return this._input
 	}
@@ -79,12 +99,24 @@ export class Trace implements ITrace {
 		this._logs = logs
 	}
 
-	get chainSlug() {
-		return this._chainSlug
+	get featureSlug() {
+		return this._featureSlug
 	}
 
 	get endTime() {
 		return this._endTime
+	}
+
+	get experiment() {
+		return this._experiment
+	}
+
+	get evaluationConfig() {
+		return this._evaluationConfig
+	}
+
+	get evaluators() {
+		return this._evaluators
 	}
 
 	/* ----------------------------- Public methods ----------------------------- */
@@ -111,6 +143,13 @@ export class Trace implements ITrace {
 		return this
 	}
 
+	public addEvaluator(evaluator: Evaluator) {
+		this._evaluators = this._evaluators ?? []
+		this._evaluators.push(evaluator)
+
+		return this
+	}
+
 	public update(params: TraceParams) {
 		this._metadata = params.metadata ?? this._metadata
 		this._input = params.input ?? this._input
@@ -120,6 +159,7 @@ export class Trace implements ITrace {
 		this._startTime = params.startTime ? new Date(params.startTime) : this._startTime
 		this._endTime = params.endTime ? new Date(params.endTime) : this._endTime
 		this._name = params.name ?? this._name
+		this._evaluators = params.evaluators ?? this._evaluators
 
 		return this
 	}
@@ -154,16 +194,27 @@ export class Trace implements ITrace {
 	}
 
 	public end(output?: string) {
-		this._output = output ?? this._output
-		this._endTime = new Date()
-
-		// Send to the API
-		// This is handled by the SDK instance that created this trace
-		// The SDK will use the SendTraceEndpoint to send the trace to the API
-		if (!this._flushedPromise) {
-			void this._flusher.flushTrace(this)
+		if (this._canFlush()) {
+			this._output = output ?? this._output
+			this._endTime = new Date()
+			this._isEnded = true
+			// Send to the API
+			// This is handled by the SDK instance that created this trace
+			// The SDK will use the SendTraceEndpoint to send the trace to the API
+			if (!this._flushedPromise) {
+				void this._flusher.flushTrace(this)
+			}
 		}
 
 		return this
+	}
+
+	/* ----------------------------- Private methods ---------------------------- */
+	private _canFlush() {
+		if (this._isEnded) {
+			this._logger.warn('Trace already ended. This operation will be ignored.')
+		}
+
+		return !this._isEnded
 	}
 }
