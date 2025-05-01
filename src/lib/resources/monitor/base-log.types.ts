@@ -1,5 +1,5 @@
 import { Evaluator } from './evaluator.types'
-import { Log } from './log'
+import { Log } from './log.types'
 import { Metadata } from './monitor.types'
 import { Trace } from './trace.types'
 
