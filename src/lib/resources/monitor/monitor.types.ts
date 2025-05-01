@@ -1,6 +1,6 @@
 import { ExperimentParams } from './experiment.types'
 import { Generation, GenerationParams } from './generation.types'
-import { Log, LogParams } from './log'
+import { Log, LogParams } from './log.types'
 import { Trace, TraceParams } from './trace.types'
 
 import { Experiment } from '../../objects/experiment'

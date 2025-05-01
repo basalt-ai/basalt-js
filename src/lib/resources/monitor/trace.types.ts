@@ -2,7 +2,7 @@ import { BaseLog } from './base-log.types'
 import { EvaluationConfig, Evaluator } from './evaluator.types'
 import { Experiment } from './experiment.types'
 import { CreateGenerationParams, Generation } from './generation.types'
-import { CreateLogParams, Log } from './log'
+import { CreateLogParams, Log } from './log.types'
 import { Metadata } from './monitor.types'
 
 /**
