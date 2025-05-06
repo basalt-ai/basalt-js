@@ -6,6 +6,7 @@ import Api from './utils/api'
 import Logger from './utils/logger'
 import MemoryCache from './utils/memorycache'
 import Networker from './utils/networker'
+import { TelemetryConfig, telemetry } from './utils/telemetry'
 
 /**
  * BasaltSDK is the entry point for interacting with the Basalt.
@@ -23,8 +24,13 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 	private static readonly _cache: ICache = new MemoryCache()
 	private readonly _basaltSdk: IBasaltSDK
 
-	constructor(opts: { apiKey: string, logLevel?: LogLevel }) {
+	constructor(opts: {
+		apiKey: string
+		logLevel?: LogLevel
+		telemetry?: TelemetryConfig
+	}) {
 		const networker = new Networker()
+		const logger = new Logger(opts.logLevel ?? 'warning')
 
 		const api = new Api(
 			new URL(__PUBLIC_API_URL__),
@@ -36,16 +42,21 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 
 		const queryCache = new MemoryCache()
 
+		// Initialize telemetry if configured
+		if (opts.telemetry) {
+			telemetry.init(opts.telemetry, logger)
+		}
+
 		this._basaltSdk = new BasaltSDK(
 			new PromptSDK(
 				api,
 				queryCache,
 				BasaltSDKFacade._cache,
-				new Logger(opts.logLevel ?? 'warning'),
+				logger,
 			),
 			new MonitorSDK(
 				api,
-				new Logger(opts.logLevel ?? 'warning'),
+				logger,
 			),
 		)
 	}
