@@ -143,6 +143,18 @@ export class Trace implements ITrace {
 		return this
 	}
 
+	public setEvaluationConfig(config: EvaluationConfig) {
+		this._evaluationConfig = config
+
+		return this
+	}
+
+	public setExperiment(experiment: Experiment) {
+		this._experiment = experiment
+
+		return this
+	}
+
 	public addEvaluator(evaluator: Evaluator) {
 		this._evaluators = this._evaluators ?? []
 		this._evaluators.push(evaluator)

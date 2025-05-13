@@ -167,6 +167,22 @@ export interface Trace extends TraceParams {
 	setMetadata(metadata: Metadata): Trace
 
 	/**
+	 * Sets the evaluation configuration for the trace.
+	 *
+	 * @param config - The evaluation configuration to set.
+	 * @returns The trace instance for method chaining.
+	 */
+	setEvaluationConfig(config: EvaluationConfig): Trace
+
+	/**
+	 * Sets the experiment for the trace.
+	 *
+	 * @param experiment - The experiment to set.
+	 * @returns The trace instance for method chaining.
+	 */
+	setExperiment(experiment: Experiment): Trace
+
+	/**
 	 * Updates the trace with new parameters.
 	 * The new parameters given in this method will override the existing ones.
 	 *

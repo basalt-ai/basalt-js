@@ -10,6 +10,7 @@ import type {
 	IApi,
 	ICache,
 	IPromptSDK,
+	ListPromptsOptions,
 	Logger,
 	NoSlugDescribePromptOptions,
 	NoSlugGetPromptOptions,
@@ -92,8 +93,8 @@ export default class PromptSDK implements IPromptSDK {
 	 *
 	 * @returns A promise with an array of prompt list responses.
 	 */
-	async list(): AsyncResult<PromptListResponse[]> {
-		return this._listPrompts()
+	async list(options?: ListPromptsOptions): AsyncResult<PromptListResponse[]> {
+		return this._listPrompts(options)
 	}
 
 	/**
@@ -258,8 +259,8 @@ export default class PromptSDK implements IPromptSDK {
 	 *
 	 * @returns A promise with an array of prompt list responses.
 	 */
-	private async _listPrompts(): AsyncResult<PromptListResponse[]> {
-		const result = await this.api.invoke(ListPromptsEndpoint)
+	private async _listPrompts(options?: ListPromptsOptions): AsyncResult<PromptListResponse[]> {
+		const result = await this.api.invoke(ListPromptsEndpoint, options)
 
 		if (result.error) {
 			return err(result.error)

@@ -89,9 +89,17 @@ export interface IPromptSDK {
 	/**
 	 * Get a list of prompts from the Basalt API
 	 *
+	 * @param options - Optional parameters for the request.
+	 * 		- featureSlug: The slug of the feature.
+	 *
+	 * @example
+	 * ```typescript
+	 * const result = await basalt.prompt.list({ featureSlug: 'my-feature' });
+	 * ```
+	 *
 	 * @returns Promise of a Result object containing prompt or any ocurred error.
 	 */
-	list(): AsyncResult<PromptListResponse[]>
+	list(options?: ListPromptsOptions): AsyncResult<PromptListResponse[]>
 
 	/**
 	 * Describe a prompt from the Basalt API
@@ -222,6 +230,13 @@ export interface DescribePromptOptions {
 export interface NoSlugDescribePromptOptions {
 	version?: string
 	tag?: string
+}
+
+/**
+ * Options for the `list` method of the `IPromptSDK` interface.
+ */
+export interface ListPromptsOptions {
+	featureSlug?: string
 }
 
 /**
