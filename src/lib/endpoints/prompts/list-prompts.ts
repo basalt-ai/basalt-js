@@ -1,15 +1,22 @@
 import type { PromptListResponse, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
+interface Input {
+	featureSlug?: string
+}
+
 interface Output {
 	warning?: string
 	prompts: PromptListResponse[]
 }
 
 export default class ListPromptsEndpoint {
-	static prepareRequest() {
+	static prepareRequest(dto?: Input) {
 		return {
 			path: '/prompts',
+			query: {
+				featureSlug: dto?.featureSlug,
+			},
 			method: 'get',
 		} as const
 	}
