@@ -1,0 +1,41 @@
+{
+  "validResponse": {
+    "status": 201,
+    "body": {
+      "datasetRow": {
+        "name": "Test Item",
+        "values": {
+          "input": "What is the capital of France?",
+          "output": "The capital of France is Paris."
+        },
+        "idealOutput": "Paris",
+        "metadata": {
+          "source": "manual",
+          "category": "geography"
+        }
+      }
+    }
+  },
+  "responseWithWarning": {
+    "status": 201,
+    "body": {
+      "warning": "The following columns do not exist in the dataset and were omitted: extra_column",
+      "datasetRow": {
+        "name": "Test Item",
+        "values": {
+          "input": "What is the capital of Spain?",
+          "output": "The capital of Spain is Madrid."
+        },
+        "idealOutput": "Madrid",
+        "metadata": {
+          "source": "manual",
+          "category": "geography"
+        }
+      }
+    }
+  },
+  "falsePositive": {
+    "status": 201,
+    "body": {}
+  }
+}
