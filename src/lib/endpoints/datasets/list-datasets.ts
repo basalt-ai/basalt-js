@@ -7,11 +7,13 @@ interface Input {
 
 interface Output {
 	warning?: string
-	datasets: {
-		slug: string
-		name: string
-		columns: string[]
-	}[]
+	datasets: DatasetResponseItem[]
+}
+
+interface DatasetResponseItem {
+	slug: string
+	name: string
+	columns: string[]
 }
 
 export default class ListDatasetsEndpoint {

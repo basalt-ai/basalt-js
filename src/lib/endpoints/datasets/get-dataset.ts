@@ -11,12 +11,14 @@ interface Output {
 		slug: string
 		name: string
 		columns: string[]
-		rows: {
-			values: Record<string, string>
-			idealOutput?: string
-			metadata?: Record<string, unknown>
-		}[]
+		rows: DatasetRow[]
 	}
+}
+
+interface DatasetRow {
+	values: Record<string, string>
+	idealOutput?: string
+	metadata?: Record<string, unknown>
 }
 
 export default class GetDatasetEndpoint {

@@ -21,15 +21,15 @@ interface Output {
 }
 
 export default class CreateDatasetItemEndpoint {
-	static prepareRequest(dto?: Input) {
+	static prepareRequest(dto: Input) {
 		return {
-			path: `/datasets/items/${dto?.slug}`,
+			path: `/datasets/${dto.slug}/items`,
 			method: 'post' as const,
 			body: JSON.stringify({
-				name: dto?.name,
-				values: dto?.values,
-				idealOutput: dto?.idealOutput,
-				metadata: dto?.metadata,
+				name: dto.name,
+				values: dto.values,
+				idealOutput: dto.idealOutput,
+				metadata: dto.metadata,
 				isPlayground: dto?.isPlayground,
 			}),
 		}
