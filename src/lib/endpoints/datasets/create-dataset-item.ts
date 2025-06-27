@@ -12,12 +12,7 @@ interface Input {
 
 interface Output {
 	warning?: string
-	datasetRow: {
-		name?: string
-		values: Record<string, string>
-		idealOutput?: string
-		metadata?: Record<string, unknown>
-	}
+	datasetRow: DatasetRow
 }
 
 export default class CreateDatasetItemEndpoint {

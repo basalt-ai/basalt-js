@@ -29,7 +29,7 @@ import { AsyncResult } from '../contract'
  * }
  *
  * // Example 3: Creating a new dataset item
- * const newItem = await datasetSDK.createItem('example-dataset', {
+ * const newItem = await datasetSDK.addRow('example-dataset', {
  *   name: 'Example Item',
  *   values: { input: 'Test input', output: 'Test output' },
  *   idealOutput: 'Expected output',
@@ -42,12 +42,9 @@ export interface IDatasetSDK {
 	/**
    * List datasets from the Basalt API
    *
-   * @param options - Optional parameters for the request.
-   *    - workspaceSlug: The slug of the workspace to filter datasets by.
-   *
    * @example
    * ```typescript
-   * const result = await basalt.dataset.list({ workspaceSlug: 'my-workspace' });
+   * const result = await basalt.dataset.list();
    *
    * if (result.error) {
    *   console.log(result.error.message);
@@ -60,7 +57,7 @@ export interface IDatasetSDK {
    *
    * @returns Promise of a Result object containing datasets or any occurred error.
    */
-	list(options?: ListDatasetsOptions): AsyncResult<DatasetListResponse[]>
+	list(): AsyncResult<DatasetListResponse[]>
 
 	/**
    * Get a dataset from the Basalt API
@@ -93,7 +90,7 @@ export interface IDatasetSDK {
    *
    * @example
    * ```typescript
-   * const result = await basalt.dataset.createItem('my-dataset', {
+   * const result = await basalt.dataset.addRow('my-dataset', {
    *   name: 'Example Item',
    *   values: { input: 'Test input', output: 'Test output' },
    *   idealOutput: 'Expected output',
@@ -112,14 +109,7 @@ export interface IDatasetSDK {
    *
    * @returns Promise of a Result object containing created dataset item or any occurred error.
    */
-	createItem(slug: string, options: CreateDatasetItemOptions): AsyncResult<CreateDatasetItemResponse>
-}
-
-/**
- * Options for the `list` method of the `IDatasetSDK` interface.
- */
-export interface ListDatasetsOptions {
-	workspaceSlug?: string
+	addRow(slug: string, options: CreateDatasetItemOptions): AsyncResult<CreateDatasetItemResponse>
 }
 
 /**
@@ -130,7 +120,7 @@ export interface GetDatasetOptions {
 }
 
 /**
- * Options for the `createItem` method of the `IDatasetSDK` interface.
+ * Options for the `addRow` method of the `IDatasetSDK` interface.
  */
 export interface CreateDatasetItemOptions {
 	name?: string
@@ -169,7 +159,7 @@ export interface DatasetResponse {
 }
 
 /**
- * Response type for the `createItem` method of the `IDatasetSDK` interface.
+ * Response type for the `addRow` method of the `IDatasetSDK` interface.
  */
 export interface CreateDatasetItemResponse {
 	warning?: string

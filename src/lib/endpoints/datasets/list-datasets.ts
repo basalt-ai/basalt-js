@@ -1,10 +1,6 @@
 import type { DatasetListResponse, Result } from '../../resources'
 import { err, ok } from '../../utils/utils'
 
-interface Input {
-	workspaceSlug?: string
-}
-
 interface Output {
 	warning?: string
 	datasets: DatasetResponseItem[]
@@ -17,12 +13,9 @@ interface DatasetResponseItem {
 }
 
 export default class ListDatasetsEndpoint {
-	static prepareRequest(dto: Input) {
+	static prepareRequest() {
 		return {
 			path: '/datasets',
-			query: {
-				workspaceSlug: dto.workspaceSlug,
-			},
 			method: 'get' as const,
 		}
 	}

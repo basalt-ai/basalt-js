@@ -9,7 +9,6 @@ import type {
 	IApi,
 	ICache,
 	IDatasetSDK,
-	ListDatasetsOptions,
 	Logger,
 } from '../resources'
 import { err, ok } from '../utils/utils'
@@ -41,11 +40,10 @@ export default class DatasetSDK implements IDatasetSDK {
 	/**
    * Lists all available datasets.
    *
-   * @param options - Optional parameters for the request.
    * @returns A promise with an array of dataset list responses.
    */
-	async list(options?: ListDatasetsOptions): AsyncResult<DatasetListResponse[]> {
-		return this._listDatasets(options)
+	async list(): AsyncResult<DatasetListResponse[]> {
+		return this._listDatasets()
 	}
 
 	/**
@@ -66,7 +64,7 @@ export default class DatasetSDK implements IDatasetSDK {
    * @param options - Parameters for the request.
    * @returns A promise with the created dataset item response.
    */
-	async createItem(slug: string, options: CreateDatasetItemOptions): AsyncResult<CreateDatasetItemResponse> {
+	async addRow(slug: string, options: CreateDatasetItemOptions): AsyncResult<CreateDatasetItemResponse> {
 		return this._createDatasetItem({ slug, ...options })
 	}
 
@@ -77,11 +75,10 @@ export default class DatasetSDK implements IDatasetSDK {
 	/**
    * Lists all datasets from the Basalt API.
    *
-   * @param options - Optional parameters for the request.
    * @returns A promise with an array of dataset list responses.
    */
-	private async _listDatasets(options?: ListDatasetsOptions): AsyncResult<DatasetListResponse[]> {
-		const result = await this.api.invoke(ListDatasetsEndpoint, options)
+	private async _listDatasets(): AsyncResult<DatasetListResponse[]> {
+		const result = await this.api.invoke(ListDatasetsEndpoint)
 
 		if (result.error) {
 			return err(result.error)

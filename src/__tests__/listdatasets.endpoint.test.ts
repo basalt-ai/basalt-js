@@ -4,16 +4,10 @@ import { ListDatasetsEndpoint } from '../lib/endpoints'
 
 describe('ListDatasetsEndpoint', () => {
 	test('prepares correct request path', () => {
-		const result = ListDatasetsEndpoint.prepareRequest({})
+		const result = ListDatasetsEndpoint.prepareRequest()
 
 		expect(result.path).toBe('/datasets')
 		expect(result.method).toBe('get')
-	})
-
-	test('includes workspaceSlug in query when present', () => {
-		const result = ListDatasetsEndpoint.prepareRequest({ workspaceSlug: 'test-workspace' })
-
-		expect(result.query).toMatchObject({ workspaceSlug: 'test-workspace' })
 	})
 
 	test('positively decodes valid responses', () => {
