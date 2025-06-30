@@ -1,6 +1,6 @@
 {
 	"name": "@basalt-ai/sdk",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "Official NodeJS package for interacting with your Basalt prompts and monitoring them.",
 	"license": "MIT",
 	"author": "Basalt AI",
