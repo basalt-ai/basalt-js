@@ -10,16 +10,22 @@ export interface BaseLogParams {
 	name: string
 
 	/**
-	 * When the log entry started, can be a Date object or ISO string.
-	 * If not provided, defaults to the current time when created.
+	 * Ideal output data for the log, typically the expected response to the user.
+	 * If provided, it will be used to evaluate the log.
 	 */
-	startTime?: Date | string | undefined
+	idealOutput?: string | null
 
 	/**
-	 * When the log entry ended, can be a Date object or ISO string.
+	 * When the log entry started, can be a Date object or ISO string or a number of milliseconds since the Unix epoch.
+	 * If not provided, defaults to the current time when created.
+	 */
+	startTime?: Date | number | string | undefined
+
+	/**
+	 * When the log entry ended, can be a Date object or ISO string or a number of milliseconds since the Unix epoch.
 	 * Can be set later using the end() method.
 	 */
-	endTime?: Date | string | undefined
+	endTime?: Date | number | string | undefined
 
 	/**
 	 * Additional contextual information about this log entry.
