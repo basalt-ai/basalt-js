@@ -293,7 +293,6 @@ export interface GenerationParams extends BaseLogParams {
 	 * Cost of the generation.
 	 */
 	cost?: number
-
 }
 
 /**

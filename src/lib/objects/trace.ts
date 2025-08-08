@@ -31,6 +31,7 @@ export class Trace implements ITrace {
 	private _experiment: Experiment | undefined
 	private _evaluators: Evaluator[] | undefined
 	private _evaluationConfig: EvaluationConfig | undefined
+	private _idealOutput: string | undefined | null
 
 	private _logs: BaseLog[] = []
 
@@ -48,6 +49,7 @@ export class Trace implements ITrace {
 		this._input = params.input
 		this._output = params.output
 		this._name = params.name
+		this._idealOutput = params.idealOutput
 		this._startTime = params.startTime ? new Date(params.startTime) : new Date()
 		this._endTime = params.endTime ? new Date(params.endTime) : undefined
 		this._evaluators = params.evaluators
@@ -119,6 +121,10 @@ export class Trace implements ITrace {
 		return this._evaluators
 	}
 
+	get idealOutput() {
+		return this._idealOutput
+	}
+
 	/* ----------------------------- Public methods ----------------------------- */
 	public start(input?: string) {
 		if (input) {
@@ -172,6 +178,7 @@ export class Trace implements ITrace {
 		this._endTime = params.endTime ? new Date(params.endTime) : this._endTime
 		this._name = params.name ?? this._name
 		this._evaluators = params.evaluators ?? this._evaluators
+		this._idealOutput = params.idealOutput ?? this._idealOutput
 
 		return this
 	}
