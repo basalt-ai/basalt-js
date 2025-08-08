@@ -12,13 +12,11 @@ import {
 export default class Log extends BaseLog implements ILog {
 	private _input: string | undefined
 	private _output: string | undefined
-	private _idealOutput: string | undefined | null
 
 	constructor(params: LogParams) {
 		super(params)
 
 		this._input = params.input
-		this._idealOutput = params.idealOutput
 	}
 
 	/* --------------------------------- Getters -------------------------------- */
@@ -28,10 +26,6 @@ export default class Log extends BaseLog implements ILog {
 
 	public get output() {
 		return this._output
-	}
-
-	public get idealOutput() {
-		return this._idealOutput
 	}
 
 	/* ----------------------------- Public methods ----------------------------- */

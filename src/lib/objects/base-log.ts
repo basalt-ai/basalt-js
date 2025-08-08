@@ -16,6 +16,7 @@ export class BaseLog implements IBaseLog {
 	private _startTime: Date
 	private _endTime: Date | undefined
 	private _metadata: Record<string, unknown> | undefined
+	private _idealOutput: string | null
 
 	private _parent: Log | undefined
 	private _trace: Trace
@@ -31,6 +32,7 @@ export class BaseLog implements IBaseLog {
 		this._trace = params.trace
 		this._parent = params.parent
 		this._evaluators = params.evaluators
+		this._idealOutput = params.idealOutput ?? null
 		params.trace.logs.push(this)
 	}
 
@@ -53,6 +55,10 @@ export class BaseLog implements IBaseLog {
 
 	public get name() {
 		return this._name
+	}
+
+	public get idealOutput() {
+		return this._idealOutput
 	}
 
 	public get startTime() {
