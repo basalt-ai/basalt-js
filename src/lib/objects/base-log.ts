@@ -98,6 +98,12 @@ export class BaseLog implements IBaseLog {
 		return this
 	}
 
+	setIdealOutput(idealOutput: string) {
+		this._idealOutput = idealOutput
+
+		return this
+	}
+
 	addEvaluator(evaluator: Evaluator) {
 		this._evaluators = this._evaluators ?? []
 		this._evaluators.push(evaluator)
