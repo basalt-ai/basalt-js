@@ -1,6 +1,5 @@
 import type { IBasaltSDK, IPromptSDK } from './resources'
 import { IDatasetSDK } from './resources/dataset/dataset.types'
-import { IMonitorSDK } from './resources/monitor/monitor.types'
 
 /**
  * The `BasaltSDK` class implements the `IBasaltSDK` interface.
@@ -9,7 +8,6 @@ import { IMonitorSDK } from './resources/monitor/monitor.types'
 export default class BasaltSDK implements IBasaltSDK {
 	constructor(
 		public readonly prompt: IPromptSDK,
-		public readonly monitor: IMonitorSDK,
 		public readonly dataset: IDatasetSDK,
 	) {}
 }

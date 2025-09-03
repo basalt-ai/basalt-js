@@ -1,7 +1,7 @@
 {
 	"name": "@basalt-ai/sdk",
-	"version": "0.3.0",
-	"description": "Official NodeJS package for interacting with your Basalt prompts and monitoring them.",
+	"version": "1.0.0",
+	"description": "Official NodeJS package for interacting with your Basalt prompts. Monitoring and observability via OpenTelemetry instrumentation.",
 	"license": "MIT",
 	"author": "Basalt AI",
 	"homepage": "https://docs.getbasalt.ai",

@@ -1,5 +1,4 @@
 import { IDatasetSDK } from './dataset/dataset.types'
-import { IMonitorSDK } from './monitor/monitor.types'
 import { IPromptSDK } from './prompt/prompt.types'
 
 /**
@@ -7,7 +6,6 @@ import { IPromptSDK } from './prompt/prompt.types'
  */
 export interface IBasaltSDK {
 	readonly prompt: IPromptSDK
-	readonly monitor: IMonitorSDK
 	readonly dataset: IDatasetSDK
 }
 

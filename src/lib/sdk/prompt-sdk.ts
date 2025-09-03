@@ -1,6 +1,4 @@
 import { DescribePromptEndpoint, GetPromptEndpoint, ListPromptsEndpoint } from '../endpoints'
-import Generation from '../objects/generation'
-import { Trace } from '../objects/trace'
 import type {
 	AsyncGetPromptResult,
 	AsyncResult,
@@ -19,7 +17,6 @@ import type {
 	PromptResponse,
 	VariablesMap,
 } from '../resources'
-import Flusher from '../utils/flusher'
 import {
 	difference,
 	err,
@@ -77,15 +74,7 @@ export default class PromptSDK implements IPromptSDK {
 			params = arg1
 		}
 
-		const prompt = await this._getPrompt(params)
-
-		if (prompt.error) {
-			return { ...prompt, generation: null }
-		}
-
-		const generation = this._prepareMonitoring(prompt.value, params)
-
-		return { ...prompt, generation }
+		return this._getPrompt(params)
 	}
 
 	/**
@@ -220,38 +209,6 @@ export default class PromptSDK implements IPromptSDK {
 		}
 
 		return cacheKey
-	}
-
-	/**
-	 * Prepares monitoring for a prompt.
-	 *
-	 * @param prompt - The prompt response.
-	 * @param params - The parameters used to retrieve the prompt.
-	 * @returns A new Generation instance.
-	 */
-	private _prepareMonitoring(prompt: GetPromptResponse, params: GetPromptOptions): Generation {
-		// 1. Create the trace
-		const flusher = new Flusher(this.api, this.logger)
-
-		const trace = new Trace(params.slug, {
-			input: prompt.text,
-			startTime: new Date(),
-		}, flusher, this.logger)
-
-		// 2. Create the generation
-		const generation = new Generation({
-			name: params.slug,
-			trace,
-			prompt: {
-				slug: params.slug,
-				version: params.version,
-				tag: params.tag,
-			},
-			input: prompt.text,
-			variables: params.variables,
-		}, { type: 'single' })
-
-		return generation
 	}
 
 	/**

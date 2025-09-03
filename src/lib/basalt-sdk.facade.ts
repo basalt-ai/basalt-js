@@ -1,7 +1,6 @@
 import BasaltSDK from './basalt-sdk'
 import type { IBasaltSDK, ICache, LogLevel } from './resources/contract'
 import DatasetSDK from './sdk/dataset-sdk'
-import MonitorSDK from './sdk/monitor-sdk'
 import PromptSDK from './sdk/prompt-sdk'
 import Api from './utils/api'
 import Logger from './utils/logger'
@@ -44,10 +43,6 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 				BasaltSDKFacade._cache,
 				new Logger(opts.logLevel ?? 'warning'),
 			),
-			new MonitorSDK(
-				api,
-				new Logger(opts.logLevel ?? 'warning'),
-			),
 			new DatasetSDK(
 				api,
 				queryCache,
@@ -59,10 +54,6 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 
 	public get prompt() {
 		return this._basaltSdk.prompt
-	}
-
-	public get monitor() {
-		return this._basaltSdk.monitor
 	}
 
 	public get dataset() {

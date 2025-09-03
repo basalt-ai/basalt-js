@@ -3,11 +3,8 @@
  */
 
 import { AsyncResult, ErrObj } from '../contract'
-import { Generation } from '../monitor'
 
-export type GetPromptResult<Wrapped, Error = ErrObj> =
-	| { error: null, value: Wrapped, generation: Generation }
-	| { error: Error, value: null, generation: null }
+export type GetPromptResult<Wrapped, Error = ErrObj> = AsyncResult<Wrapped, Error>
 
 export type AsyncGetPromptResult<Wrapped, Error = ErrObj> = Promise<GetPromptResult<Wrapped, Error>>
 
