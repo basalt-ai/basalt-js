@@ -17,6 +17,17 @@
 	"scripts": {
 		"test": "jest"
 	},
+	"dependencies": {
+		"@opentelemetry/api": "^1.8.0",
+		"@opentelemetry/auto-instrumentations-node": "^0.52.1",
+		"@opentelemetry/exporter-trace-otlp-http": "^0.56.0",
+		"@opentelemetry/exporter-trace-otlp-grpc": "^0.56.0",
+		"@opentelemetry/instrumentation-http": "^0.56.0",
+		"@opentelemetry/instrumentation-undici": "^0.8.0",
+		"@opentelemetry/resources": "^1.28.0",
+		"@opentelemetry/sdk-node": "^0.56.0",
+		"@opentelemetry/semantic-conventions": "^1.28.0"
+	},
 	"devDependencies": {
 		"@swc/core": "^1.11.11",
 		"@swc/helpers": "^0.5.15",

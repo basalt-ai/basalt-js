@@ -1,0 +1,1 @@
+export { initOpenTelemetry, shutdown, OpenTelemetryConfig } from './init';
