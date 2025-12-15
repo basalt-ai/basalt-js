@@ -24,6 +24,7 @@ export default {
 		'^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
 	},
 	moduleFileExtensions: ['ts', 'js', 'html'],
+	setupFiles: ['<rootDir>/jest.setup.js'],
 	testEnvironment: 'node',
 	coverageDirectory: '../../coverage/packages/js-sdk',
 };

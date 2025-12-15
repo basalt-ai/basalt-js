@@ -19,6 +19,9 @@ import type {
 	PromptResponse,
 	VariablesMap,
 } from '../resources'
+import type { Span } from '@opentelemetry/api'
+import { withSpan, BasaltContextManager } from '../telemetry'
+import { BASALT_ATTRIBUTES, CACHE_TYPES } from '../telemetry/attributes'
 import Flusher from '../utils/flusher'
 import { renderTemplate } from '../utils/template'
 import {
@@ -75,15 +78,33 @@ export default class PromptSDK implements IPromptSDK {
 			params = arg1
 		}
 
-		const prompt = await this._getPrompt(params)
+		return withSpan(
+			'@basalt-ai/sdk',
+			'basalt.prompt.get',
+			{
+				[BASALT_ATTRIBUTES.OPERATION]: 'get',
+				[BASALT_ATTRIBUTES.PROMPT_SLUG]: params.slug,
+				[BASALT_ATTRIBUTES.PROMPT_VERSION]: params.version,
+				[BASALT_ATTRIBUTES.PROMPT_TAG]: params.tag,
+				[BASALT_ATTRIBUTES.PROMPT_VARIABLES_COUNT]: params.variables
+					? Object.keys(params.variables).length
+					: 0,
+				...BasaltContextManager.extractAttributes(),
+			},
+			async (span) => {
+				const prompt = await this._getPromptWithCache(params, span)
 
-		if (prompt.error) {
-			return { ...prompt, generation: null }
-		}
+				if (prompt.error) {
+					return { ...prompt, generation: null }
+				}
 
-		const generation = this._prepareMonitoring(prompt.value, params)
+				const generation = this._prepareMonitoring(prompt.value, params)
 
-		return { ...prompt, generation }
+				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+
+				return { ...prompt, generation }
+			},
+		)
 	}
 
 	/**
@@ -92,7 +113,25 @@ export default class PromptSDK implements IPromptSDK {
 	 * @returns A promise with an array of prompt list responses.
 	 */
 	async list(options?: ListPromptsOptions): AsyncResult<PromptListResponse[]> {
-		return this._listPrompts(options)
+		return withSpan(
+			'@basalt-ai/sdk',
+			'basalt.prompt.list',
+			{
+				[BASALT_ATTRIBUTES.OPERATION]: 'list',
+				[BASALT_ATTRIBUTES.PROMPT_FEATURE_SLUG]: options?.featureSlug,
+				...BasaltContextManager.extractAttributes(),
+			},
+			async (span) => {
+				const result = await this._listPrompts(options)
+
+				if (result.value) {
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+					span.setAttribute('basalt.prompt.count', result.value.length)
+				}
+
+				return result
+			},
+		)
 	}
 
 	/**
@@ -111,11 +150,35 @@ export default class PromptSDK implements IPromptSDK {
 	 */
 	async describe(options: DescribePromptOptions): AsyncResult<PromptDetailResponse>
 	async describe(arg1: string | DescribePromptOptions, arg2?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse> {
+		let params: DescribePromptOptions
+
 		if (typeof arg1 === 'string') {
-			return this._describePrompt({ ...(arg2 ?? {}), slug: arg1 })
+			params = { ...(arg2 ?? {}), slug: arg1 }
+		}
+		else {
+			params = arg1
 		}
 
-		return this._describePrompt(arg1)
+		return withSpan(
+			'@basalt-ai/sdk',
+			'basalt.prompt.describe',
+			{
+				[BASALT_ATTRIBUTES.OPERATION]: 'describe',
+				[BASALT_ATTRIBUTES.PROMPT_SLUG]: params.slug,
+				[BASALT_ATTRIBUTES.PROMPT_VERSION]: params.version,
+				[BASALT_ATTRIBUTES.PROMPT_TAG]: params.tag,
+				...BasaltContextManager.extractAttributes(),
+			},
+			async (span) => {
+				const result = await this._describePrompt(params)
+
+				if (result.value) {
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+				}
+
+				return result
+			},
+		)
 	}
 
 	// --
@@ -123,12 +186,16 @@ export default class PromptSDK implements IPromptSDK {
 	// --
 
 	/**
-	 * Internal implementation for retrieving a prompt.
+	 * Internal implementation for retrieving a prompt with cache tracking.
 	 *
 	 * @param opts - Options for retrieving the prompt.
+	 * @param span - OpenTelemetry span for adding cache attributes.
 	 * @returns A promise with the prompt response.
 	 */
-	private async _getPrompt(opts: GetPromptOptions): AsyncResult<GetPromptResponse> {
+	private async _getPromptWithCache(
+		opts: GetPromptOptions,
+		span: Pick<Span, 'setAttribute'>,
+	): AsyncResult<GetPromptResponse> {
 		// 1. Read from query cache first
 		const cacheKey = this._makePromptCacheKey(opts)
 		const cached = this.queryCache.get<GetPromptResponse>(cacheKey)
@@ -137,6 +204,8 @@ export default class PromptSDK implements IPromptSDK {
 		const variables = opts.variables ?? {}
 
 		if (cacheEnabled && cached) {
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true)
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.QUERY)
 			return ok(this._insertVariables(cached, variables))
 		}
 
@@ -144,6 +213,8 @@ export default class PromptSDK implements IPromptSDK {
 		const result = await this.api.invoke(GetPromptEndpoint, opts)
 
 		if (result.value) {
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false)
+
 			this.queryCache.set(cacheKey, result.value.prompt, this.cacheDuration)
 			this.fallbackCache.set(cacheKey, result.value.prompt, Infinity)
 
@@ -158,11 +229,15 @@ export default class PromptSDK implements IPromptSDK {
 		const fallback = this.fallbackCache.get<GetPromptResponse>(cacheKey)
 
 		if (cacheEnabled && fallback) {
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true)
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.FALLBACK)
+
 			this.logger.warn(`Basalt Warning: Failed to fetch prompt from API, using last result for "${opts.slug}"`)
 
 			return ok(this._insertVariables(fallback, variables))
 		}
 
+		span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false)
 		return err(result.error)
 	}
 
