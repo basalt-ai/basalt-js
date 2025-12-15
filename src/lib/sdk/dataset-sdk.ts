@@ -11,8 +11,11 @@ import type {
 	IDatasetSDK,
 	Logger,
 } from '../resources'
+import type { Span } from '@opentelemetry/api'
 import { FileAttachment } from '../resources/dataset/file-attachment.types'
 import { uploadFile } from '../utils/file-upload'
+import { withSpan, BasaltContextManager } from '../telemetry'
+import { BASALT_ATTRIBUTES, CACHE_TYPES } from '../telemetry/attributes'
 import { err, ok } from '../utils/utils'
 
 export default class DatasetSDK implements IDatasetSDK {
@@ -45,7 +48,24 @@ export default class DatasetSDK implements IDatasetSDK {
    * @returns A promise with an array of dataset list responses.
    */
 	async list(): AsyncResult<DatasetListResponse[]> {
-		return this._listDatasets()
+		return withSpan(
+			'@basalt-ai/sdk',
+			'basalt.dataset.list',
+			{
+				[BASALT_ATTRIBUTES.OPERATION]: 'list',
+				...BasaltContextManager.extractAttributes(),
+			},
+			async (span) => {
+				const result = await this._listDatasets()
+
+				if (result.value) {
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+					span.setAttribute(BASALT_ATTRIBUTES.DATASET_ROW_COUNT, result.value.length)
+				}
+
+				return result
+			},
+		)
 	}
 
 	/**
@@ -56,7 +76,24 @@ export default class DatasetSDK implements IDatasetSDK {
    * @returns A promise with the dataset response.
    */
 	async get(slug: string): AsyncResult<DatasetResponse> {
-		return this._getDataset({ slug })
+		return withSpan(
+			'@basalt-ai/sdk',
+			'basalt.dataset.get',
+			{
+				[BASALT_ATTRIBUTES.OPERATION]: 'get',
+				[BASALT_ATTRIBUTES.DATASET_SLUG]: slug,
+				...BasaltContextManager.extractAttributes(),
+			},
+			async (span) => {
+				const result = await this._getDatasetWithCache({ slug }, span)
+
+				if (result.value) {
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+				}
+
+				return result
+			},
+		)
 	}
 
 	/**
@@ -67,7 +104,25 @@ export default class DatasetSDK implements IDatasetSDK {
    * @returns A promise with the created dataset item response.
    */
 	async addRow(slug: string, options: CreateDatasetItemOptions): AsyncResult<CreateDatasetItemResponse> {
-		return this._createDatasetItem({ slug, ...options })
+		return withSpan(
+			'@basalt-ai/sdk',
+			'basalt.dataset.addRow',
+			{
+				[BASALT_ATTRIBUTES.OPERATION]: 'create',
+				[BASALT_ATTRIBUTES.DATASET_SLUG]: slug,
+				'basalt.dataset.is_playground': options.isPlayground,
+				...BasaltContextManager.extractAttributes(),
+			},
+			async (span) => {
+				const result = await this._createDatasetItem({ slug, ...options })
+
+				if (result.value) {
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+				}
+
+				return result
+			},
+		)
 	}
 
 	// --
@@ -94,17 +149,23 @@ export default class DatasetSDK implements IDatasetSDK {
 	}
 
 	/**
-   * Gets a dataset from the Basalt API.
+   * Gets a dataset from the Basalt API with cache tracking.
    *
    * @param options - Options to select the dataset.
+   * @param span - OpenTelemetry span for adding cache attributes.
    * @returns A promise with the dataset response.
    */
-	private async _getDataset(options: GetDatasetOptions): AsyncResult<DatasetResponse> {
+	private async _getDatasetWithCache(
+		options: GetDatasetOptions,
+		span: Span,
+	): AsyncResult<DatasetResponse> {
 		// 1. Read from query cache first
 		const cacheKey = options.slug
 		const cached = this.queryCache.get<DatasetResponse>(cacheKey)
 
 		if (cached) {
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true)
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.QUERY)
 			return ok(cached)
 		}
 
@@ -112,6 +173,8 @@ export default class DatasetSDK implements IDatasetSDK {
 		const result = await this.api.invoke(GetDatasetEndpoint, options)
 
 		if (result.value) {
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false)
+
 			this.queryCache.set(cacheKey, result.value.dataset, this.cacheDuration)
 			this.fallbackCache.set(cacheKey, result.value.dataset, Infinity)
 
@@ -126,10 +189,14 @@ export default class DatasetSDK implements IDatasetSDK {
 		const fallback = this.fallbackCache.get<DatasetResponse>(cacheKey)
 
 		if (fallback) {
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true)
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.FALLBACK)
+
 			this.logger.warn(`Basalt Warning: Failed to fetch dataset from API, using last result for "${options.slug}"`)
 			return ok(fallback)
 		}
 
+		span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false)
 		return err(result.error)
 	}
 
