@@ -76,7 +76,7 @@ export default class GetPromptEndpoint {
 			prompt: {
 				text: body.prompt.text,
 				model: body.prompt.model as PromptModel,
-				systemText: body.prompt.systemText ?? undefined,
+				systemText: body.prompt.systemText as string | undefined,
 				version: body.prompt.version,
 			},
 		})

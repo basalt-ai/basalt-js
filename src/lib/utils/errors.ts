@@ -77,3 +77,35 @@ export class BadRequest extends NetworkBaseError {
 		})
 	}
 }
+
+/**
+ * Error specific to file upload operations
+ */
+export class FileUploadError extends Error {
+	public readonly filename?: string
+
+	constructor(opts: { message: string, filename?: string }) {
+		super(opts.message)
+		this.filename = opts.filename
+		this.name = 'FileUploadError'
+	}
+}
+
+/**
+ * Error for file validation failures
+ */
+export class FileValidationError extends Error {
+	public readonly filename?: string
+	public readonly validationErrors: string[]
+
+	constructor(opts: {
+		message: string
+		filename?: string
+		validationErrors?: string[]
+	}) {
+		super(opts.message)
+		this.filename = opts.filename
+		this.validationErrors = opts.validationErrors || []
+		this.name = 'FileValidationError'
+	}
+}

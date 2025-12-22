@@ -3,6 +3,7 @@
  */
 
 import { AsyncResult } from '../contract'
+import { FileAttachment } from './file-attachment.types'
 
 /**
  * @preserve
@@ -124,7 +125,7 @@ export interface GetDatasetOptions {
  */
 export interface CreateDatasetItemOptions {
 	name?: string
-	values: Record<string, string>
+	values: Record<string, string | FileAttachment>
 	idealOutput?: string
 	metadata?: Record<string, unknown>
 	isPlayground?: boolean
