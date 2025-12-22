@@ -11,6 +11,8 @@ import type {
 	IDatasetSDK,
 	Logger,
 } from '../resources'
+import { FileAttachment } from '../resources/dataset/file-attachment.types'
+import { uploadFile } from '../utils/file-upload'
 import { err, ok } from '../utils/utils'
 
 export default class DatasetSDK implements IDatasetSDK {
@@ -138,7 +140,34 @@ export default class DatasetSDK implements IDatasetSDK {
    * @returns A promise with the created dataset item response.
    */
 	private async _createDatasetItem(options: { slug: string } & CreateDatasetItemOptions): AsyncResult<CreateDatasetItemResponse> {
-		const result = await this.api.invoke(CreateDatasetItemEndpoint, options)
+		// Process file uploads if present
+		let processedValues: Record<string, string>
+
+		const hasFiles = Object.values(options.values).some(
+			value => value instanceof FileAttachment,
+		)
+
+		if (hasFiles) {
+			const uploadResult = await this._processFileUploads(options.values)
+			if (uploadResult.error) {
+				return err(uploadResult.error)
+			}
+			processedValues = uploadResult.value
+		}
+		else {
+			// Type assertion: if no files, all values are already strings
+			processedValues = options.values as Record<string, string>
+		}
+
+		// Call existing endpoint with processed values (all strings now)
+		const result = await this.api.invoke(CreateDatasetItemEndpoint, {
+			slug: options.slug,
+			name: options.name,
+			values: processedValues,
+			idealOutput: options.idealOutput,
+			metadata: options.metadata,
+			isPlayground: options.isPlayground,
+		})
 
 		if (result.error) {
 			return err(result.error)
@@ -149,5 +178,35 @@ export default class DatasetSDK implements IDatasetSDK {
 		}
 
 		return ok(result.value)
+	}
+
+	/**
+   * Processes file uploads in values object.
+   * Replaces FileAttachment instances with file_key strings.
+   *
+   * @param values - The values object potentially containing FileAttachment instances.
+   * @returns A promise with processed values (all strings).
+   */
+	private async _processFileUploads(
+		values: Record<string, string | FileAttachment>,
+	): AsyncResult<Record<string, string>> {
+		const processedValues: Record<string, string> = {}
+
+		for (const [key, value] of Object.entries(values)) {
+			if (value instanceof FileAttachment) {
+				const uploadResult = await uploadFile(this.api, value)
+				if (uploadResult.error) {
+					return err({
+						message: `Failed to upload file for field "${key}": ${uploadResult.error.message}`,
+					})
+				}
+				processedValues[key] = uploadResult.value
+			}
+			else {
+				processedValues[key] = value
+			}
+		}
+
+		return ok(processedValues)
 	}
 }
