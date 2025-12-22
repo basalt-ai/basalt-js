@@ -52,7 +52,7 @@ export default class CreateDatasetItemEndpoint {
 			return err({ message: 'Create Dataset Item: Failed to decode response (invalid datasetRow.name type)' })
 		}
 
-		if ('idealOutput' in datasetRow && typeof datasetRow.idealOutput !== 'string' && datasetRow.idealOutput !== undefined) {
+		if ('idealOutput' in datasetRow && typeof datasetRow.idealOutput !== 'string' && datasetRow.idealOutput !== undefined && datasetRow.idealOutput !== null) {
 			return err({ message: 'Create Dataset Item: Failed to decode response (invalid datasetRow.idealOutput type)' })
 		}
 

@@ -20,9 +20,9 @@ export default class GenerateUploadUrlEndpoint {
 			path: '/files/generate-upload-url',
 			method: 'post' as const,
 			body: JSON.stringify({
-				filename: dto.filename,
-				content_type: dto.content_type,
-				size_bytes: dto.size_bytes,
+				fileName: dto.filename,
+				contentType: dto.content_type,
+				sizeBytes: dto.size_bytes,
 			}),
 		}
 	}
@@ -34,35 +34,35 @@ export default class GenerateUploadUrlEndpoint {
 			})
 		}
 
-		if (!('upload_url' in body) || typeof body.upload_url !== 'string') {
+		if (!('uploadUrl' in body) || typeof body.uploadUrl !== 'string') {
 			return err({
-				message: 'Generate Upload URL: Failed to decode response (missing upload_url)',
+				message: 'Generate Upload URL: Failed to decode response (missing uploadUrl)',
 			})
 		}
 
-		if (!('file_key' in body) || typeof body.file_key !== 'string') {
+		if (!('fileKey' in body) || typeof body.fileKey !== 'string') {
 			return err({
-				message: 'Generate Upload URL: Failed to decode response (missing file_key)',
+				message: 'Generate Upload URL: Failed to decode response (missing fileKey)',
 			})
 		}
 
-		if (!('expires_at' in body) || typeof body.expires_at !== 'string') {
+		if (!('expiresAt' in body) || typeof body.expiresAt !== 'string') {
 			return err({
-				message: 'Generate Upload URL: Failed to decode response (missing expires_at)',
+				message: 'Generate Upload URL: Failed to decode response (missing expiresAt)',
 			})
 		}
 
-		if (!('max_size_bytes' in body) || typeof body.max_size_bytes !== 'number') {
+		if (!('maxSizeBytes' in body) || typeof body.maxSizeBytes !== 'number') {
 			return err({
-				message: 'Generate Upload URL: Failed to decode response (missing max_size_bytes)',
+				message: 'Generate Upload URL: Failed to decode response (missing maxSizeBytes)',
 			})
 		}
 
 		return ok({
-			upload_url: body.upload_url,
-			file_key: body.file_key,
-			expires_at: body.expires_at,
-			max_size_bytes: body.max_size_bytes,
+			upload_url: body.uploadUrl,
+			file_key: body.fileKey,
+			expires_at: body.expiresAt,
+			max_size_bytes: body.maxSizeBytes,
 		})
 	}
 }

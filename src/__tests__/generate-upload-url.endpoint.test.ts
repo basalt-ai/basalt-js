@@ -13,7 +13,7 @@ describe('GenerateUploadUrlEndpoint', () => {
 			expect(result.method).toBe('post')
 		})
 
-		test('request body includes filename and content_type', () => {
+		test('request body includes fileName and contentType in camelCase', () => {
 			const params = {
 				filename: 'document.pdf',
 				content_type: 'application/pdf',
@@ -22,12 +22,12 @@ describe('GenerateUploadUrlEndpoint', () => {
 			const result = GenerateUploadUrlEndpoint.prepareRequest(params)
 
 			expect(result.body).toMatch(JSON.stringify({
-				filename: params.filename,
-				content_type: params.content_type,
+				fileName: params.filename,
+				contentType: params.content_type,
 			}))
 		})
 
-		test('request body includes size_bytes when provided', () => {
+		test('request body includes sizeBytes when provided', () => {
 			const params = {
 				filename: 'image.jpg',
 				content_type: 'image/jpeg',
@@ -37,13 +37,13 @@ describe('GenerateUploadUrlEndpoint', () => {
 			const result = GenerateUploadUrlEndpoint.prepareRequest(params)
 
 			expect(result.body).toMatch(JSON.stringify({
-				filename: params.filename,
-				content_type: params.content_type,
-				size_bytes: params.size_bytes,
+				fileName: params.filename,
+				contentType: params.content_type,
+				sizeBytes: params.size_bytes,
 			}))
 		})
 
-		test('request body excludes size_bytes when undefined', () => {
+		test('request body excludes sizeBytes when undefined', () => {
 			const params = {
 				filename: 'file.txt',
 				content_type: 'text/plain',
@@ -52,9 +52,9 @@ describe('GenerateUploadUrlEndpoint', () => {
 			const result = GenerateUploadUrlEndpoint.prepareRequest(params)
 			const body = JSON.parse(result.body)
 
-			expect(body).toHaveProperty('filename')
-			expect(body).toHaveProperty('content_type')
-			expect(body.size_bytes).toBeUndefined()
+			expect(body).toHaveProperty('fileName')
+			expect(body).toHaveProperty('contentType')
+			expect(body.sizeBytes).toBeUndefined()
 		})
 	})
 
@@ -64,119 +64,119 @@ describe('GenerateUploadUrlEndpoint', () => {
 
 			expect(result.error).toBeNull()
 			expect(result.value).toMatchObject({
-				upload_url: fixtures.validResponse.body.upload_url,
-				file_key: fixtures.validResponse.body.file_key,
-				expires_at: fixtures.validResponse.body.expires_at,
-				max_size_bytes: fixtures.validResponse.body.max_size_bytes,
+				upload_url: fixtures.validResponse.body.uploadUrl,
+				file_key: fixtures.validResponse.body.fileKey,
+				expires_at: fixtures.validResponse.body.expiresAt,
+				max_size_bytes: fixtures.validResponse.body.maxSizeBytes,
 			})
 		})
 
-		test('rejects response missing upload_url', () => {
+		test('rejects response missing uploadUrl', () => {
 			const body = {
-				file_key: 'files/test',
-				expires_at: '2025-12-23T10:00:00Z',
-				max_size_bytes: 10485760,
+				fileKey: 'files/test',
+				expiresAt: '2025-12-23T10:00:00Z',
+				maxSizeBytes: 10485760,
 			}
 
 			const result = GenerateUploadUrlEndpoint.decodeResponse(body)
 
 			expect(result.error).not.toBeNull()
-			expect(result.error?.message).toContain('upload_url')
+			expect(result.error?.message).toContain('uploadUrl')
 		})
 
-		test('rejects response missing file_key', () => {
+		test('rejects response missing fileKey', () => {
 			const body = {
-				upload_url: 'https://s3.amazonaws.com/test',
-				expires_at: '2025-12-23T10:00:00Z',
-				max_size_bytes: 10485760,
+				uploadUrl: 'https://s3.amazonaws.com/test',
+				expiresAt: '2025-12-23T10:00:00Z',
+				maxSizeBytes: 10485760,
 			}
 
 			const result = GenerateUploadUrlEndpoint.decodeResponse(body)
 
 			expect(result.error).not.toBeNull()
-			expect(result.error?.message).toContain('file_key')
+			expect(result.error?.message).toContain('fileKey')
 		})
 
-		test('rejects response missing expires_at', () => {
+		test('rejects response missing expiresAt', () => {
 			const body = {
-				upload_url: 'https://s3.amazonaws.com/test',
-				file_key: 'files/test',
-				max_size_bytes: 10485760,
+				uploadUrl: 'https://s3.amazonaws.com/test',
+				fileKey: 'files/test',
+				maxSizeBytes: 10485760,
 			}
 
 			const result = GenerateUploadUrlEndpoint.decodeResponse(body)
 
 			expect(result.error).not.toBeNull()
-			expect(result.error?.message).toContain('expires_at')
+			expect(result.error?.message).toContain('expiresAt')
 		})
 
-		test('rejects response missing max_size_bytes', () => {
+		test('rejects response missing maxSizeBytes', () => {
 			const body = {
-				upload_url: 'https://s3.amazonaws.com/test',
-				file_key: 'files/test',
-				expires_at: '2025-12-23T10:00:00Z',
+				uploadUrl: 'https://s3.amazonaws.com/test',
+				fileKey: 'files/test',
+				expiresAt: '2025-12-23T10:00:00Z',
 			}
 
 			const result = GenerateUploadUrlEndpoint.decodeResponse(body)
 
 			expect(result.error).not.toBeNull()
-			expect(result.error?.message).toContain('max_size_bytes')
+			expect(result.error?.message).toContain('maxSizeBytes')
 		})
 
-		test('rejects response with wrong type for upload_url', () => {
+		test('rejects response with wrong type for uploadUrl', () => {
 			const body = {
-				upload_url: 123,
-				file_key: 'files/test',
-				expires_at: '2025-12-23T10:00:00Z',
-				max_size_bytes: 10485760,
+				uploadUrl: 123,
+				fileKey: 'files/test',
+				expiresAt: '2025-12-23T10:00:00Z',
+				maxSizeBytes: 10485760,
 			}
 
 			const result = GenerateUploadUrlEndpoint.decodeResponse(body)
 
 			expect(result.error).not.toBeNull()
-			expect(result.error?.message).toContain('upload_url')
+			expect(result.error?.message).toContain('uploadUrl')
 		})
 
-		test('rejects response with wrong type for file_key', () => {
+		test('rejects response with wrong type for fileKey', () => {
 			const body = {
-				upload_url: 'https://s3.amazonaws.com/test',
-				file_key: 123,
-				expires_at: '2025-12-23T10:00:00Z',
-				max_size_bytes: 10485760,
+				uploadUrl: 'https://s3.amazonaws.com/test',
+				fileKey: 123,
+				expiresAt: '2025-12-23T10:00:00Z',
+				maxSizeBytes: 10485760,
 			}
 
 			const result = GenerateUploadUrlEndpoint.decodeResponse(body)
 
 			expect(result.error).not.toBeNull()
-			expect(result.error?.message).toContain('file_key')
+			expect(result.error?.message).toContain('fileKey')
 		})
 
-		test('rejects response with wrong type for expires_at', () => {
+		test('rejects response with wrong type for expiresAt', () => {
 			const body = {
-				upload_url: 'https://s3.amazonaws.com/test',
-				file_key: 'files/test',
-				expires_at: 12345,
-				max_size_bytes: 10485760,
+				uploadUrl: 'https://s3.amazonaws.com/test',
+				fileKey: 'files/test',
+				expiresAt: 12345,
+				maxSizeBytes: 10485760,
 			}
 
 			const result = GenerateUploadUrlEndpoint.decodeResponse(body)
 
 			expect(result.error).not.toBeNull()
-			expect(result.error?.message).toContain('expires_at')
+			expect(result.error?.message).toContain('expiresAt')
 		})
 
-		test('rejects response with wrong type for max_size_bytes', () => {
+		test('rejects response with wrong type for maxSizeBytes', () => {
 			const body = {
-				upload_url: 'https://s3.amazonaws.com/test',
-				file_key: 'files/test',
-				expires_at: '2025-12-23T10:00:00Z',
-				max_size_bytes: '10485760',
+				uploadUrl: 'https://s3.amazonaws.com/test',
+				fileKey: 'files/test',
+				expiresAt: '2025-12-23T10:00:00Z',
+				maxSizeBytes: '10485760',
 			}
 
 			const result = GenerateUploadUrlEndpoint.decodeResponse(body)
 
 			expect(result.error).not.toBeNull()
-			expect(result.error?.message).toContain('max_size_bytes')
+			expect(result.error?.message).toContain('maxSizeBytes')
 		})
 
 		test.each([
