@@ -1,0 +1,15 @@
+{
+  "validResponse": {
+    "status": 200,
+    "body": {
+      "upload_url": "https://s3.amazonaws.com/bucket/path?signature=xyz",
+      "file_key": "files/abc123-image.png",
+      "expires_at": "2025-12-23T10:00:00Z",
+      "max_size_bytes": 10485760
+    }
+  },
+  "falsePositive": {
+    "status": 200,
+    "body": {}
+  }
+}
