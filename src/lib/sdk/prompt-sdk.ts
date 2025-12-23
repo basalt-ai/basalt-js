@@ -20,12 +20,10 @@ import type {
 	VariablesMap,
 } from '../resources'
 import Flusher from '../utils/flusher'
+import { renderTemplate } from '../utils/template'
 import {
-	difference,
 	err,
-	getVariableNames,
 	ok,
-	replaceVariables,
 } from '../utils/utils'
 
 export default class PromptSDK implements IPromptSDK {
@@ -176,24 +174,8 @@ export default class PromptSDK implements IPromptSDK {
 	 * @returns The prompt response with variables inserted.
 	 */
 	private _insertVariables(prompt: PromptResponse, variables: VariablesMap): PromptResponse {
-		// From the arbitrary variables passed by the user, pick all those present in the prompt.
-		// This approach seems better than counting the remaining variables after replacing.
-		// The counting method would not allow user to insert variable syntax
-		// as a value (ex: replacing "Hello {{name}}" with { name: "{{something}}"})
-		// The inserted {{something}} should not count as a prompt variable, but simply
-		// as inserted text
-
-		const promptVariables = new Set(getVariableNames(prompt.text))
-		const passedVariables = new Set(Object.keys(variables))
-
-		const diff: Set<string> = difference(promptVariables, passedVariables)
-
-		if (diff.size) {
-			this.logger.warn(`Basalt Warning: Some variables are missing in the prompt text: ${[...diff].join(', ')}`)
-		}
-
-		const filledPrompt = replaceVariables(prompt.text, variables)
-		const filledSystemText = replaceVariables(prompt.systemText ?? '', variables)
+		const filledPrompt = renderTemplate(prompt.text, variables)
+		const filledSystemText = renderTemplate(prompt.systemText ?? '', variables)
 
 		return {
 			text: filledPrompt,
