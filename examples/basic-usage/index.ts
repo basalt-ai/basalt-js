@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import * as path from "path";
 import * as fs from "fs";
 import * as dotenv from "dotenv";
+import { initializeOpenTelemetry, shutdownOpenTelemetry, exampleSupportTicketJokeFlow } from "./opentelemetry-joke-example";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -283,10 +284,13 @@ async function exampleImageUpload() {
 async function main() {
 	console.log("Basalt SDK Example - Testing against real API");
 
+	// Initialize OpenTelemetry
+	initializeOpenTelemetry();
+
 	try {
 		// Run examples
 		await exampleListPrompts();
-		await exampleImageUpload();
+		// await exampleImageUpload();
 
 		// Uncomment the examples you want to test:
 		// await exampleBasicPrompt();
@@ -294,10 +298,16 @@ async function main() {
 		// await exampleMonitoring();
 		// await exampleDatasets();
 
+		// OpenTelemetry example with joke prompt flow
+		await exampleSupportTicketJokeFlow(basalt, openai, resolveOpenAIModel, buildOpenAIMessages);
+
 		console.log("\n✓ All examples completed successfully!");
 	} catch (error) {
 		console.error("\n✗ Error:", error);
 		process.exit(1);
+	} finally {
+		// Shutdown OpenTelemetry gracefully
+		await shutdownOpenTelemetry();
 	}
 }
 
