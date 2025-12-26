@@ -156,7 +156,7 @@ export interface GetPromptOptions {
 
 export type NoSlugGetPromptOptions = Omit<GetPromptOptions, 'slug'>
 
-export type VariablesMap = Record<string, string>
+export type VariablesMap = Record<string, unknown>
 
 export type PromptModel = AnthropicPromptModel | OpenAIPromptModel | MistralPromptModel
 
