@@ -9,6 +9,12 @@ export interface IBasaltSDK {
 	readonly prompt: IPromptSDK
 	readonly monitor: IMonitorSDK
 	readonly dataset: IDatasetSDK
+
+	/**
+	 * Shutdown SDK and flush telemetry
+	 * Call before process exit to ensure all spans are exported
+	 */
+	shutdown(): Promise<void>
 }
 
 /**
@@ -107,4 +113,68 @@ export interface Logger {
 	warn(msg: string, ...args: unknown[]): void
 	info(msg: string, ...args: unknown[]): void
 	error(msg: string, ...args: unknown[]): void
+}
+
+/**
+ * Telemetry configuration for OpenTelemetry integration
+ */
+export interface TelemetryConfig {
+	/**
+	 * Enable/disable telemetry
+	 * @default true
+	 */
+	enabled?: boolean
+
+	/**
+	 * OTLP exporter endpoint (gRPC protocol)
+	 * @default process.env.BASALT_OTEL_EXPORTER_OTLP_ENDPOINT || 'localhost:4317'
+	 */
+	endpoint?: string
+
+	/**
+	 * API key for OTLP collector authentication
+	 * @default Same as SDK apiKey
+	 */
+	apiKey?: string
+
+	/**
+	 * Use insecure connection (no TLS)
+	 * Useful for local development with local collector
+	 * @default false
+	 */
+	insecure?: boolean
+
+	/**
+	 * Additional gRPC metadata headers
+	 */
+	metadata?: Record<string, string>
+
+	/**
+	 * Service name for OpenTelemetry resource
+	 * @default 'basalt-sdk-app'
+	 */
+	serviceName?: string
+}
+
+/**
+ * Configuration for Basalt SDK
+ */
+export interface BasaltConfig {
+	/**
+	 * API key for Basalt authentication
+	 */
+	apiKey: string
+
+	/**
+	 * Logging level
+	 * @default 'warning'
+	 */
+	logLevel?: LogLevel
+
+	/**
+	 * Telemetry configuration
+	 * Telemetry is enabled by default with auto-configuration
+	 * Set { enabled: false } to disable
+	 */
+	telemetry?: TelemetryConfig
 }

@@ -33,6 +33,58 @@ const basalt = new Basalt({
 })
 ```
 
+### OpenTelemetry (Tracing)
+
+Tracing is enabled by default for all Basalt SDK routes. To export spans, configure the built-in OTLP gRPC exporter:
+
+```typescript
+import { Basalt } from '@basalt-ai/sdk'
+
+const basalt = new Basalt({
+  apiKey: process.env.BASALT_API_KEY!,
+  telemetry: {
+    // For a local collector without TLS
+    insecure: true,
+    serviceName: 'my-app',
+    // Optionally override the collector endpoint
+    // endpoint: 'localhost:4317',
+  },
+})
+```
+
+All spans include Basalt metadata attributes (e.g. `basalt.sdk`, `basalt.version`, `basalt.span_type`, and `basalt.meta.*`) and propagate trace context headers (`traceparent`, etc.) on outgoing Basalt API requests.
+
+#### Add Custom Attributes
+
+To add custom attributes to the current active span:
+
+```typescript
+import { setCurrentSpanAttributes } from '@basalt-ai/sdk'
+
+setCurrentSpanAttributes({
+  'basalt.meta.customer_id': 'cust_123',
+})
+```
+
+#### Share / Mutate Basalt Context
+
+To attach context that will be added to all Basalt spans created within a scope:
+
+```typescript
+import { BasaltContextManager } from '@basalt-ai/sdk'
+
+await BasaltContextManager.withMergedContext(
+  {
+    user: { id: 'user_1' },
+    metadata: { env: 'prod' },
+  },
+  async () => {
+    // Calls inside this function will automatically include these attributes
+    // in Basalt spans.
+  },
+)
+```
+
 ### API Spec
 
 ### Basalt

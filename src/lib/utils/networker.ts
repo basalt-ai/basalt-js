@@ -12,6 +12,37 @@ import type {
 	INetworker,
 } from '../resources/contract'
 
+function injectOtelPropagationHeaders(original?: HeadersInit): Headers {
+	const carrier = new Headers(original)
+
+	try {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const otel = require('@opentelemetry/api')
+		const activeContext = otel.context.active()
+
+		otel.propagation.inject(activeContext, carrier, {
+			set: (c: Headers, key: string, value: string) => {
+				c.set(key, value)
+			},
+		})
+
+		// Some environments don't configure a global propagator by default.
+		// Ensure at least W3C trace context is propagated for downstream correlation.
+		if (!carrier.get('traceparent')) {
+			const spanContext = otel.trace.getSpanContext(activeContext)
+			if (spanContext?.traceId && spanContext?.spanId) {
+				const flags = (spanContext.traceFlags & 0xff)
+				const traceFlags = flags.toString(16).padStart(2, '0')
+				carrier.set('traceparent', `00-${spanContext.traceId}-${spanContext.spanId}-${traceFlags}`)
+			}
+		}
+	} catch {
+		// No-op: OpenTelemetry not available or propagation isn't configured
+	}
+
+	return carrier
+}
+
 /**
  * Simple class to make network requests.
  */
@@ -32,12 +63,13 @@ export default class Networker implements INetworker {
 	): AsyncResult<FetchResponse> {
 		try {
 			try {
+				const requestHeaders = injectOtelPropagationHeaders(headers)
 				const response = await fetch(
 					url,
 					{
 						body,
 						method,
-						headers,
+						headers: requestHeaders,
 					},
 				)
 				const json = await response.json()
