@@ -23,4 +23,8 @@ export { BasaltContextManager } from './context-manager'
 
 export { BASALT_ATTRIBUTES, CACHE_TYPES, API_CLIENTS, METADATA_PREFIX } from './attributes'
 
+export { TelemetryManager } from './manager'
+
 export type { BasaltContext, SpanOptions, SpanCallback, AttributeValue, AttributeDict } from './types'
+
+export type { TelemetryManagerConfig } from './manager'
