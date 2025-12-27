@@ -20,7 +20,7 @@ import type {
 	VariablesMap,
 } from '../resources'
 import type { Span } from '@opentelemetry/api'
-import { withSpan, BasaltContextManager } from '../telemetry'
+import { withBasaltSpan } from '../telemetry'
 import { BASALT_ATTRIBUTES, CACHE_TYPES } from '../telemetry/attributes'
 import Flusher from '../utils/flusher'
 import { renderTemplate } from '../utils/template'
@@ -78,7 +78,7 @@ export default class PromptSDK implements IPromptSDK {
 			params = arg1
 		}
 
-		return withSpan(
+		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.prompt.get',
 			{
@@ -89,7 +89,6 @@ export default class PromptSDK implements IPromptSDK {
 				[BASALT_ATTRIBUTES.PROMPT_VARIABLES_COUNT]: params.variables
 					? Object.keys(params.variables).length
 					: 0,
-				...BasaltContextManager.extractAttributes(),
 			},
 			async (span) => {
 				const prompt = await this._getPromptWithCache(params, span)
@@ -113,13 +112,12 @@ export default class PromptSDK implements IPromptSDK {
 	 * @returns A promise with an array of prompt list responses.
 	 */
 	async list(options?: ListPromptsOptions): AsyncResult<PromptListResponse[]> {
-		return withSpan(
+		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.prompt.list',
 			{
 				[BASALT_ATTRIBUTES.OPERATION]: 'list',
 				[BASALT_ATTRIBUTES.PROMPT_FEATURE_SLUG]: options?.featureSlug,
-				...BasaltContextManager.extractAttributes(),
 			},
 			async (span) => {
 				const result = await this._listPrompts(options)
@@ -159,7 +157,7 @@ export default class PromptSDK implements IPromptSDK {
 			params = arg1
 		}
 
-		return withSpan(
+		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.prompt.describe',
 			{
@@ -167,7 +165,6 @@ export default class PromptSDK implements IPromptSDK {
 				[BASALT_ATTRIBUTES.PROMPT_SLUG]: params.slug,
 				[BASALT_ATTRIBUTES.PROMPT_VERSION]: params.version,
 				[BASALT_ATTRIBUTES.PROMPT_TAG]: params.tag,
-				...BasaltContextManager.extractAttributes(),
 			},
 			async (span) => {
 				const result = await this._describePrompt(params)

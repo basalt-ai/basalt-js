@@ -14,7 +14,7 @@ import type {
 import type { Span } from '@opentelemetry/api'
 import { FileAttachment } from '../resources/dataset/file-attachment.types'
 import { uploadFile } from '../utils/file-upload'
-import { withSpan, BasaltContextManager } from '../telemetry'
+import { withBasaltSpan } from '../telemetry'
 import { BASALT_ATTRIBUTES, CACHE_TYPES } from '../telemetry/attributes'
 import { err, ok } from '../utils/utils'
 
@@ -48,12 +48,11 @@ export default class DatasetSDK implements IDatasetSDK {
    * @returns A promise with an array of dataset list responses.
    */
 	async list(): AsyncResult<DatasetListResponse[]> {
-		return withSpan(
+		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.dataset.list',
 			{
 				[BASALT_ATTRIBUTES.OPERATION]: 'list',
-				...BasaltContextManager.extractAttributes(),
 			},
 			async (span) => {
 				const result = await this._listDatasets()
@@ -76,13 +75,12 @@ export default class DatasetSDK implements IDatasetSDK {
    * @returns A promise with the dataset response.
    */
 	async get(slug: string): AsyncResult<DatasetResponse> {
-		return withSpan(
+		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.dataset.get',
 			{
 				[BASALT_ATTRIBUTES.OPERATION]: 'get',
 				[BASALT_ATTRIBUTES.DATASET_SLUG]: slug,
-				...BasaltContextManager.extractAttributes(),
 			},
 			async (span) => {
 				const result = await this._getDatasetWithCache({ slug }, span)
@@ -104,14 +102,13 @@ export default class DatasetSDK implements IDatasetSDK {
    * @returns A promise with the created dataset item response.
    */
 	async addRow(slug: string, options: CreateDatasetItemOptions): AsyncResult<CreateDatasetItemResponse> {
-		return withSpan(
+		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.dataset.addRow',
 			{
 				[BASALT_ATTRIBUTES.OPERATION]: 'create',
 				[BASALT_ATTRIBUTES.DATASET_SLUG]: slug,
 				'basalt.dataset.is_playground': options.isPlayground,
-				...BasaltContextManager.extractAttributes(),
 			},
 			async (span) => {
 				const result = await this._createDatasetItem({ slug, ...options })
