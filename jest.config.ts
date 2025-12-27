@@ -1,15 +1,16 @@
 /* eslint-disable */
 import { readFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const swcrcPath =
+	typeof __dirname === 'string'
+		? join(__dirname, '.swcrc')
+		: join(process.cwd(), '.swcrc');
 
 // Reading the SWC compilation config and remove the "exclude"
 // for the test files to be compiled by SWC
 const { exclude: _, ...swcJestConfig } = JSON.parse(
-	readFileSync(join(__dirname, '.swcrc'), 'utf-8')
+	readFileSync(swcrcPath, 'utf-8')
 );
 
 // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
