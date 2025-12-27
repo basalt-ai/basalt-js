@@ -8,7 +8,7 @@ import type { AsyncResult, IApi, Logger } from '../resources/contract'
 import { ExperimentParams } from '../resources/monitor/experiment.types'
 import { IMonitorSDK } from '../resources/monitor/monitor.types'
 import { TraceParams } from '../resources/monitor/trace.types'
-import { withSpan, BasaltContextManager } from '../telemetry'
+import { withBasaltSpan } from '../telemetry'
 import { BASALT_ATTRIBUTES } from '../telemetry/attributes'
 import Flusher from '../utils/flusher'
 import { ok } from '../utils/utils'
@@ -34,14 +34,13 @@ export default class MonitorSDK implements IMonitorSDK {
 	 * @returns A new Experiment instance.
 	 */
 	public async createExperiment(featureSlug: string, params: ExperimentParams): AsyncResult<Experiment> {
-		return withSpan(
+		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.experiment.create',
 			{
 				[BASALT_ATTRIBUTES.OPERATION]: 'create',
 				[BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG]: featureSlug,
 				[BASALT_ATTRIBUTES.EXPERIMENT_NAME]: params.name,
-				...BasaltContextManager.extractAttributes(),
 			},
 			async (span) => {
 				const result = await this.api.invoke(CreateExperimentEndpoint, { featureSlug, ...params })

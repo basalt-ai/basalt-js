@@ -343,6 +343,23 @@ export function withContext<T>(ctx: Context, fn: () => T): T {
 }
 
 /**
+ * Set attributes on the current active span (if any).
+ * Safe no-op when OpenTelemetry isn't available or there's no active span.
+ */
+export function setCurrentSpanAttributes(attrs: Record<string, unknown>): void {
+	if (!otel) {
+		return;
+	}
+
+	const span = otel.trace.getSpan(otel.context.active());
+	if (!span) {
+		return;
+	}
+
+	span.setAttributes(sanitizeAttributes(attrs));
+}
+
+/**
  * Extract the client name from an API path
  * e.g., "/prompts/slug" -> "prompts"
  *

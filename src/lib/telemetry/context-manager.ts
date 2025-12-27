@@ -147,4 +147,36 @@ export class BasaltContextManager {
 
 		return this.setContext(merged)
 	}
+
+	/**
+	 * Execute a function within a Basalt context that is merged into the current one.
+	 * This is the recommended way to "mutate" context safely across async boundaries.
+	 */
+	static withMergedContext<T>(updates: Partial<BasaltContext>, fn: () => T): T {
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
+			const otel = require('@opentelemetry/api')
+			const currentContext = otel.context.active()
+			const existing = currentContext.getValue(BASALT_CONTEXT_KEY) as BasaltContext | undefined
+			const merged: BasaltContext = {
+				...(existing ?? {}),
+				...updates,
+				user: updates.user ? { ...(existing?.user ?? {}), ...updates.user } : existing?.user,
+				organization: updates.organization
+					? { ...(existing?.organization ?? {}), ...updates.organization }
+					: existing?.organization,
+				experiment: updates.experiment
+					? { ...(existing?.experiment ?? {}), ...updates.experiment }
+					: existing?.experiment,
+				metadata: updates.metadata
+					? { ...(existing?.metadata ?? {}), ...updates.metadata }
+					: existing?.metadata,
+			}
+
+			const newContext = currentContext.setValue(BASALT_CONTEXT_KEY, merged)
+			return otel.context.with(newContext, fn)
+		} catch {
+			return fn()
+		}
+	}
 }

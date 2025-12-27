@@ -11,6 +11,7 @@ export {
 	getTracer,
 	withSpan,
 	withSpanSync,
+	setCurrentSpanAttributes,
 	getCurrentContext,
 	withContext,
 	isOtelAvailable,
@@ -18,6 +19,8 @@ export {
 	flattenMetadata,
 	extractClientFromPath,
 } from './telemetry'
+
+export { withBasaltSpan, withBasaltSpanSync } from './basalt-span'
 
 export { BasaltContextManager } from './context-manager'
 

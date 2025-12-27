@@ -1,5 +1,5 @@
 import { err } from './utils'
-import { withSpan, extractClientFromPath, BasaltContextManager } from '../telemetry'
+import { withBasaltSpan, extractClientFromPath } from '../telemetry'
 import { BASALT_ATTRIBUTES } from '../telemetry/attributes'
 
 import type {
@@ -34,7 +34,7 @@ export default class Api implements IApi {
 		const url = this._buildUrl(requestInfo.path, requestInfo.query ?? {})
 		const client = extractClientFromPath(requestInfo.path)
 
-		return withSpan(
+		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.api.request',
 			{
@@ -46,7 +46,6 @@ export default class Api implements IApi {
 				[BASALT_ATTRIBUTES.SDK_NAME]: '@basalt-ai/sdk',
 				[BASALT_ATTRIBUTES.SDK_VERSION]: this.sdkVersion,
 				[BASALT_ATTRIBUTES.SDK_TARGET]: this.sdkType,
-				...BasaltContextManager.extractAttributes(),
 			},
 			async (span) => {
 				const startTime = performance.now()

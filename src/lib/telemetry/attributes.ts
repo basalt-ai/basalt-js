@@ -3,6 +3,12 @@
  * Following Python SDK conventions
  */
 export const BASALT_ATTRIBUTES = {
+	// Epic parity attributes
+	SDK: 'basalt.sdk',
+	VERSION: 'basalt.version',
+	SPAN_TYPE: 'basalt.span_type',
+	TRACE: 'basalt.trace',
+
 	// SDK identification
 	SDK_NAME: 'basalt.sdk.name',
 	SDK_VERSION: 'basalt.sdk.version',
