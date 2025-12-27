@@ -12,4 +12,12 @@ export default class BasaltSDK implements IBasaltSDK {
 		public readonly monitor: IMonitorSDK,
 		public readonly dataset: IDatasetSDK,
 	) {}
+
+	/**
+	 * Shutdown SDK - delegate to facade
+	 * This is a no-op in the internal SDK, facade handles actual shutdown
+	 */
+	async shutdown(): Promise<void> {
+		// No-op - facade handles telemetry shutdown
+	}
 }
