@@ -58,6 +58,42 @@ export interface SpanOptions {
 }
 
 /**
+ * Options for creating child observation spans (observe)
+ * Does not include experiment or identity (use StartObserveOptions for root spans)
+ */
+export interface ObserveOptions {
+	readonly name?: string
+	readonly attributes?: Record<string, unknown>
+	readonly spanKind?: number
+}
+
+/**
+ * Options for starting a root observation span (startObserve)
+ * Includes experiment and identity parameters for root spans only
+ */
+export interface StartObserveOptions {
+	readonly name?: string
+	readonly attributes?: Record<string, unknown>
+	readonly spanKind?: number
+	/**
+	 * Experiment context for A/B testing
+	 */
+	readonly experiment?: string
+	/**
+	 * Identity information for tracking
+	 */
+	readonly identity?: {
+		userId?: string
+		organizationId?: string
+		[key: string]: unknown
+	}
+	/**
+	 * Evaluation configuration
+	 */
+	readonly evaluationConfig?: Record<string, unknown>
+}
+
+/**
  * Function type for span callback
  */
 export type SpanCallback<T> = (span: Span) => Promise<T>

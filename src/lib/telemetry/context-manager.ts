@@ -1,11 +1,17 @@
 import type { Context } from '@opentelemetry/api'
 import type { BasaltContext } from './types'
+import type { StartSpanHandle } from './span-handle'
 import { flattenMetadata, getCurrentContext } from './telemetry'
 
 /**
  * Symbol key for storing Basalt context in OpenTelemetry context
  */
 const BASALT_CONTEXT_KEY = Symbol.for('basalt-context')
+
+/**
+ * Symbol key for storing root span handle in OpenTelemetry context
+ */
+export const BASALT_ROOT_SPAN = Symbol.for('basalt.context.root_span')
 
 /**
  * Manages Basalt-specific context (user, organization, experiment, metadata)
@@ -176,6 +182,65 @@ export class BasaltContextManager {
 			const newContext = currentContext.setValue(BASALT_CONTEXT_KEY, merged)
 			return otel.context.with(newContext, fn)
 		} catch {
+			return fn()
+		}
+	}
+
+	/**
+	 * Set root span handle in the OpenTelemetry context
+	 * Returns a new context with the root span handle attached
+	 *
+	 * @param handle - Root span handle to store
+	 * @param ctx - Optional context to use (defaults to active context)
+	 */
+	static setRootSpan(handle: StartSpanHandle, ctx?: Context): Context | undefined {
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
+			const otel = require('@opentelemetry/api')
+			const activeContext = ctx ?? otel.context.active()
+			return activeContext.setValue(BASALT_ROOT_SPAN, handle)
+		} catch {
+			return undefined
+		}
+	}
+
+	/**
+	 * Get root span handle from the OpenTelemetry context
+	 * 
+	 * @param ctx - Optional context to use (defaults to active context)
+	 * @returns The root span handle if available
+	 */
+	static getRootSpan(ctx?: Context): StartSpanHandle | undefined {
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
+			const otel = require('@opentelemetry/api')
+			const activeContext = ctx ?? otel.context.active()
+			return activeContext.getValue(BASALT_ROOT_SPAN) as StartSpanHandle | undefined
+		} catch {
+			return undefined
+		}
+	}
+
+	/**
+	 * Execute a function within a context that has a root span handle
+	 * The root span handle will be available to all nested operations
+	 * Also sets the span as the active OpenTelemetry span
+	 *
+	 * @param handle - Root span handle to use
+	 * @param fn - Function to execute
+	 */
+	static withRootSpan<T>(handle: StartSpanHandle, fn: () => T): T {
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
+			const otel = require('@opentelemetry/api')
+			const currentContext = otel.context.active()
+			// Store handle in Basalt context
+			let newContext = currentContext.setValue(BASALT_ROOT_SPAN, handle)
+			// Also set as active OpenTelemetry span so child spans connect properly
+			newContext = otel.trace.setSpan(newContext, handle.getSpan())
+			return otel.context.with(newContext, fn)
+		} catch {
+			// If OTel not available, just execute the function
 			return fn()
 		}
 	}

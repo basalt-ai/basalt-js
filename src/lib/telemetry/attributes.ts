@@ -9,10 +9,14 @@ export const BASALT_ATTRIBUTES = {
 	SPAN_TYPE: 'basalt.span_type',
 	TRACE: 'basalt.trace',
 
+	// Root span markers
+	ROOT: 'basalt.root',
+
 	// SDK identification
 	SDK_NAME: 'basalt.sdk.name',
 	SDK_VERSION: 'basalt.sdk.version',
 	SDK_TARGET: 'basalt.sdk.target',
+	SDK_TYPE: 'basalt.sdk.type',
 	OPERATION: 'basalt.operation',
 
 	// API layer attributes
@@ -39,6 +43,16 @@ export const BASALT_ATTRIBUTES = {
 	EXPERIMENT_ID: 'basalt.experiment.id',
 	EXPERIMENT_NAME: 'basalt.experiment.name',
 	EXPERIMENT_FEATURE_SLUG: 'basalt.experiment.feature_slug',
+	TRACE_EXPERIMENT: 'basalt.trace_experiment',
+
+	// Identity tracking
+	TRACE_IDENTITY: 'basalt.trace_identity',
+	IDENTITY_USER_ID: 'basalt.identity.user_id',
+	IDENTITY_ORGANIZATION_ID: 'basalt.identity.organization_id',
+	IDENTITY_PREFIX: 'basalt.identity.',
+
+	// Evaluation configuration
+	EVALUATION_CONFIG: 'basalt.evaluation.config',
 
 	// Cache attributes
 	CACHE_HIT: 'basalt.cache.hit',

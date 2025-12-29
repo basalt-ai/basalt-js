@@ -5,8 +5,12 @@ import type {
 	Attributes,
 	Link,
 	SpanOptions,
+	SpanKind,
 } from "@opentelemetry/api";
-import type { SpanCallback, AttributeValue } from "./types";
+import type { SpanCallback, AttributeValue, StartObserveOptions, ObserveOptions } from "./types";
+import { SpanHandle, StartSpanHandle } from './span-handle'
+import { BasaltContextManager } from './context-manager'
+import { BASALT_ATTRIBUTES } from './attributes'
 
 /**
  * Safely import OpenTelemetry API
@@ -357,6 +361,176 @@ export function setCurrentSpanAttributes(attrs: Record<string, unknown>): void {
 	}
 
 	span.setAttributes(sanitizeAttributes(attrs));
+}
+
+/**
+ * Execute a function within an observation span that automatically wraps all nested operations
+ * 
+ * This creates an active span marked with Basalt metadata that becomes the parent for all
+ * child operations. Unlike regular spans, this span allows setting experiment, identity,
+ * and evaluation configuration metadata.
+ * 
+ * Use this at operation entry points (request handlers, background jobs, CLI commands)
+ * to create a span that automatically wraps all nested SDK and manual span operations.
+ * 
+ * @param options - Configuration for the observation span
+ * @param fn - Async function to execute within the observation span context
+ * @returns Result of the function execution
+ * 
+ * @example
+ * ```typescript
+ * await basalt.observe(
+ *   { name: 'process-user-request', attributes: { userId: '123' } },
+ *   async (span) => {
+ *     span.setExperiment('recommendation-v2')
+ *       .setIdentity({ userId: '123', organizationId: 'acme' });
+ *     
+ *     // All operations automatically become child spans
+ *     await basalt.prompt.get({ slug: 'greeting' });
+ *     await callOpenAI();
+ *   }
+ * );
+ * ```
+ */
+export async function observe<T>(
+	options: ObserveOptions = {},
+	fn: (span: SpanHandle) => Promise<T>
+): Promise<T> {
+	const {
+		name = 'basalt.observe',
+		attributes = {},
+		spanKind,
+	} = options
+
+	if (!otel) {
+		// Execute without tracing if OTel not available
+		const noOpSpan = createNoOpTracer().startSpan(name)
+		const handle = new SpanHandle(noOpSpan as any)
+		try {
+			return await fn(handle)
+		} finally {
+			noOpSpan.end()
+		}
+	}
+
+	const tracer = getTracer('@basalt-ai/sdk', __SDK_VERSION__)
+
+	// Prepare observation span attributes
+	const observeAttributes = {
+		[BASALT_ATTRIBUTES.TRACE]: true,
+		[BASALT_ATTRIBUTES.SDK_TYPE]: 'nodejs',
+		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
+		'basalt.observe': true,
+		...attributes,
+	}
+
+	const spanOptions: SpanOptions = {
+		kind: spanKind ?? otel.SpanKind.INTERNAL,
+		attributes: sanitizeAttributes(observeAttributes),
+	}
+
+	// Use startActiveSpan to automatically make this span the active parent
+	return await tracer.startActiveSpan(
+		name,
+		spanOptions,
+		async (span: Span) => {
+			const handle = new SpanHandle(span as any)
+
+			// Store in Basalt context for additional metadata access
+			const contextWithHandle = BasaltContextManager.setRootSpan(handle as any)
+
+			try {
+				// Execute user function within the active span context
+				return await otel.context.with(contextWithHandle ?? otel.context.active(), async () => {
+					return await fn(handle)
+				})
+			} catch (error) {
+				// Record exception on span
+				span.recordException(error as Error)
+				span.setStatus({
+					code: otel.SpanStatusCode.ERROR,
+					message: error instanceof Error ? error.message : String(error)
+				})
+				throw error
+			} finally {
+				// Span is automatically ended by startActiveSpan
+				span.end()
+			}
+		}
+	)
+}
+
+/**
+ * Start a root observation span with experiment and identity context
+ * 
+ * @param options - Configuration for the root observation span including experiment and identity
+ * @returns StartSpanHandle that must be manually ended
+ */
+export function startObserve(options: StartObserveOptions = {}): StartSpanHandle {
+	const {
+		name = 'basalt.observe',
+		attributes = {},
+		spanKind,
+		experiment,
+		identity,
+		evaluationConfig,
+	} = options
+
+	if (!otel) {
+		// Return a handle wrapping a no-op span if OTel not available
+		const noOpSpan = createNoOpTracer().startSpan(name)
+		return new StartSpanHandle(noOpSpan)
+	}
+
+	const tracer = getTracer('@basalt-ai/sdk', __SDK_VERSION__)
+
+	// Prepare observation span attributes
+	const observeAttributes = {
+		[BASALT_ATTRIBUTES.TRACE]: true,
+		[BASALT_ATTRIBUTES.SDK_TYPE]: 'nodejs',
+		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
+		[BASALT_ATTRIBUTES.ROOT]: true,
+		'basalt.observe': true,
+		...attributes,
+	}
+
+	const spanOptions: SpanOptions = {
+		kind: spanKind ?? otel.SpanKind.INTERNAL,
+		attributes: sanitizeAttributes(observeAttributes),
+	}
+
+	// Create span (not active)
+	const span = tracer.startSpan(name, spanOptions)
+	const handle = new StartSpanHandle(span)
+
+	// Auto-apply experiment if provided
+	if (experiment) {
+		handle.setExperiment(experiment)
+	}
+
+	// Auto-apply identity if provided
+	if (identity) {
+		handle.setIdentity(identity)
+	}
+
+	// Auto-apply evaluation config if provided
+	if (evaluationConfig) {
+		handle.setEvaluationConfig(evaluationConfig)
+	}
+
+	// Store in context for child span access (but context doesn't become active)
+	try {
+		const newContext = BasaltContextManager.setRootSpan(handle)
+		if (newContext) {
+			otel.context.with(newContext, () => {
+				// Context is active only within this callback
+			})
+		}
+	} catch {
+		// Continue even if context storage fails
+	}
+
+	return handle
 }
 
 /**
