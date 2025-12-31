@@ -54,7 +54,6 @@ export const BASALT_ATTRIBUTES = {
 	EXPERIMENT_ID: 'basalt.experiment.id',
 	EXPERIMENT_NAME: 'basalt.experiment.name',
 	EXPERIMENT_FEATURE_SLUG: 'basalt.experiment.feature_slug',
-	TRACE_EXPERIMENT: 'basalt.trace_experiment',
 
 	// Identity tracking
 	TRACE_IDENTITY: 'basalt.trace_identity',
