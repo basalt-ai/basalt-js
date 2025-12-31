@@ -22,7 +22,7 @@ export {
 	startObserve,
 } from './telemetry'
 
-export type { ObserveOptions } from './telemetry'
+export type { ObserveOptions, StartObserveOptions } from './types'
 
 export { withBasaltSpan, withBasaltSpanSync } from './basalt-span'
 
@@ -36,6 +36,6 @@ export { BASALT_ATTRIBUTES, CACHE_TYPES, API_CLIENTS, METADATA_PREFIX } from './
 
 export { TelemetryManager } from './manager'
 
-export type { BasaltContext, SpanOptions, SpanCallback, AttributeValue, AttributeDict } from './types'
+export type { BasaltContext, SpanOptions, SpanCallback, AttributeValue, AttributeDict, TraceExperiment } from './types'
 
 export type { TelemetryManagerConfig } from './manager'

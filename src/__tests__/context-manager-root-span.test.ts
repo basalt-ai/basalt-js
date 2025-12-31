@@ -115,7 +115,7 @@ describe('BasaltContextManager root span storage', () => {
 
 	describe('setRootSpan', () => {
 		it('should store root span handle in context', () => {
-			const rootSpan = startObserve()
+			const rootSpan = startObserve({ featureSlug: 'test-feature' })
 			const newContext = BasaltContextManager.setRootSpan(rootSpan)
 
 			expect(newContext).toBeDefined()
@@ -130,7 +130,7 @@ describe('BasaltContextManager root span storage', () => {
 
 	describe('getRootSpan', () => {
 		it('should retrieve stored root span handle', () => {
-			const rootSpan = startObserve()
+			const rootSpan = startObserve({ featureSlug: 'test-feature' })
 			BasaltContextManager.setRootSpan(rootSpan)
 
 			const retrieved = BasaltContextManager.getRootSpan()
@@ -155,7 +155,7 @@ describe('BasaltContextManager root span storage', () => {
 
 	describe('withRootSpan', () => {
 		it('should execute function within root span context', () => {
-			const rootSpan = startObserve()
+			const rootSpan = startObserve({ featureSlug: 'test-feature' })
 			let executedInContext = false
 
 			const result = BasaltContextManager.withRootSpan(rootSpan, () => {
@@ -168,7 +168,7 @@ describe('BasaltContextManager root span storage', () => {
 		})
 
 		it('should propagate root span to nested operations', () => {
-			const rootSpan = startObserve()
+			const rootSpan = startObserve({ featureSlug: 'test-feature' })
 			let nestedRootSpan
 
 			BasaltContextManager.withRootSpan(rootSpan, () => {
@@ -181,7 +181,7 @@ describe('BasaltContextManager root span storage', () => {
 		})
 
 		it('should handle async operations', async () => {
-			const rootSpan = startObserve()
+			const rootSpan = startObserve({ featureSlug: 'test-feature' })
 
 			const result = await BasaltContextManager.withRootSpan(rootSpan, async () => {
 				await new Promise(resolve => setTimeout(resolve, 10))
@@ -192,7 +192,7 @@ describe('BasaltContextManager root span storage', () => {
 		})
 
 		it('should execute function even if OTel not available', () => {
-			const rootSpan = startObserve()
+			const rootSpan = startObserve({ featureSlug: 'test-feature' })
 			let executed = false
 
 			BasaltContextManager.withRootSpan(rootSpan, () => {
@@ -205,7 +205,7 @@ describe('BasaltContextManager root span storage', () => {
 
 	describe('Integration with existing context methods', () => {
 		it('should not interfere with existing Basalt context', () => {
-			const rootSpan = startObserve()
+			const rootSpan = startObserve({ featureSlug: 'test-feature' })
 
 			// Set Basalt context
 			BasaltContextManager.setContext({
@@ -225,7 +225,7 @@ describe('BasaltContextManager root span storage', () => {
 		})
 
 		it('should work with withContext and withRootSpan together', () => {
-			const rootSpan = startObserve()
+			const rootSpan = startObserve({ featureSlug: 'test-feature' })
 			let executedInBothContexts = false
 
 			BasaltContextManager.withContext(
@@ -260,8 +260,8 @@ describe('BASALT_ROOT_SPAN symbol', () => {
 
 describe('Context propagation scenarios', () => {
 	it('should support nested root span contexts (though not recommended)', () => {
-		const rootSpan1 = startObserve({ name: 'outer' })
-		const rootSpan2 = startObserve({ name: 'inner' })
+		const rootSpan1 = startObserve({ name: 'outer', featureSlug: 'outer-feature' })
+		const rootSpan2 = startObserve({ name: 'inner', featureSlug: 'inner-feature' })
 
 		BasaltContextManager.withRootSpan(rootSpan1, () => {
 			BasaltContextManager.withRootSpan(rootSpan2, () => {
@@ -273,8 +273,8 @@ describe('Context propagation scenarios', () => {
 	})
 
 	it('should restore previous context after withRootSpan', () => {
-		const rootSpan1 = startObserve({ name: 'first' })
-		const rootSpan2 = startObserve({ name: 'second' })
+		const rootSpan1 = startObserve({ name: 'first', featureSlug: 'first-feature' })
+		const rootSpan2 = startObserve({ name: 'second', featureSlug: 'second-feature' })
 
 		BasaltContextManager.withRootSpan(rootSpan1, () => {
 			BasaltContextManager.withRootSpan(rootSpan2, () => {

@@ -99,7 +99,7 @@ describe('startObserve', () => {
 	})
 
 	it('should create a root span with default options', () => {
-		const rootSpan = startObserve()
+		const rootSpan = startObserve({ featureSlug: 'test-feature' })
 
 		expect(rootSpan).toBeInstanceOf(StartSpanHandle)
 		expect(rootSpan).toBeInstanceOf(SpanHandle)
@@ -109,6 +109,7 @@ describe('startObserve', () => {
 		const otel = require('@opentelemetry/api')
 		const rootSpan = startObserve({
 			name: 'custom-operation',
+			featureSlug: 'test-feature',
 		})
 
 		expect(rootSpan).toBeInstanceOf(StartSpanHandle)
@@ -117,6 +118,7 @@ describe('startObserve', () => {
 
 	it('should set root span attributes', () => {
 		const rootSpan = startObserve({
+			featureSlug: 'test-feature',
 			attributes: {
 				'custom.attribute': 'value',
 			},
@@ -129,6 +131,7 @@ describe('startObserve', () => {
 	it('should support custom span kind', () => {
 		const otel = require('@opentelemetry/api')
 		const rootSpan = startObserve({
+			featureSlug: 'test-feature',
 			spanKind: otel.SpanKind.INTERNAL,
 		})
 
@@ -145,18 +148,36 @@ describe('StartSpanHandle', () => {
 		const otel = require('@opentelemetry/api')
 		const tracer = otel.trace.getTracer()
 		mockSpan = tracer.startSpan('test')
-		rootSpan = startObserve()
+		rootSpan = startObserve({ featureSlug: 'test-feature' })
 	})
 
 	describe('setExperiment', () => {
 		it('should set experiment attributes', () => {
-			const result = rootSpan.setExperiment('exp-123')
+			const result = rootSpan.setExperiment({
+				id: 'exp-123',
+				name: 'Test Experiment',
+				featureSlug: 'test-exp-feature',
+			})
 
 			expect(result).toBe(rootSpan) // Should return this for chaining
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				BASALT_ATTRIBUTES.TRACE_EXPERIMENT,
-				true
+				BASALT_ATTRIBUTES.EXPERIMENT_ID,
+				'exp-123'
 			)
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.EXPERIMENT_NAME,
+				'Test Experiment'
+			)
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG,
+				'test-exp-feature'
+			)
+		})
+
+		it('should set experiment with only required id', () => {
+			const result = rootSpan.setExperiment({ id: 'exp-123' })
+
+			expect(result).toBe(rootSpan)
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
 				BASALT_ATTRIBUTES.EXPERIMENT_ID,
 				'exp-123'
@@ -164,7 +185,7 @@ describe('StartSpanHandle', () => {
 		})
 
 		it('should support method chaining', () => {
-			const result = rootSpan.setExperiment('exp-123').setIdentity({ userId: 'user-1' })
+			const result = rootSpan.setExperiment({ id: 'exp-123' }).setIdentity({ userId: 'user-1' })
 
 			expect(result).toBe(rootSpan)
 		})
@@ -253,7 +274,7 @@ describe('StartSpanHandle', () => {
 		it('should support method chaining', () => {
 			const result = rootSpan
 				.setIdentity({ userId: 'user-1' })
-				.setExperiment('exp-1')
+			.setExperiment({ id: 'exp-1' })
 				.setEvaluationConfig({ key: 'value' })
 
 			expect(result).toBe(rootSpan)
@@ -270,7 +291,7 @@ describe('SpanHandle', () => {
 		const otel = require('@opentelemetry/api')
 		const tracer = otel.trace.getTracer()
 		mockSpan = tracer.startSpan('test')
-		rootSpan = startObserve()
+		rootSpan = startObserve({ featureSlug: 'test-feature' })
 	})
 
 	describe('setAttribute', () => {
@@ -362,6 +383,7 @@ describe('Integration: Complete workflow', () => {
 	it('should support complete root span lifecycle with chaining', () => {
 		const rootSpan = startObserve({
 			name: 'user-registration',
+			featureSlug: 'auth-service',
 			attributes: {
 				'service.name': 'auth-service',
 			},
@@ -374,7 +396,7 @@ describe('Integration: Complete workflow', () => {
 				organizationId: 'org-456',
 				registrationSource: 'web',
 			})
-			.setExperiment('onboarding-v2')
+			.setExperiment({ id: 'onboarding-v2', name: 'Onboarding V2' })
 			.setEvaluationConfig({
 				model: 'gpt-4',
 				temperature: 0.7,
@@ -398,7 +420,7 @@ describe('Integration: Complete workflow', () => {
 	})
 
 	it('should handle errors gracefully', () => {
-		const rootSpan = startObserve({ name: 'failing-operation' })
+		const rootSpan = startObserve({ name: 'failing-operation', featureSlug: 'test-feature' })
 
 		try {
 			// Simulate error
@@ -517,7 +539,11 @@ describe('startObserve() API with inline experiment/identity', () => {
 	it('should create root span with experiment in options', () => {
 		const span = startObserve({
 			name: 'test-root-span',
-			experiment: 'exp-123',
+			featureSlug: 'test-feature',
+			experiment: {
+				id: 'exp-123',
+				name: 'Test Experiment',
+			},
 		})
 
 		expect(span).toBeInstanceOf(StartSpanHandle)
@@ -527,6 +553,7 @@ describe('startObserve() API with inline experiment/identity', () => {
 	it('should create root span with identity in options', () => {
 		const span = startObserve({
 			name: 'user-request',
+			featureSlug: 'test-feature',
 			identity: {
 				userId: 'user-123',
 				organizationId: 'org-456',
@@ -540,7 +567,11 @@ describe('startObserve() API with inline experiment/identity', () => {
 	it('should create root span with experiment, identity, and evaluationConfig', () => {
 		const span = startObserve({
 			name: 'llm-request',
-			experiment: 'llm-v2',
+			featureSlug: 'test-feature',
+			experiment: {
+				id: 'llm-v2',
+				name: 'LLM V2',
+			},
 			identity: { userId: 'tester' },
 			evaluationConfig: {
 				model: 'gpt-4',
@@ -554,11 +585,14 @@ describe('startObserve() API with inline experiment/identity', () => {
 	})
 
 	it('should still allow method chaining for experiment/identity', () => {
-		const span = startObserve({ name: 'chaining-test' })
+		const span = startObserve({ 
+			name: 'chaining-test',
+			featureSlug: 'test-feature',
+		})
 
 		// Method chaining still works
 		span
-			.setExperiment('chained-exp')
+			.setExperiment({ id: 'chained-exp' })
 			.setIdentity({ userId: 'user-456' })
 
 		expect(span).toBeInstanceOf(StartSpanHandle)

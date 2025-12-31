@@ -141,14 +141,15 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 	 * Start a root observation span with experiment and identity context
 	 * Returns a handle that must be manually ended
 	 * 
-	 * @param options Root observation options including experiment and identity
+	 * @param options Root observation options including experiment and identity (featureSlug is required)
 	 * @returns StartSpanHandle that must be manually ended
 	 * 
 	 * @example
 	 * ```typescript
 	 * const span = basalt.startObserve({
 	 *   name: 'my-root-operation',
-	 *   experiment: 'exp-123',
+	 *   featureSlug: 'my-feature',
+	 *   experiment: { id: 'exp-123' },
 	 *   identity: { userId: 'user-1', organizationId: 'org-1' }
 	 * })
 	 * try {
@@ -158,7 +159,7 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 	 * }
 	 * ```
 	 */
-	public startObserve(options?: StartObserveOptions): StartSpanHandle {
+	public startObserve(options: StartObserveOptions): StartSpanHandle {
 		return startObserve(options)
 	}
 

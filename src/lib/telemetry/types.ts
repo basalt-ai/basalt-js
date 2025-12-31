@@ -82,6 +82,15 @@ export interface ObserveOptions {
 }
 
 /**
+ * Experiment metadata for trace observation
+ */
+export interface TraceExperiment {
+	id: string
+	name?: string
+	featureSlug?: string
+}
+
+/**
  * Options for starting a root observation span (startObserve)
  * Includes experiment and identity parameters for root spans only
  */
@@ -90,9 +99,13 @@ export interface StartObserveOptions {
 	readonly attributes?: Record<string, unknown>
 	readonly spanKind?: number
 	/**
+	 * Feature slug for the observation (mandatory)
+	 */
+	readonly featureSlug: string
+	/**
 	 * Experiment context for A/B testing
 	 */
-	readonly experiment?: string
+	readonly experiment?: TraceExperiment
 	/**
 	 * Identity information for tracking
 	 */
@@ -103,10 +116,6 @@ export interface StartObserveOptions {
 		organizationName?: string
 		[key: string]: unknown
 	}
-	/**
-	 * Evaluation configuration
-	 */
-	readonly evaluationConfig?: Record<string, unknown>
 }
 
 /**

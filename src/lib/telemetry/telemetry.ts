@@ -466,27 +466,26 @@ export async function observe<T>(
  * @param options - Configuration for the root observation span including experiment and identity
  * @returns StartSpanHandle that must be manually ended
  */
-export function startObserve(options: StartObserveOptions = {}): StartSpanHandle {
+export function startObserve(options: StartObserveOptions): StartSpanHandle {
 	const {
 		name = 'basalt.observe',
 		attributes = {},
 		spanKind,
+		featureSlug,
 		experiment,
 		identity,
-		evaluationConfig,
 	} = options
 
 	if (!otel) {
 		// Return a handle wrapping a no-op span if OTel not available
 		const noOpSpan = createNoOpTracer().startSpan(name)
-		return new StartSpanHandle(noOpSpan)
+		return new StartSpanHandle(noOpSpan, featureSlug)
 	}
 
 	const tracer = getTracer('@basalt-ai/sdk', __SDK_VERSION__)
 
 	// Prepare observation span attributes
 	const observeAttributes = {
-		[BASALT_ATTRIBUTES.TRACE]: true,
 		[BASALT_ATTRIBUTES.SDK_TYPE]: 'nodejs',
 		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
 		[BASALT_ATTRIBUTES.ROOT]: true,
@@ -501,7 +500,7 @@ export function startObserve(options: StartObserveOptions = {}): StartSpanHandle
 
 	// Create span (not active)
 	const span = tracer.startSpan(name, spanOptions)
-	const handle = new StartSpanHandle(span)
+	const handle = new StartSpanHandle(span, featureSlug)
 
 	// Auto-apply experiment if provided
 	if (experiment) {
@@ -512,11 +511,7 @@ export function startObserve(options: StartObserveOptions = {}): StartSpanHandle
 	if (identity) {
 		handle.setIdentity(identity)
 	}
-
-	// Auto-apply evaluation config if provided
-	if (evaluationConfig) {
-		handle.setEvaluationConfig(evaluationConfig)
-	}
+	
 
 	// Store in context for child span access (but context doesn't become active)
 	try {

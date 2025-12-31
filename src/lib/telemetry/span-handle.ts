@@ -84,10 +84,14 @@ export class SpanHandle {
  * Only root spans (created via startObserve()) have these methods
  */
 export class StartSpanHandle extends SpanHandle {
-	constructor(span: Span) {
+	constructor(span: Span, featureSlug: string) {
 		super(span)
-		// Root spans always have kind "basalt_trace"
+		// Root spans always have these markers
+		this.setAttribute(BASALT_ATTRIBUTES.TRACE, true)
+		this.setAttribute(BASALT_ATTRIBUTES.IN_TRACE, 'true')
 		this.setAttribute(BASALT_ATTRIBUTES.SPAN_KIND, 'basalt_trace')
+		// Feature slug is mandatory for root spans
+		this.setAttribute(BASALT_ATTRIBUTES.FEATURE_SLUG, featureSlug)
 	}
 
 	/**
@@ -100,14 +104,19 @@ export class StartSpanHandle extends SpanHandle {
 
 	/**
 	 * Associate this observation with an experiment
-	 * Sets basalt.trace_experiment marker and experiment ID
+	 * Sets experiment attributes following Python SDK structure
 	 * 
-	 * @param experimentId The unique identifier for the experiment
+	 * @param experiment Experiment metadata with id, name, and featureSlug
 	 * @returns this for method chaining
 	 */
-	setExperiment(experimentId: string): this {
-		this.setAttribute(BASALT_ATTRIBUTES.TRACE_EXPERIMENT, true)
-		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experimentId)
+	setExperiment(experiment: { id: string; name?: string; featureSlug?: string }): this {
+		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment.id)
+		if (experiment.name) {
+			this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_NAME, experiment.name)
+		}
+		if (experiment.featureSlug) {
+			this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG, experiment.featureSlug)
+		}
 		return this
 	}
 
