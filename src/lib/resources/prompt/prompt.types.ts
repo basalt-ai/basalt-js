@@ -152,6 +152,12 @@ export interface GetPromptOptions {
 	 * @default true
 	 */
 	cache?: boolean
+
+	/**
+	 * @var kind - Span kind for this operation.
+	 * @default ObserveKind.SPAN
+	 */
+	kind?: import('../../telemetry/types').ObserveKind
 }
 
 export type NoSlugGetPromptOptions = Omit<GetPromptOptions, 'slug'>
@@ -225,11 +231,21 @@ export interface DescribePromptOptions {
 	slug: string
 	version?: string
 	tag?: string
+	/**
+	 * @var kind - Span kind for this operation.
+	 * @default ObserveKind.SPAN
+	 */
+	kind?: import('../../telemetry/types').ObserveKind
 }
 
 export interface NoSlugDescribePromptOptions {
 	version?: string
 	tag?: string
+	/**
+	 * @var kind - Span kind for this operation.
+	 * @default ObserveKind.SPAN
+	 */
+	kind?: import('../../telemetry/types').ObserveKind
 }
 
 /**
@@ -237,6 +253,11 @@ export interface NoSlugDescribePromptOptions {
  */
 export interface ListPromptsOptions {
 	featureSlug?: string
+	/**
+	 * @var kind - Span kind for this operation.
+	 * @default ObserveKind.SPAN
+	 */
+	kind?: import('../../telemetry/types').ObserveKind
 }
 
 /**

@@ -86,6 +86,8 @@ export class SpanHandle {
 export class StartSpanHandle extends SpanHandle {
 	constructor(span: Span) {
 		super(span)
+		// Root spans always have kind "basalt_trace"
+		this.setAttribute(BASALT_ATTRIBUTES.SPAN_KIND, 'basalt_trace')
 	}
 
 	/**
@@ -123,30 +125,30 @@ export class StartSpanHandle extends SpanHandle {
 
 	/**
 	 * Set identity information for this observation
-	 * Sets basalt.trace_identity marker and identity attributes
+	 * Sets identity attributes following basalt.{user|organization}.{id|name} format
 	 * 
-	 * @param identity Object containing userId, organizationId, and optional custom fields
+	 * @param identity Object containing userId, organizationId, userName, organizationName, and optional custom fields
 	 * @returns this for method chaining
 	 */
 	setIdentity(identity: {
 		userId?: string
 		organizationId?: string
+		userName?: string
+		organizationName?: string
 		[key: string]: unknown
 	}): this {
-		this.setAttribute(BASALT_ATTRIBUTES.TRACE_IDENTITY, true)
-
 		if (identity.userId) {
-			this.setAttribute(BASALT_ATTRIBUTES.IDENTITY_USER_ID, identity.userId)
+			this.setAttribute(BASALT_ATTRIBUTES.USER_ID, identity.userId)
+		}
+		if (identity.userName) {
+			this.setAttribute(BASALT_ATTRIBUTES.USER_NAME, identity.userName)
 		}
 		if (identity.organizationId) {
-			this.setAttribute(BASALT_ATTRIBUTES.IDENTITY_ORGANIZATION_ID, identity.organizationId)
+			this.setAttribute(BASALT_ATTRIBUTES.ORG_ID, identity.organizationId)
 		}
-
-		// Additional identity fields as metadata
-		const { userId, organizationId, ...rest } = identity
-		Object.entries(rest).forEach(([key, value]) => {
-			this.setAttribute(`${BASALT_ATTRIBUTES.IDENTITY_PREFIX}${key}`, value)
-		})
+		if (identity.organizationName) {
+			this.setAttribute(BASALT_ATTRIBUTES.ORG_NAME, identity.organizationName)
+		}
 
 		return this
 	}

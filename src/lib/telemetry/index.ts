@@ -30,6 +30,8 @@ export { BasaltContextManager, BASALT_ROOT_SPAN } from './context-manager'
 
 export { SpanHandle, StartSpanHandle } from './span-handle'
 
+export { ObserveKind } from './types'
+
 export { BASALT_ATTRIBUTES, CACHE_TYPES, API_CLIENTS, METADATA_PREFIX } from './attributes'
 
 export { TelemetryManager } from './manager'

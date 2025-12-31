@@ -1,6 +1,20 @@
 import type { Attributes, Span } from '@opentelemetry/api'
 
 /**
+ * Span kind classification for Basalt observations
+ * Matches Python SDK ObserveKind enum
+ */
+export enum ObserveKind {
+	ROOT = 'basalt_trace',
+	SPAN = 'span',
+	GENERATION = 'generation',
+	RETRIEVAL = 'retrieval',
+	FUNCTION = 'function',
+	TOOL = 'tool',
+	EVENT = 'event',
+}
+
+/**
  * Basalt-specific context that can be attached to spans
  */
 export interface BasaltContext {
@@ -84,7 +98,9 @@ export interface StartObserveOptions {
 	 */
 	readonly identity?: {
 		userId?: string
+		userName?: string
 		organizationId?: string
+		organizationName?: string
 		[key: string]: unknown
 	}
 	/**

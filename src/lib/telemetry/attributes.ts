@@ -8,9 +8,13 @@ export const BASALT_ATTRIBUTES = {
 	VERSION: 'basalt.version',
 	SPAN_TYPE: 'basalt.span_type',
 	TRACE: 'basalt.trace',
+	IN_TRACE: 'basalt.in_trace',
 
 	// Root span markers
 	ROOT: 'basalt.root',
+
+	// Span classification
+	SPAN_KIND: 'basalt.span.kind',
 
 	// SDK identification
 	SDK_NAME: 'basalt.sdk.name',
@@ -18,6 +22,10 @@ export const BASALT_ATTRIBUTES = {
 	SDK_TARGET: 'basalt.sdk.target',
 	SDK_TYPE: 'basalt.sdk.type',
 	OPERATION: 'basalt.operation',
+
+	// Metadata and variables
+	METADATA: 'basalt.metadata',
+	SPAN_VARIABLES: 'basalt.span.variables',
 
 	// API layer attributes
 	API_CLIENT: 'basalt.api.client',
@@ -45,12 +53,6 @@ export const BASALT_ATTRIBUTES = {
 	EXPERIMENT_FEATURE_SLUG: 'basalt.experiment.feature_slug',
 	TRACE_EXPERIMENT: 'basalt.trace_experiment',
 
-	// Identity tracking
-	TRACE_IDENTITY: 'basalt.trace_identity',
-	IDENTITY_USER_ID: 'basalt.identity.user_id',
-	IDENTITY_ORGANIZATION_ID: 'basalt.identity.organization_id',
-	IDENTITY_PREFIX: 'basalt.identity.',
-
 	// Evaluation configuration
 	EVALUATION_CONFIG: 'basalt.evaluation.config',
 
@@ -64,7 +66,7 @@ export const BASALT_ATTRIBUTES = {
 	HTTP_STATUS_CODE: 'http.status_code',
 	HTTP_RESPONSE_TIME_MS: 'http.response_time_ms',
 
-	// Context propagation attributes
+	// Context propagation attributes - identity
 	USER_ID: 'basalt.user.id',
 	USER_NAME: 'basalt.user.name',
 	ORG_ID: 'basalt.organization.id',

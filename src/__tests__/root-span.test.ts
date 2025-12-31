@@ -202,15 +202,11 @@ describe('StartSpanHandle', () => {
 
 			expect(result).toBe(rootSpan)
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				BASALT_ATTRIBUTES.TRACE_IDENTITY,
-				true
-			)
-			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				BASALT_ATTRIBUTES.IDENTITY_USER_ID,
+				BASALT_ATTRIBUTES.USER_ID,
 				'user-123'
 			)
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				BASALT_ATTRIBUTES.IDENTITY_ORGANIZATION_ID,
+				BASALT_ATTRIBUTES.ORG_ID,
 				'org-456'
 			)
 		})
@@ -222,26 +218,35 @@ describe('StartSpanHandle', () => {
 
 			expect(result).toBe(rootSpan)
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				BASALT_ATTRIBUTES.IDENTITY_USER_ID,
+				BASALT_ATTRIBUTES.USER_ID,
 				'user-123'
 			)
 		})
 
-		it('should set custom identity fields as metadata', () => {
+		it('should support userName and organizationName', () => {
 			const result = rootSpan.setIdentity({
 				userId: 'user-123',
-				sessionId: 'session-abc',
-				region: 'us-east-1',
+				userName: 'Alice Smith',
+				organizationId: 'org-456',
+				organizationName: 'Acme Corp',
 			})
 
 			expect(result).toBe(rootSpan)
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				`${BASALT_ATTRIBUTES.IDENTITY_PREFIX}sessionId`,
-				'session-abc'
+				BASALT_ATTRIBUTES.USER_ID,
+				'user-123'
 			)
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				`${BASALT_ATTRIBUTES.IDENTITY_PREFIX}region`,
-				'us-east-1'
+				BASALT_ATTRIBUTES.USER_NAME,
+				'Alice Smith'
+			)
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.ORG_ID,
+				'org-456'
+			)
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.ORG_NAME,
+				'Acme Corp'
 			)
 		})
 
