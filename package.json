@@ -18,24 +18,55 @@
 		"test": "jest"
 	},
 	"devDependencies": {
-		"@swc/core": "1.15.7",
+		"@swc/core": "1.15.8",
 		"@swc/helpers": "0.5.18",
 		"@swc/jest": "0.2.39",
-		"@types/mime-types": "3.0.1",
 		"@types/jest": "30.0.0",
+		"@types/mime-types": "3.0.1",
 		"jest": "30.2.0",
 		"ts-node": "10.9.2",
 		"typescript": "5.9.3"
 	},
 	"dependencies": {
+		"@grpc/grpc-js": "1.14.3",
 		"@huggingface/jinja": "0.5.3",
-		"mime-types": "3.0.2",
 		"@opentelemetry/api": "1.9.0",
-		"@opentelemetry/sdk-trace-node": "2.2.0",
-		"@opentelemetry/sdk-trace-base": "2.2.0",
 		"@opentelemetry/exporter-trace-otlp-grpc": "0.208.0",
+		"@opentelemetry/instrumentation": "0.208.0",
 		"@opentelemetry/resources": "2.2.0",
+		"@opentelemetry/sdk-trace-base": "2.2.0",
+		"@opentelemetry/sdk-trace-node": "2.2.0",
 		"@opentelemetry/semantic-conventions": "1.38.0",
-		"@grpc/grpc-js": "1.14.3"
+		"mime-types": "3.0.2"
+	},
+	"peerDependencies": {
+		"@anthropic-ai/sdk": "0.71.2",
+		"@aws-sdk/client-bedrock-runtime": "3.962.0",
+		"@traceloop/instrumentation-anthropic": "0.22.5",
+		"@traceloop/instrumentation-bedrock": "0.22.5",
+		"openai": "6.15.0"
+	},
+	"peerDependenciesMeta": {
+		"openai": {
+			"optional": true
+		},
+		"@opentelemetry/instrumentation-openai": {
+			"optional": true
+		},
+		"@anthropic-ai/sdk": {
+			"optional": true
+		},
+		"@traceloop/instrumentation-anthropic": {
+			"optional": true
+		},
+		"@aws-sdk/client-bedrock-runtime": {
+			"optional": true
+		},
+		"@traceloop/instrumentation-bedrock": {
+			"optional": true
+		}
+	},
+	"optionalDependencies": {
+		"@opentelemetry/instrumentation-openai": "^0.7.1"
 	}
 }

@@ -3,6 +3,7 @@ import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc'
 import { resourceFromAttributes } from '@opentelemetry/resources'
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions'
+import { BasaltSpanProcessor } from '../instrumentation/basalt-span-processor'
 
 export interface TelemetryManagerConfig {
 	apiKey: string
@@ -47,16 +48,21 @@ export class TelemetryManager {
 			})
 
 			// Create batch processor for efficient export
-			const processor = new BatchSpanProcessor(exporter)
+			const batchProcessor = new BatchSpanProcessor(exporter)
 
-			// Create TracerProvider with resource and processor
+			// Create Basalt span processor to inject context attributes
+			const basaltProcessor = new BasaltSpanProcessor()
+
+			// Create TracerProvider with resource and processors
+			// IMPORTANT: BasaltSpanProcessor must be registered BEFORE BatchSpanProcessor
+			// so that attributes are added before export
 			this.provider = new NodeTracerProvider({
 				resource: resourceFromAttributes({
 					[ATTR_SERVICE_NAME]: this.config.serviceName,
 					'basalt.sdk.name': '@basalt-ai/sdk',
 					'basalt.sdk.version': __SDK_VERSION__,
 				}),
-				spanProcessors: [processor],
+				spanProcessors: [basaltProcessor, batchProcessor],
 			})
 
 			// Register as global provider

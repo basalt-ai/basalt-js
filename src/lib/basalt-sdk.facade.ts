@@ -7,6 +7,8 @@ import { TelemetryManager } from './telemetry/manager'
 import { observe, startObserve } from './telemetry/telemetry'
 import type { ObserveOptions, StartObserveOptions } from './telemetry/types'
 import { SpanHandle, StartSpanHandle } from './telemetry/span-handle'
+import { instrument as instrumentProviders } from './instrumentation'
+import type { InstrumentationConfig } from './instrumentation'
 import Api from './utils/api'
 import Logger from './utils/logger'
 import MemoryCache from './utils/memorycache'
@@ -35,16 +37,38 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 		// Initialize telemetry first (if enabled)
 		if (config.telemetry?.enabled !== false) {
 			try {
+				// Determine OTEL exporter endpoint with explicit priority:
+				// 1. Explicit config.telemetry.endpoint (highest priority)
+				// 2. BASALT_OTEL_EXPORTER_OTLP_ENDPOINT environment variable
+				// 3. OTEL_EXPORTER_OTLP_ENDPOINT environment variable (standard OTEL)
+				// 4. Default to 'https://grpc.otel.getbasalt.ai'
+				let endpoint: string
+				let endpointSource: string
+
+				if (config.telemetry?.endpoint) {
+					endpoint = config.telemetry.endpoint
+					endpointSource = 'config'
+				} else if (process.env['BASALT_OTEL_EXPORTER_OTLP_ENDPOINT']) {
+					endpoint = process.env['BASALT_OTEL_EXPORTER_OTLP_ENDPOINT']
+					endpointSource = 'BASALT_OTEL_EXPORTER_OTLP_ENDPOINT env var'
+				} else if (process.env['OTEL_EXPORTER_OTLP_ENDPOINT']) {
+					endpoint = process.env['OTEL_EXPORTER_OTLP_ENDPOINT']
+					endpointSource = 'OTEL_EXPORTER_OTLP_ENDPOINT env var'
+				} else {
+					endpoint = 'https://grpc.otel.getbasalt.ai'
+					endpointSource = 'default'
+				}
+
 				this._telemetryManager = TelemetryManager.initialize({
 					apiKey: config.telemetry?.apiKey ?? config.apiKey,
-					endpoint: config.telemetry?.endpoint
-						?? process.env['BASALT_OTEL_EXPORTER_OTLP_ENDPOINT']
-						?? 'localhost:4317',
+					endpoint,
 					insecure: config.telemetry?.insecure ?? false,
 					metadata: config.telemetry?.metadata,
 					serviceName: config.telemetry?.serviceName ?? 'basalt-sdk-app',
 				})
-				logger.info('Telemetry initialized successfully')
+				logger.info(
+					`Telemetry initialized successfully (OTEL exporter endpoint: ${endpoint} from ${endpointSource})`,
+				)
 			} catch (error) {
 				logger.warn(
 					'Failed to initialize telemetry. SDK will continue without tracing.',
@@ -161,6 +185,38 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 	 */
 	public startObserve(options: StartObserveOptions): StartSpanHandle {
 		return startObserve(options)
+	}
+
+	/**
+	 * Enable auto-instrumentation for GenAI providers
+	 *
+	 * Automatically creates spans for LLM API calls that inherit basalt_trace
+	 * attributes when inside a Basalt observation context.
+	 *
+	 * Uses existing OpenTelemetry instrumentation libraries:
+	 * - OpenAI: @opentelemetry/instrumentation-openai
+	 * - Anthropic: @traceloop/instrumentation-anthropic
+	 * - AWS Bedrock: @traceloop/instrumentation-bedrock
+	 *
+	 * @param config Provider-specific configuration
+	 * @example
+	 * ```typescript
+	 * // Enable all providers with defaults
+	 * basalt.instrument({
+	 *   openai: true,
+	 *   anthropic: true,
+	 *   bedrock: true
+	 * })
+	 *
+	 * // Enable with privacy mode (no message content)
+	 * basalt.instrument({
+	 *   openai: true,
+	 *   anthropic: { captureContent: false }
+	 * })
+	 * ```
+	 */
+	public instrument(config: InstrumentationConfig): void {
+		instrumentProviders(config)
 	}
 
 	public get prompt() {
