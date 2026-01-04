@@ -1,4 +1,5 @@
 import { Span, SpanStatusCode, SpanStatus, Attributes } from '@opentelemetry/api'
+import type { BasaltContext } from './types'
 import { BASALT_ATTRIBUTES } from './attributes'
 import { sanitizeAttributes } from './telemetry'
 
@@ -84,8 +85,15 @@ export class SpanHandle {
  * Only root spans (created via startObserve()) have these methods
  */
 export class StartSpanHandle extends SpanHandle {
+	private readonly basaltContext: BasaltContext
+
 	constructor(span: Span, featureSlug: string) {
 		super(span)
+		this.basaltContext = {}
+		if (featureSlug) {
+			this.basaltContext.featureSlug = featureSlug
+		}
+
 		// Root spans always have these markers
 		this.setAttribute(BASALT_ATTRIBUTES.TRACE, true)
 		this.setAttribute(BASALT_ATTRIBUTES.IN_TRACE, 'true')
@@ -103,6 +111,14 @@ export class StartSpanHandle extends SpanHandle {
 	}
 
 	/**
+	 * Get Basalt context captured from root span configuration
+	 * @internal Used by context manager to propagate attributes
+	 */
+	getBasaltContext(): BasaltContext {
+		return this.basaltContext
+	}
+
+	/**
 	 * Associate this observation with an experiment
 	 * Sets experiment attributes following Python SDK structure
 	 * 
@@ -116,6 +132,11 @@ export class StartSpanHandle extends SpanHandle {
 		}
 		if (experiment.featureSlug) {
 			this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG, experiment.featureSlug)
+		}
+		this.basaltContext.experiment = {
+			id: experiment.id,
+			name: experiment.name ?? this.basaltContext.experiment?.name,
+			featureSlug: experiment.featureSlug ?? this.basaltContext.experiment?.featureSlug,
 		}
 		return this
 	}
@@ -157,6 +178,23 @@ export class StartSpanHandle extends SpanHandle {
 		}
 		if (identity.organizationName) {
 			this.setAttribute(BASALT_ATTRIBUTES.ORG_NAME, identity.organizationName)
+		}
+
+		const userId = identity.userId ?? this.basaltContext.user?.id
+		if (userId) {
+			this.basaltContext.user = {
+				id: userId,
+				name: identity.userName ?? this.basaltContext.user?.name,
+			}
+		}
+
+		const organizationId =
+			identity.organizationId ?? this.basaltContext.organization?.id
+		if (organizationId) {
+			this.basaltContext.organization = {
+				id: organizationId,
+				name: identity.organizationName ?? this.basaltContext.organization?.name,
+			}
 		}
 
 		return this

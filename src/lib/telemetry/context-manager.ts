@@ -233,12 +233,21 @@ export class BasaltContextManager {
 		try {
 			// eslint-disable-next-line @typescript-eslint/no-var-requires
 			const otel = require('@opentelemetry/api')
-			const currentContext = otel.context.active()
-			// Store handle in Basalt context
-			let newContext = currentContext.setValue(BASALT_ROOT_SPAN, handle)
-			// Also set as active OpenTelemetry span so child spans connect properly
-			newContext = otel.trace.setSpan(newContext, handle.getSpan())
-			return otel.context.with(newContext, fn)
+			const runWithRoot = () => {
+				const currentContext = otel.context.active()
+				// Store handle in Basalt context
+				let newContext = currentContext.setValue(BASALT_ROOT_SPAN, handle)
+				// Also set as active OpenTelemetry span so child spans connect properly
+				newContext = otel.trace.setSpan(newContext, handle.getSpan())
+				return otel.context.with(newContext, fn)
+			}
+
+			const basaltContext = (handle as any).getBasaltContext?.()
+			if (basaltContext && Object.keys(basaltContext).length > 0) {
+				return BasaltContextManager.withMergedContext(basaltContext, runWithRoot)
+			}
+
+			return runWithRoot()
 		} catch {
 			// If OTel not available, just execute the function
 			return fn()
