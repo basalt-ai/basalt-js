@@ -3,13 +3,6 @@
  */
 
 import { AsyncResult, ErrObj } from '../contract'
-import { Generation } from '../monitor'
-
-export type GetPromptResult<Wrapped, Error = ErrObj> =
-	| { error: null, value: Wrapped, generation: Generation }
-	| { error: Error, value: null, generation: null }
-
-export type AsyncGetPromptResult<Wrapped, Error = ErrObj> = Promise<GetPromptResult<Wrapped, Error>>
 
 /**
  * @preserve
@@ -62,7 +55,7 @@ export interface IPromptSDK {
 	 *
 	 * @returns Promise of a Result object containing prompt or any ocurred error.
 	 */
-	get(slug: string, options?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse>
+	get(slug: string, options?: NoSlugGetPromptOptions): AsyncResult<PromptResponse>
 
 	/**
 	 * Get a prompt from the Basalt API using the full options
@@ -84,7 +77,7 @@ export interface IPromptSDK {
 	 *
 	 * @returns Promise of a Result object containing prompt or any ocurred error.
 	 */
-	get(options: GetPromptOptions): AsyncGetPromptResult<PromptResponse>
+	get(options: GetPromptOptions): AsyncResult<PromptResponse>
 
 	/**
 	 * Get a list of prompts from the Basalt API

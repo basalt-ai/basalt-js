@@ -192,3 +192,46 @@ const basalt = new Basalt({
 - **Offline Resilience**: Previously cached prompts remain available even during temporary network issues
 
 The cache is particularly useful in high-throughput applications where the same prompts are requested multiple times in a short period.
+
+## Migration from Legacy Monitoring
+
+If you were using the legacy manual monitoring system (removed in v2.x), migrate to OpenTelemetry:
+
+**Before (Legacy):**
+```typescript
+const result = await basalt.prompt.get('my-prompt');
+const generation = result.generation; // No longer available
+
+await basalt.monitor.createExperiment(...); // No longer available
+trace.end(); // No longer available
+```
+
+**After (OpenTelemetry):**
+```typescript
+// Use startObserve() for root spans with experiment tracking
+const span = basalt.startObserve({
+  name: 'my-operation',
+  featureSlug: 'my-feature',
+  experiment: {
+    id: 'exp-1',
+    name: 'My Experiment',
+    featureSlug: 'my-feature',
+  },
+});
+
+// Wrap operations with the root span context
+await BasaltContextManager.withRootSpan(span, async () => {
+  // Your operations here - child spans will auto-connect
+  const result = await basalt.prompt.get('my-prompt');
+  // ...
+});
+
+// End the span
+span.end();
+```
+
+Key changes:
+- `basalt.prompt.get()` no longer returns a `generation` object
+- `basalt.monitor.*` methods removed - use OpenTelemetry spans instead
+- Use `basalt.startObserve()` or `basalt.observe()` for tracing
+- See OpenTelemetry section above for full documentation

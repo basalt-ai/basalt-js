@@ -573,11 +573,6 @@ describe('startObserve() API with inline experiment/identity', () => {
 				name: 'LLM V2',
 			},
 			identity: { userId: 'tester' },
-			evaluationConfig: {
-				model: 'gpt-4',
-				temperature: 0.7,
-				maxTokens: 1000,
-			},
 		})
 
 		expect(span).toBeInstanceOf(StartSpanHandle)

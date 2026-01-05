@@ -1,12 +1,8 @@
 import { DescribePromptEndpoint, GetPromptEndpoint, ListPromptsEndpoint } from '../endpoints'
-import Generation from '../objects/generation'
-import { Trace } from '../objects/trace'
 import type {
-	AsyncGetPromptResult,
 	AsyncResult,
 	DescribePromptOptions,
 	GetPromptOptions,
-	GetPromptResponse,
 	IApi,
 	ICache,
 	IPromptSDK,
@@ -22,7 +18,6 @@ import type {
 import type { Span } from '@opentelemetry/api'
 import { withBasaltSpan } from '../telemetry'
 import { BASALT_ATTRIBUTES, CACHE_TYPES } from '../telemetry/attributes'
-import Flusher from '../utils/flusher'
 import { renderTemplate } from '../utils/template'
 import {
 	err,
@@ -58,17 +53,17 @@ export default class PromptSDK implements IPromptSDK {
 	 *
 	 * @param slug - The unique identifier for the prompt.
 	 * @param options - Optional parameters for retrieving the prompt.
-	 * @returns A promise with the prompt response and generation.
+	 * @returns A promise with the prompt response.
 	 */
-	async get(slug: string, options?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse>
+	async get(slug: string, options?: NoSlugGetPromptOptions): AsyncResult<PromptResponse>
 	/**
 	 * Retrieves a prompt using options object.
 	 *
 	 * @param options - Options for retrieving the prompt.
-	 * @returns A promise with the prompt response and generation.
+	 * @returns A promise with the prompt response.
 	 */
-	async get(options: GetPromptOptions): AsyncGetPromptResult<PromptResponse>
-	async get(arg1: string | GetPromptOptions, arg2?: NoSlugGetPromptOptions): AsyncGetPromptResult<PromptResponse> {
+	async get(options: GetPromptOptions): AsyncResult<PromptResponse>
+	async get(arg1: string | GetPromptOptions, arg2?: NoSlugGetPromptOptions): AsyncResult<PromptResponse> {
 		let params: GetPromptOptions
 
 		if (typeof arg1 === 'string') {
@@ -99,14 +94,12 @@ export default class PromptSDK implements IPromptSDK {
 				const prompt = await this._getPromptWithCache(params, span)
 
 				if (prompt.error) {
-					return { ...prompt, generation: null }
+					return prompt
 				}
-
-				const generation = this._prepareMonitoring(prompt.value, params)
 
 				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
 
-				return { ...prompt, generation }
+				return prompt
 			},
 		)
 	}
@@ -207,10 +200,10 @@ export default class PromptSDK implements IPromptSDK {
 	private async _getPromptWithCache(
 		opts: GetPromptOptions,
 		span: Pick<Span, 'setAttribute'>,
-	): AsyncResult<GetPromptResponse> {
+	): AsyncResult<PromptResponse> {
 		// 1. Read from query cache first
 		const cacheKey = this._makePromptCacheKey(opts)
-		const cached = this.queryCache.get<GetPromptResponse>(cacheKey)
+		const cached = this.queryCache.get<PromptResponse>(cacheKey)
 
 		const cacheEnabled = opts.cache !== false
 		const variables = opts.variables ?? {}
@@ -238,7 +231,7 @@ export default class PromptSDK implements IPromptSDK {
 		}
 
 		// 3. Api call failed, check if there is a fallback in the cache
-		const fallback = this.fallbackCache.get<GetPromptResponse>(cacheKey)
+		const fallback = this.fallbackCache.get<PromptResponse>(cacheKey)
 
 		if (cacheEnabled && fallback) {
 			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true)
@@ -289,38 +282,6 @@ export default class PromptSDK implements IPromptSDK {
 		}
 
 		return cacheKey
-	}
-
-	/**
-	 * Prepares monitoring for a prompt.
-	 *
-	 * @param prompt - The prompt response.
-	 * @param params - The parameters used to retrieve the prompt.
-	 * @returns A new Generation instance.
-	 */
-	private _prepareMonitoring(prompt: GetPromptResponse, params: GetPromptOptions): Generation {
-		// 1. Create the trace
-		const flusher = new Flusher(this.api, this.logger)
-
-		const trace = new Trace(params.slug, {
-			input: prompt.text,
-			startTime: new Date(),
-		}, flusher, this.logger)
-
-		// 2. Create the generation
-		const generation = new Generation({
-			name: params.slug,
-			trace,
-			prompt: {
-				slug: params.slug,
-				version: params.version,
-				tag: params.tag,
-			},
-			input: prompt.text,
-			variables: params.variables,
-		}, { type: 'single' })
-
-		return generation
 	}
 
 	/**
