@@ -23,6 +23,7 @@ import {
 	err,
 	ok,
 } from '../utils/utils'
+import { type SpanHandle, withBasaltSpan } from "../telemetry";
 
 export default class PromptSDK implements IPromptSDK {
 	/**
@@ -91,15 +92,29 @@ export default class PromptSDK implements IPromptSDK {
 				}),
 			},
 			async (span) => {
-				const prompt = await this._getPromptWithCache(params, span)
+				// Capture input
+				span.setInput({
+					slug: params.slug,
+					...(params.version && { version: params.version }),
+					...(params.tag && { tag: params.tag }),
+					...(params.variables && { variables: params.variables }),
+					cache: params.cache !== false,
+				});
+
+				const prompt = await this._getPromptWithCache(params, span);
 
 				if (prompt.error) {
-					return prompt
+					// Capture error as output
+					span.setOutput({ error: prompt.error.message });
+					return prompt;
 				}
 
-				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true);
 
-				return prompt
+				// Capture successful output
+				span.setOutput(prompt.value);
+
+				return prompt;
 			},
 		)
 	}
@@ -123,11 +138,22 @@ export default class PromptSDK implements IPromptSDK {
 				}),
 			},
 			async (span) => {
-				const result = await this._listPrompts(options)
+				// Capture input
+				span.setInput({
+					...(options?.featureSlug && { featureSlug: options.featureSlug }),
+				});
+
+				const result = await this._listPrompts(options);
 
 				if (result.value) {
-					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
-					span.setAttribute('basalt.prompt.count', result.value.length)
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true);
+					span.setAttribute("basalt.prompt.count", result.value.length);
+
+					// Capture output
+					span.setOutput(result.value);
+				} else {
+					// Capture error
+					span.setOutput({ error: result.error.message });
 				}
 
 				return result
@@ -175,10 +201,22 @@ export default class PromptSDK implements IPromptSDK {
 				}),
 			},
 			async (span) => {
-				const result = await this._describePrompt(params)
+				// Capture input
+				span.setInput({
+					slug: params.slug,
+					...(params.version && { version: params.version }),
+					...(params.tag && { tag: params.tag }),
+				});
+
+				const result = await this._describePrompt(params);
 
 				if (result.value) {
-					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true);
+					// Capture output
+					span.setOutput(result.value);
+				} else {
+					// Capture error
+					span.setOutput({ error: result.error.message });
 				}
 
 				return result
@@ -199,7 +237,7 @@ export default class PromptSDK implements IPromptSDK {
 	 */
 	private async _getPromptWithCache(
 		opts: GetPromptOptions,
-		span: Pick<Span, 'setAttribute'>,
+		span: Pick<SpanHandle, "setAttribute">,
 	): AsyncResult<PromptResponse> {
 		// 1. Read from query cache first
 		const cacheKey = this._makePromptCacheKey(opts)

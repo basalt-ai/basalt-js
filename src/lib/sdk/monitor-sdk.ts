@@ -42,17 +42,34 @@ export default class MonitorSDK implements IMonitorSDK {
 				}),
 			},
 			async (span) => {
-				const result = await this.api.invoke(CreateExperimentEndpoint, { featureSlug, ...params })
+				// Capture input
+				span.setInput({
+					featureSlug,
+					...params,
+				});
+
+				const result = await this.api.invoke(CreateExperimentEndpoint, {
+					featureSlug,
+					...params,
+				});
 
 				if (result.error) {
-					return err(result.error)
+					// Capture error
+					span.setOutput({ error: result.error.message });
+					return err(result.error);
 				}
 
 				// Add experiment ID after creation
-				span.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, result.value.experiment.id)
-				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+				span.setAttribute(
+					BASALT_ATTRIBUTES.EXPERIMENT_ID,
+					result.value.experiment.id,
+				);
+				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true);
 
-				return ok(result.value.experiment)
+				// Capture output
+				span.setOutput(result.value.experiment);
+
+				return ok(result.value.experiment);
 			},
 		)
 	}

@@ -17,6 +17,7 @@ import { uploadFile } from '../utils/file-upload'
 import { withBasaltSpan } from '../telemetry'
 import { BASALT_ATTRIBUTES, CACHE_TYPES } from '../telemetry/attributes'
 import { err, ok } from '../utils/utils'
+import type { SpanHandle } from "../telemetry/basalt-span";
 
 export default class DatasetSDK implements IDatasetSDK {
 	/**
@@ -60,11 +61,23 @@ export default class DatasetSDK implements IDatasetSDK {
 				}),
 			},
 			async (span) => {
-				const result = await this._listDatasets()
+				// Capture input (empty for list)
+				span.setInput({});
+
+				const result = await this._listDatasets();
 
 				if (result.value) {
-					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
-					span.setAttribute(BASALT_ATTRIBUTES.DATASET_ROW_COUNT, result.value.length)
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true);
+					span.setAttribute(
+						BASALT_ATTRIBUTES.DATASET_ROW_COUNT,
+						result.value.length,
+					);
+
+					// Capture output
+					span.setOutput(result.value);
+				} else {
+					// Capture error
+					span.setOutput({ error: result.error.message });
 				}
 
 				return result
@@ -93,10 +106,18 @@ export default class DatasetSDK implements IDatasetSDK {
 				}),
 			},
 			async (span) => {
-				const result = await this._getDatasetWithCache({ slug }, span)
+				// Capture input
+				span.setInput({ slug });
+
+				const result = await this._getDatasetWithCache({ slug }, span);
 
 				if (result.value) {
-					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true);
+					// Capture output
+					span.setOutput(result.value);
+				} else {
+					// Capture error
+					span.setOutput({ error: result.error.message });
 				}
 
 				return result
@@ -126,10 +147,36 @@ export default class DatasetSDK implements IDatasetSDK {
 				}),
 			},
 			async (span) => {
-				const result = await this._createDatasetItem({ slug, ...options })
+				// Capture input (sanitize FileAttachment objects)
+				const sanitizedValues: Record<string, string> = {};
+				for (const [key, value] of Object.entries(options.values)) {
+					if (value instanceof FileAttachment) {
+						sanitizedValues[key] = `<FileAttachment: ${value.getFilename()}>`;
+					} else {
+						sanitizedValues[key] = value;
+					}
+				}
+
+				span.setInput({
+					slug,
+					...(options.name && { name: options.name }),
+					values: sanitizedValues,
+					...(options.idealOutput && { idealOutput: options.idealOutput }),
+					...(options.metadata && { metadata: options.metadata }),
+					...(options.isPlayground !== undefined && {
+						isPlayground: options.isPlayground,
+					}),
+				});
+
+				const result = await this._createDatasetItem({ slug, ...options });
 
 				if (result.value) {
-					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+					span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true);
+					// Capture output
+					span.setOutput(result.value);
+				} else {
+					// Capture error
+					span.setOutput({ error: result.error.message });
 				}
 
 				return result
@@ -169,7 +216,7 @@ export default class DatasetSDK implements IDatasetSDK {
    */
 	private async _getDatasetWithCache(
 		options: GetDatasetOptions,
-		span: Span,
+		span: SpanHandle,
 	): AsyncResult<DatasetResponse> {
 		// 1. Read from query cache first
 		const cacheKey = options.slug
