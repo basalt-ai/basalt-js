@@ -23,6 +23,9 @@
  * ```
  */
 
-export { instrument } from './registry'
-export type { InstrumentationConfig, ProviderInstrumentationConfig } from './types'
-export { BasaltSpanProcessor } from './basalt-span-processor'
+export { BasaltSpanProcessor } from "./basalt-span-processor";
+export { instrument } from "./registry";
+export type {
+	InstrumentationConfig,
+	ProviderInstrumentationConfig,
+} from "./types";

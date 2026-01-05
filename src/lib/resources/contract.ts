@@ -1,49 +1,53 @@
-import { IDatasetSDK } from './dataset/dataset.types'
-import { IMonitorSDK } from './monitor/monitor.types'
-import { IPromptSDK } from './prompt/prompt.types'
+import type { IDatasetSDK } from "./dataset/dataset.types";
+import type { IMonitorSDK } from "./monitor/monitor.types";
+import type { IPromptSDK } from "./prompt/prompt.types";
 
 /**
  * Interface for the Basalt SDK.
  */
 export interface IBasaltSDK {
-	readonly prompt: IPromptSDK
-	readonly monitor: IMonitorSDK
-	readonly dataset: IDatasetSDK
+	readonly prompt: IPromptSDK;
+	readonly monitor: IMonitorSDK;
+	readonly dataset: IDatasetSDK;
 
 	/**
 	 * Shutdown SDK and flush telemetry
 	 * Call before process exit to ensure all spans are exported
 	 */
-	shutdown(): Promise<void>
+	shutdown(): Promise<void>;
 }
 
 /**
  * Result wrapper type
  */
 export type Result<Wrapped, Error = ErrObj> =
-	| { error: null, value: Wrapped }
-	| { error: Error, value: null }
+	| { error: null; value: Wrapped }
+	| { error: Error; value: null };
 
 /**
  * Result type for asynchronous operations
  */
-export type AsyncResult<Wrapped, Error = ErrObj> = Promise<Result<Wrapped, Error>>
+export type AsyncResult<Wrapped, Error = ErrObj> = Promise<
+	Result<Wrapped, Error>
+>;
 
 /**
  * HTTP methods for fetch requests
  */
-export type FetchMethod = 'get' | 'post' | 'put' | 'delete'
+export type FetchMethod = "get" | "post" | "put" | "delete";
 
 /**
  * Response type for fetch requests
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type FetchResponse = any
+export type FetchResponse = any;
 
 /**
  * Error type for fetch requests
  */
-export interface ErrObj { message: string }
+export interface ErrObj {
+	message: string;
+}
 
 /**
  * Interface for the Networker
@@ -60,8 +64,8 @@ export interface INetworker {
 		url: URL,
 		method: FetchMethod,
 		body?: BodyInit,
-		headers?: HeadersInit
-	): AsyncResult<FetchResponse>
+		headers?: HeadersInit,
+	): AsyncResult<FetchResponse>;
 }
 
 /**
@@ -72,7 +76,7 @@ export interface ICache {
 	 * Get a value from the cache
 	 * @param key - The key of the value to get
 	 */
-	get<T = unknown>(key: string): T | undefined
+	get<T = unknown>(key: string): T | undefined;
 
 	/**
 	 * Set a value in the cache
@@ -80,39 +84,42 @@ export interface ICache {
 	 * @param value - The value to set
 	 * @param duration - Optional duration for the cache entry
 	 */
-	set(key: string, value: unknown, duration?: number): void
+	set(key: string, value: unknown, duration?: number): void;
 }
 
 /**
  * Type for query parameters
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type QueryParamsObject = Record<string, any>
+export type QueryParamsObject = Record<string, any>;
 
 /**
  * Interface for the API.
  */
 export interface IApi {
-	invoke<Input, Output>(endpoint: IEndpoint<Input, Output>, dto?: Input): AsyncResult<Output>
+	invoke<Input, Output>(
+		endpoint: IEndpoint<Input, Output>,
+		dto?: Input,
+	): AsyncResult<Output>;
 }
 
 export interface IEndpoint<Input, Output> {
 	prepareRequest(dto: Input): {
-		path: string
-		method: FetchMethod
-		body?: BodyInit
-		query?: QueryParamsObject
-	}
+		path: string;
+		method: FetchMethod;
+		body?: BodyInit;
+		query?: QueryParamsObject;
+	};
 
-	decodeResponse(body: unknown): Result<Output>
+	decodeResponse(body: unknown): Result<Output>;
 }
 
-export type LogLevel = 'all' | 'warning' | 'none'
+export type LogLevel = "all" | "warning" | "none";
 
 export interface Logger {
-	warn(msg: string, ...args: unknown[]): void
-	info(msg: string, ...args: unknown[]): void
-	error(msg: string, ...args: unknown[]): void
+	warn(msg: string, ...args: unknown[]): void;
+	info(msg: string, ...args: unknown[]): void;
+	error(msg: string, ...args: unknown[]): void;
 }
 
 /**
@@ -123,37 +130,37 @@ export interface TelemetryConfig {
 	 * Enable/disable telemetry
 	 * @default true
 	 */
-	enabled?: boolean
+	enabled?: boolean;
 
 	/**
 	 * OTLP exporter endpoint (gRPC protocol)
 	 * @default process.env.BASALT_OTEL_EXPORTER_OTLP_ENDPOINT || 'localhost:4317'
 	 */
-	endpoint?: string
+	endpoint?: string;
 
 	/**
 	 * API key for OTLP collector authentication
 	 * @default Same as SDK apiKey
 	 */
-	apiKey?: string
+	apiKey?: string;
 
 	/**
 	 * Use insecure connection (no TLS)
 	 * Useful for local development with local collector
 	 * @default false
 	 */
-	insecure?: boolean
+	insecure?: boolean;
 
 	/**
 	 * Additional gRPC metadata headers
 	 */
-	metadata?: Record<string, string>
+	metadata?: Record<string, string>;
 
 	/**
 	 * Service name for OpenTelemetry resource
 	 * @default 'basalt-sdk-app'
 	 */
-	serviceName?: string
+	serviceName?: string;
 }
 
 /**
@@ -163,18 +170,18 @@ export interface BasaltConfig {
 	/**
 	 * API key for Basalt authentication
 	 */
-	apiKey: string
+	apiKey: string;
 
 	/**
 	 * Logging level
 	 * @default 'warning'
 	 */
-	logLevel?: LogLevel
+	logLevel?: LogLevel;
 
 	/**
 	 * Telemetry configuration
 	 * Telemetry is enabled by default with auto-configuration
 	 * Set { enabled: false } to disable
 	 */
-	telemetry?: TelemetryConfig
+	telemetry?: TelemetryConfig;
 }

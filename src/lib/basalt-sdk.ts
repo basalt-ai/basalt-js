@@ -1,6 +1,6 @@
-import type { IBasaltSDK, IPromptSDK } from './resources'
-import { IDatasetSDK } from './resources/dataset/dataset.types'
-import { IMonitorSDK } from './resources/monitor/monitor.types'
+import type { IBasaltSDK, IPromptSDK } from "./resources";
+import type { IDatasetSDK } from "./resources/dataset/dataset.types";
+import type { IMonitorSDK } from "./resources/monitor/monitor.types";
 
 /**
  * The `BasaltSDK` class implements the `IBasaltSDK` interface.

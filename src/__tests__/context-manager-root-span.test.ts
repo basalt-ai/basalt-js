@@ -3,8 +3,8 @@
  */
 
 // Mock OpenTelemetry API before any imports
-jest.mock('@opentelemetry/api', () => {
-	let contextStorage = new Map()
+jest.mock("@opentelemetry/api", () => {
+	let contextStorage = new Map();
 
 	const mockContext: any = {
 		getValue: jest.fn((key) => contextStorage.get(key)),
@@ -12,19 +12,19 @@ jest.mock('@opentelemetry/api', () => {
 			const newContext = {
 				getValue: jest.fn((k) => (k === key ? value : contextStorage.get(k))),
 				setValue: jest.fn((k, v) => {
-					contextStorage.set(k, v)
-					return mockContext
+					contextStorage.set(k, v);
+					return mockContext;
 				}),
-			}
-			contextStorage.set(key, value)
-			return newContext
+			};
+			contextStorage.set(key, value);
+			return newContext;
 		}),
-	}
+	};
 
 	const mockSpan = {
 		spanContext: () => ({
-			traceId: 'test-trace-id',
-			spanId: 'test-span-id',
+			traceId: "test-trace-id",
+			spanId: "test-span-id",
 			traceFlags: 1,
 		}),
 		setAttribute: jest.fn().mockReturnThis(),
@@ -37,17 +37,17 @@ jest.mock('@opentelemetry/api', () => {
 		recordException: jest.fn(),
 		addLink: jest.fn().mockReturnThis(),
 		addLinks: jest.fn().mockReturnThis(),
-	}
+	};
 
 	const mockTracer = {
 		startSpan: jest.fn(() => mockSpan),
 		startActiveSpan: jest.fn((name, options, fn) => {
-			if (typeof options === 'function') {
-				return options(mockSpan)
+			if (typeof options === "function") {
+				return options(mockSpan);
 			}
-			return fn(mockSpan)
+			return fn(mockSpan);
 		}),
-	}
+	};
 
 	return {
 		trace: {
@@ -58,11 +58,11 @@ jest.mock('@opentelemetry/api', () => {
 		context: {
 			active: jest.fn(() => mockContext),
 			with: jest.fn((ctx, fn) => {
-				const previousStorage = contextStorage
-				contextStorage = new Map(contextStorage)
-				const result = fn()
-				contextStorage = previousStorage
-				return result
+				const previousStorage = contextStorage;
+				contextStorage = new Map(contextStorage);
+				const result = fn();
+				contextStorage = previousStorage;
+				return result;
 			}),
 		},
 		SpanKind: {
@@ -103,187 +103,211 @@ jest.mock('@opentelemetry/api', () => {
 			extract: jest.fn(),
 			inject: jest.fn(),
 		},
-	}
-})
+	};
+});
 
-import { BasaltContextManager, BASALT_ROOT_SPAN, startObserve } from '../lib/telemetry'
+import {
+	BASALT_ROOT_SPAN,
+	BasaltContextManager,
+	startObserve,
+} from "../lib/telemetry";
 
-describe('BasaltContextManager root span storage', () => {
+describe("BasaltContextManager root span storage", () => {
 	beforeEach(() => {
-		jest.clearAllMocks()
-	})
+		jest.clearAllMocks();
+	});
 
-	describe('setRootSpan', () => {
-		it('should store root span handle in context', () => {
-			const rootSpan = startObserve({ featureSlug: 'test-feature' })
-			const newContext = BasaltContextManager.setRootSpan(rootSpan)
+	describe("setRootSpan", () => {
+		it("should store root span handle in context", () => {
+			const rootSpan = startObserve({ featureSlug: "test-feature" });
+			const newContext = BasaltContextManager.setRootSpan(rootSpan);
 
-			expect(newContext).toBeDefined()
-		})
+			expect(newContext).toBeDefined();
+		});
 
-		it('should return undefined if OTel not available', () => {
+		it("should return undefined if OTel not available", () => {
 			// This test would need mocking the require failure
 			// For now, we assume OTel is available in tests
-			expect(true).toBe(true)
-		})
-	})
+			expect(true).toBe(true);
+		});
+	});
 
-	describe('getRootSpan', () => {
-		it('should retrieve stored root span handle', () => {
-			const rootSpan = startObserve({ featureSlug: 'test-feature' })
-			BasaltContextManager.setRootSpan(rootSpan)
+	describe("getRootSpan", () => {
+		it("should retrieve stored root span handle", () => {
+			const rootSpan = startObserve({ featureSlug: "test-feature" });
+			BasaltContextManager.setRootSpan(rootSpan);
 
-			const retrieved = BasaltContextManager.getRootSpan()
+			const retrieved = BasaltContextManager.getRootSpan();
 
 			// May be undefined due to context isolation in tests
 			// The important thing is it doesn't throw
-			expect(retrieved === rootSpan || retrieved === undefined).toBe(true)
-		})
+			expect(retrieved === rootSpan || retrieved === undefined).toBe(true);
+		});
 
-		it('should return undefined if no root span stored', () => {
-			const retrieved = BasaltContextManager.getRootSpan()
+		it("should return undefined if no root span stored", () => {
+			const retrieved = BasaltContextManager.getRootSpan();
 
 			// Should not throw
-			expect(retrieved === undefined || retrieved !== null).toBe(true)
-		})
+			expect(retrieved === undefined || retrieved !== null).toBe(true);
+		});
 
-		it('should return undefined if OTel not available', () => {
+		it("should return undefined if OTel not available", () => {
 			// Similar to setRootSpan test
-			expect(true).toBe(true)
-		})
-	})
+			expect(true).toBe(true);
+		});
+	});
 
-	describe('withRootSpan', () => {
-		it('should execute function within root span context', () => {
-			const rootSpan = startObserve({ featureSlug: 'test-feature' })
-			let executedInContext = false
+	describe("withRootSpan", () => {
+		it("should execute function within root span context", () => {
+			const rootSpan = startObserve({ featureSlug: "test-feature" });
+			let executedInContext = false;
 
 			const result = BasaltContextManager.withRootSpan(rootSpan, () => {
-				executedInContext = true
-				return 'test-result'
-			})
+				executedInContext = true;
+				return "test-result";
+			});
 
-			expect(executedInContext).toBe(true)
-			expect(result).toBe('test-result')
-		})
+			expect(executedInContext).toBe(true);
+			expect(result).toBe("test-result");
+		});
 
-		it('should propagate root span to nested operations', () => {
-			const rootSpan = startObserve({ featureSlug: 'test-feature' })
-			let nestedRootSpan
+		it("should propagate root span to nested operations", () => {
+			const rootSpan = startObserve({ featureSlug: "test-feature" });
+			let nestedRootSpan;
 
 			BasaltContextManager.withRootSpan(rootSpan, () => {
-				nestedRootSpan = BasaltContextManager.getRootSpan()
-			})
+				nestedRootSpan = BasaltContextManager.getRootSpan();
+			});
 
 			// Due to context isolation, this may not work in tests
 			// But the API should not throw
-			expect(nestedRootSpan === rootSpan || nestedRootSpan === undefined).toBe(true)
-		})
+			expect(nestedRootSpan === rootSpan || nestedRootSpan === undefined).toBe(
+				true,
+			);
+		});
 
-		it('should handle async operations', async () => {
-			const rootSpan = startObserve({ featureSlug: 'test-feature' })
+		it("should handle async operations", async () => {
+			const rootSpan = startObserve({ featureSlug: "test-feature" });
 
-			const result = await BasaltContextManager.withRootSpan(rootSpan, async () => {
-				await new Promise(resolve => setTimeout(resolve, 10))
-				return 'async-result'
-			})
+			const result = await BasaltContextManager.withRootSpan(
+				rootSpan,
+				async () => {
+					await new Promise((resolve) => setTimeout(resolve, 10));
+					return "async-result";
+				},
+			);
 
-			expect(result).toBe('async-result')
-		})
+			expect(result).toBe("async-result");
+		});
 
-		it('should execute function even if OTel not available', () => {
-			const rootSpan = startObserve({ featureSlug: 'test-feature' })
-			let executed = false
+		it("should execute function even if OTel not available", () => {
+			const rootSpan = startObserve({ featureSlug: "test-feature" });
+			let executed = false;
 
 			BasaltContextManager.withRootSpan(rootSpan, () => {
-				executed = true
-			})
+				executed = true;
+			});
 
-			expect(executed).toBe(true)
-		})
-	})
+			expect(executed).toBe(true);
+		});
+	});
 
-	describe('Integration with existing context methods', () => {
-		it('should not interfere with existing Basalt context', () => {
-			const rootSpan = startObserve({ featureSlug: 'test-feature' })
+	describe("Integration with existing context methods", () => {
+		it("should not interfere with existing Basalt context", () => {
+			const rootSpan = startObserve({ featureSlug: "test-feature" });
 
 			// Set Basalt context
 			BasaltContextManager.setContext({
-				user: { id: 'user-123' },
-				organization: { id: 'org-456' },
-			})
+				user: { id: "user-123" },
+				organization: { id: "org-456" },
+			});
 
 			// Set root span
-			BasaltContextManager.setRootSpan(rootSpan)
+			BasaltContextManager.setRootSpan(rootSpan);
 
 			// Both should be accessible
-			const basaltContext = BasaltContextManager.getContext()
-			const retrievedRootSpan = BasaltContextManager.getRootSpan()
+			const basaltContext = BasaltContextManager.getContext();
+			const retrievedRootSpan = BasaltContextManager.getRootSpan();
 
 			// At least one should work (context isolation in tests)
-			expect(basaltContext !== undefined || retrievedRootSpan !== undefined).toBe(true)
-		})
+			expect(
+				basaltContext !== undefined || retrievedRootSpan !== undefined,
+			).toBe(true);
+		});
 
-		it('should work with withContext and withRootSpan together', () => {
-			const rootSpan = startObserve({ featureSlug: 'test-feature' })
-			let executedInBothContexts = false
+		it("should work with withContext and withRootSpan together", () => {
+			const rootSpan = startObserve({ featureSlug: "test-feature" });
+			let executedInBothContexts = false;
 
-			BasaltContextManager.withContext(
-				{ user: { id: 'user-123' } },
-				() => {
-					BasaltContextManager.withRootSpan(rootSpan, () => {
-						executedInBothContexts = true
-					})
-				}
-			)
+			BasaltContextManager.withContext({ user: { id: "user-123" } }, () => {
+				BasaltContextManager.withRootSpan(rootSpan, () => {
+					executedInBothContexts = true;
+				});
+			});
 
-			expect(executedInBothContexts).toBe(true)
-		})
-	})
-})
+			expect(executedInBothContexts).toBe(true);
+		});
+	});
+});
 
-describe('BASALT_ROOT_SPAN symbol', () => {
-	it('should be a unique symbol', () => {
-		expect(typeof BASALT_ROOT_SPAN).toBe('symbol')
-	})
+describe("BASALT_ROOT_SPAN symbol", () => {
+	it("should be a unique symbol", () => {
+		expect(typeof BASALT_ROOT_SPAN).toBe("symbol");
+	});
 
-	it('should have a descriptive string representation', () => {
-		const symbolString = BASALT_ROOT_SPAN.toString()
-		expect(symbolString).toContain('basalt.context.root_span')
-	})
+	it("should have a descriptive string representation", () => {
+		const symbolString = BASALT_ROOT_SPAN.toString();
+		expect(symbolString).toContain("basalt.context.root_span");
+	});
 
-	it('should be different from other symbols', () => {
-		const anotherSymbol = Symbol('test')
-		expect(BASALT_ROOT_SPAN).not.toBe(anotherSymbol)
-	})
-})
+	it("should be different from other symbols", () => {
+		const anotherSymbol = Symbol("test");
+		expect(BASALT_ROOT_SPAN).not.toBe(anotherSymbol);
+	});
+});
 
-describe('Context propagation scenarios', () => {
-	it('should support nested root span contexts (though not recommended)', () => {
-		const rootSpan1 = startObserve({ name: 'outer', featureSlug: 'outer-feature' })
-		const rootSpan2 = startObserve({ name: 'inner', featureSlug: 'inner-feature' })
+describe("Context propagation scenarios", () => {
+	it("should support nested root span contexts (though not recommended)", () => {
+		const rootSpan1 = startObserve({
+			name: "outer",
+			featureSlug: "outer-feature",
+		});
+		const rootSpan2 = startObserve({
+			name: "inner",
+			featureSlug: "inner-feature",
+		});
 
 		BasaltContextManager.withRootSpan(rootSpan1, () => {
 			BasaltContextManager.withRootSpan(rootSpan2, () => {
-				const retrieved = BasaltContextManager.getRootSpan()
+				const retrieved = BasaltContextManager.getRootSpan();
 				// Should get the inner one
-				expect(retrieved === rootSpan2 || retrieved === undefined).toBe(true)
-			})
-		})
-	})
+				expect(retrieved === rootSpan2 || retrieved === undefined).toBe(true);
+			});
+		});
+	});
 
-	it('should restore previous context after withRootSpan', () => {
-		const rootSpan1 = startObserve({ name: 'first', featureSlug: 'first-feature' })
-		const rootSpan2 = startObserve({ name: 'second', featureSlug: 'second-feature' })
+	it("should restore previous context after withRootSpan", () => {
+		const rootSpan1 = startObserve({
+			name: "first",
+			featureSlug: "first-feature",
+		});
+		const rootSpan2 = startObserve({
+			name: "second",
+			featureSlug: "second-feature",
+		});
 
 		BasaltContextManager.withRootSpan(rootSpan1, () => {
 			BasaltContextManager.withRootSpan(rootSpan2, () => {
 				// Inner context
-			})
+			});
 			// Should be back to rootSpan1 context (or undefined due to context isolation in tests)
-			const retrieved = BasaltContextManager.getRootSpan()
+			const retrieved = BasaltContextManager.getRootSpan();
 			// In test environment, context may not properly restore, so we accept undefined
-			expect(retrieved === rootSpan1 || retrieved === rootSpan2 || retrieved === undefined).toBe(true)
-		})
-	})
-})
+			expect(
+				retrieved === rootSpan1 ||
+					retrieved === rootSpan2 ||
+					retrieved === undefined,
+			).toBe(true);
+		});
+	});
+});

@@ -1,4 +1,8 @@
-import { DescribePromptEndpoint, GetPromptEndpoint, ListPromptsEndpoint } from '../endpoints'
+import {
+	DescribePromptEndpoint,
+	GetPromptEndpoint,
+	ListPromptsEndpoint,
+} from "../endpoints";
 import type {
 	AsyncResult,
 	DescribePromptOptions,
@@ -14,16 +18,11 @@ import type {
 	PromptListResponse,
 	PromptResponse,
 	VariablesMap,
-} from '../resources'
-import type { Span } from '@opentelemetry/api'
-import { withBasaltSpan } from '../telemetry'
-import { BASALT_ATTRIBUTES, CACHE_TYPES } from '../telemetry/attributes'
-import { renderTemplate } from '../utils/template'
-import {
-	err,
-	ok,
-} from '../utils/utils'
+} from "../resources";
 import { type SpanHandle, withBasaltSpan } from "../telemetry";
+import { BASALT_ATTRIBUTES, CACHE_TYPES } from "../telemetry/attributes";
+import { renderTemplate } from "../utils/template";
+import { err, ok } from "../utils/utils";
 
 export default class PromptSDK implements IPromptSDK {
 	/**
@@ -46,7 +45,7 @@ export default class PromptSDK implements IPromptSDK {
 	 * @returns The cache duration in milliseconds.
 	 */
 	private get cacheDuration() {
-		return 5 * 60 * 1000
+		return 5 * 60 * 1000;
 	}
 
 	/**
@@ -56,36 +55,41 @@ export default class PromptSDK implements IPromptSDK {
 	 * @param options - Optional parameters for retrieving the prompt.
 	 * @returns A promise with the prompt response.
 	 */
-	async get(slug: string, options?: NoSlugGetPromptOptions): AsyncResult<PromptResponse>
+	async get(
+		slug: string,
+		options?: NoSlugGetPromptOptions,
+	): AsyncResult<PromptResponse>;
 	/**
 	 * Retrieves a prompt using options object.
 	 *
 	 * @param options - Options for retrieving the prompt.
 	 * @returns A promise with the prompt response.
 	 */
-	async get(options: GetPromptOptions): AsyncResult<PromptResponse>
-	async get(arg1: string | GetPromptOptions, arg2?: NoSlugGetPromptOptions): AsyncResult<PromptResponse> {
-		let params: GetPromptOptions
+	async get(options: GetPromptOptions): AsyncResult<PromptResponse>;
+	async get(
+		arg1: string | GetPromptOptions,
+		arg2?: NoSlugGetPromptOptions,
+	): AsyncResult<PromptResponse> {
+		let params: GetPromptOptions;
 
-		if (typeof arg1 === 'string') {
-			params = { ...(arg2 ?? {}), slug: arg1 }
-		}
-		else {
-			params = arg1
+		if (typeof arg1 === "string") {
+			params = { ...(arg2 ?? {}), slug: arg1 };
+		} else {
+			params = arg1;
 		}
 
 		return withBasaltSpan(
-			'@basalt-ai/sdk',
-			'basalt.prompt.get',
+			"@basalt-ai/sdk",
+			"basalt.prompt.get",
 			{
 				kind: params.kind,
 				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
-					'basalt.api.client': 'prompts',
-					'basalt.api.operation': 'get',
-					'basalt.internal.api': true,
-					'basalt.prompt.slug': params.slug,
-					...(params.version && { 'basalt.prompt.version': params.version }),
-					...(params.tag && { 'basalt.prompt.tag': params.tag }),
+					"basalt.api.client": "prompts",
+					"basalt.api.operation": "get",
+					"basalt.internal.api": true,
+					"basalt.prompt.slug": params.slug,
+					...(params.version && { "basalt.prompt.version": params.version }),
+					...(params.tag && { "basalt.prompt.tag": params.tag }),
 				}),
 				...(params.variables && {
 					[BASALT_ATTRIBUTES.SPAN_VARIABLES]: JSON.stringify(params.variables),
@@ -116,7 +120,7 @@ export default class PromptSDK implements IPromptSDK {
 
 				return prompt;
 			},
-		)
+		);
 	}
 
 	/**
@@ -126,15 +130,17 @@ export default class PromptSDK implements IPromptSDK {
 	 */
 	async list(options?: ListPromptsOptions): AsyncResult<PromptListResponse[]> {
 		return withBasaltSpan(
-			'@basalt-ai/sdk',
-			'basalt.prompt.list',
+			"@basalt-ai/sdk",
+			"basalt.prompt.list",
 			{
 				kind: options?.kind,
 				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
-					'basalt.api.client': 'prompts',
-					'basalt.api.operation': 'list',
-					'basalt.internal.api': true,
-					...(options?.featureSlug && { 'basalt.prompt.feature_slug': options.featureSlug }),
+					"basalt.api.client": "prompts",
+					"basalt.api.operation": "list",
+					"basalt.internal.api": true,
+					...(options?.featureSlug && {
+						"basalt.prompt.feature_slug": options.featureSlug,
+					}),
 				}),
 			},
 			async (span) => {
@@ -156,9 +162,9 @@ export default class PromptSDK implements IPromptSDK {
 					span.setOutput({ error: result.error.message });
 				}
 
-				return result
+				return result;
 			},
-		)
+		);
 	}
 
 	/**
@@ -168,36 +174,43 @@ export default class PromptSDK implements IPromptSDK {
 	 * @param options - Optional parameters for describing the prompt.
 	 * @returns A promise with the prompt detail response.
 	 */
-	async describe(slug: string, options?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse>
+	async describe(
+		slug: string,
+		options?: NoSlugDescribePromptOptions,
+	): AsyncResult<PromptDetailResponse>;
 	/**
 	 * Describes a prompt using options object.
 	 *
 	 * @param options - Options for describing the prompt.
 	 * @returns A promise with the prompt detail response.
 	 */
-	async describe(options: DescribePromptOptions): AsyncResult<PromptDetailResponse>
-	async describe(arg1: string | DescribePromptOptions, arg2?: NoSlugDescribePromptOptions): AsyncResult<PromptDetailResponse> {
-		let params: DescribePromptOptions
+	async describe(
+		options: DescribePromptOptions,
+	): AsyncResult<PromptDetailResponse>;
+	async describe(
+		arg1: string | DescribePromptOptions,
+		arg2?: NoSlugDescribePromptOptions,
+	): AsyncResult<PromptDetailResponse> {
+		let params: DescribePromptOptions;
 
-		if (typeof arg1 === 'string') {
-			params = { ...(arg2 ?? {}), slug: arg1 }
-		}
-		else {
-			params = arg1
+		if (typeof arg1 === "string") {
+			params = { ...(arg2 ?? {}), slug: arg1 };
+		} else {
+			params = arg1;
 		}
 
 		return withBasaltSpan(
-			'@basalt-ai/sdk',
-			'basalt.prompt.describe',
+			"@basalt-ai/sdk",
+			"basalt.prompt.describe",
 			{
 				kind: params.kind,
 				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
-					'basalt.api.client': 'prompts',
-					'basalt.api.operation': 'describe',
-					'basalt.internal.api': true,
-					'basalt.prompt.slug': params.slug,
-					...(params.version && { 'basalt.prompt.version': params.version }),
-					...(params.tag && { 'basalt.prompt.tag': params.tag }),
+					"basalt.api.client": "prompts",
+					"basalt.api.operation": "describe",
+					"basalt.internal.api": true,
+					"basalt.prompt.slug": params.slug,
+					...(params.version && { "basalt.prompt.version": params.version }),
+					...(params.tag && { "basalt.prompt.tag": params.tag }),
 				}),
 			},
 			async (span) => {
@@ -219,9 +232,9 @@ export default class PromptSDK implements IPromptSDK {
 					span.setOutput({ error: result.error.message });
 				}
 
-				return result
+				return result;
 			},
-		)
+		);
 	}
 
 	// --
@@ -240,48 +253,50 @@ export default class PromptSDK implements IPromptSDK {
 		span: Pick<SpanHandle, "setAttribute">,
 	): AsyncResult<PromptResponse> {
 		// 1. Read from query cache first
-		const cacheKey = this._makePromptCacheKey(opts)
-		const cached = this.queryCache.get<PromptResponse>(cacheKey)
+		const cacheKey = this._makePromptCacheKey(opts);
+		const cached = this.queryCache.get<PromptResponse>(cacheKey);
 
-		const cacheEnabled = opts.cache !== false
-		const variables = opts.variables ?? {}
+		const cacheEnabled = opts.cache !== false;
+		const variables = opts.variables ?? {};
 
 		if (cacheEnabled && cached) {
-			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true)
-			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.QUERY)
-			return ok(this._insertVariables(cached, variables))
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true);
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.QUERY);
+			return ok(this._insertVariables(cached, variables));
 		}
 
 		// 2. If no cache, fetch from the API
-		const result = await this.api.invoke(GetPromptEndpoint, opts)
+		const result = await this.api.invoke(GetPromptEndpoint, opts);
 
 		if (result.value) {
-			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false)
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false);
 
-			this.queryCache.set(cacheKey, result.value.prompt, this.cacheDuration)
-			this.fallbackCache.set(cacheKey, result.value.prompt, Infinity)
+			this.queryCache.set(cacheKey, result.value.prompt, this.cacheDuration);
+			this.fallbackCache.set(cacheKey, result.value.prompt, Infinity);
 
 			if (result.value.warning) {
-				this.logger.warn(`Basalt Warning: "${result.value.warning}"`)
+				this.logger.warn(`Basalt Warning: "${result.value.warning}"`);
 			}
 
-			return ok(this._insertVariables(result.value.prompt, variables))
+			return ok(this._insertVariables(result.value.prompt, variables));
 		}
 
 		// 3. Api call failed, check if there is a fallback in the cache
-		const fallback = this.fallbackCache.get<PromptResponse>(cacheKey)
+		const fallback = this.fallbackCache.get<PromptResponse>(cacheKey);
 
 		if (cacheEnabled && fallback) {
-			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true)
-			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.FALLBACK)
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true);
+			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.FALLBACK);
 
-			this.logger.warn(`Basalt Warning: Failed to fetch prompt from API, using last result for "${opts.slug}"`)
+			this.logger.warn(
+				`Basalt Warning: Failed to fetch prompt from API, using last result for "${opts.slug}"`,
+			);
 
-			return ok(this._insertVariables(fallback, variables))
+			return ok(this._insertVariables(fallback, variables));
 		}
 
-		span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false)
-		return err(result.error)
+		span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false);
+		return err(result.error);
 	}
 
 	/**
@@ -291,15 +306,18 @@ export default class PromptSDK implements IPromptSDK {
 	 * @param variables - A record of variables to be inserted into the prompt text.
 	 * @returns The prompt response with variables inserted.
 	 */
-	private _insertVariables(prompt: PromptResponse, variables: VariablesMap): PromptResponse {
-		const filledPrompt = renderTemplate(prompt.text, variables)
-		const filledSystemText = renderTemplate(prompt.systemText ?? '', variables)
+	private _insertVariables(
+		prompt: PromptResponse,
+		variables: VariablesMap,
+	): PromptResponse {
+		const filledPrompt = renderTemplate(prompt.text, variables);
+		const filledSystemText = renderTemplate(prompt.systemText ?? "", variables);
 
 		return {
 			text: filledPrompt,
 			model: prompt.model,
 			systemText: filledSystemText,
-		}
+		};
 	}
 
 	/**
@@ -309,17 +327,17 @@ export default class PromptSDK implements IPromptSDK {
 	 * @returns The cache key for given options.
 	 */
 	private _makePromptCacheKey(opts: GetPromptOptions): string {
-		let cacheKey = opts.slug
+		let cacheKey = opts.slug;
 
-		if ('tag' in opts) {
-			cacheKey += `|tag:${opts.tag}`
+		if ("tag" in opts) {
+			cacheKey += `|tag:${opts.tag}`;
 		}
 
-		if ('version' in opts) {
-			cacheKey += `|version:${opts.version}`
+		if ("version" in opts) {
+			cacheKey += `|version:${opts.version}`;
 		}
 
-		return cacheKey
+		return cacheKey;
 	}
 
 	/**
@@ -327,18 +345,20 @@ export default class PromptSDK implements IPromptSDK {
 	 *
 	 * @returns A promise with an array of prompt list responses.
 	 */
-	private async _listPrompts(options?: ListPromptsOptions): AsyncResult<PromptListResponse[]> {
-		const result = await this.api.invoke(ListPromptsEndpoint, options)
+	private async _listPrompts(
+		options?: ListPromptsOptions,
+	): AsyncResult<PromptListResponse[]> {
+		const result = await this.api.invoke(ListPromptsEndpoint, options);
 
 		if (result.error) {
-			return err(result.error)
+			return err(result.error);
 		}
 
 		if (result.value.warning) {
-			this.logger.warn(`Basalt Warning: "${result.value.warning}"`)
+			this.logger.warn(`Basalt Warning: "${result.value.warning}"`);
 		}
 
-		return ok(result.value.prompts)
+		return ok(result.value.prompts);
 	}
 
 	/**
@@ -347,17 +367,19 @@ export default class PromptSDK implements IPromptSDK {
 	 * @param options - Options to select the prompt.
 	 * @returns A promise with a prompt detail response.
 	 */
-	private async _describePrompt(options: DescribePromptOptions): AsyncResult<PromptDetailResponse> {
-		const result = await this.api.invoke(DescribePromptEndpoint, options)
+	private async _describePrompt(
+		options: DescribePromptOptions,
+	): AsyncResult<PromptDetailResponse> {
+		const result = await this.api.invoke(DescribePromptEndpoint, options);
 
 		if (result.error) {
-			return err(result.error)
+			return err(result.error);
 		}
 
 		if (result.value.warning) {
-			this.logger.warn(`Basalt Warning: "${result.value.warning}"`)
+			this.logger.warn(`Basalt Warning: "${result.value.warning}"`);
 		}
 
-		return ok(result.value.prompt)
+		return ok(result.value.prompt);
 	}
 }
