@@ -1,4 +1,7 @@
-import type { InstrumentationConfig, ProviderInstrumentationConfig } from './types'
+import type {
+	InstrumentationConfig,
+	ProviderInstrumentationConfig,
+} from "./types";
 
 /**
  * Singleton registry for managing GenAI provider instrumentations.
@@ -9,18 +12,18 @@ import type { InstrumentationConfig, ProviderInstrumentationConfig } from './typ
  * - Gracefully handling missing packages
  */
 class InstrumentationRegistry {
-	private static instance?: InstrumentationRegistry
-	private registeredInstrumentations: any[] = []
+	private static instance?: InstrumentationRegistry;
+	private registeredInstrumentations: any[] = [];
 
 	private constructor() {
 		// Private constructor for singleton pattern
 	}
 
 	static getInstance(): InstrumentationRegistry {
-		if (!this.instance) {
-			this.instance = new InstrumentationRegistry()
+		if (!InstrumentationRegistry.instance) {
+			InstrumentationRegistry.instance = new InstrumentationRegistry();
 		}
-		return this.instance
+		return InstrumentationRegistry.instance;
 	}
 
 	/**
@@ -29,41 +32,48 @@ class InstrumentationRegistry {
 	 * @param config Provider-specific configuration
 	 */
 	instrument(config: InstrumentationConfig): void {
-		const instrumentations: any[] = []
+		const instrumentations: any[] = [];
 
 		// OpenAI - Official OpenTelemetry package
 		if (config.openai) {
-			const openaiInst = this.loadOpenAIInstrumentation(config.openai)
-			if (openaiInst) instrumentations.push(openaiInst)
+			const openaiInst = this.loadOpenAIInstrumentation(config.openai);
+			if (openaiInst) {
+				instrumentations.push(openaiInst);
+			}
 		}
 
 		// Anthropic - Traceloop package
 		if (config.anthropic) {
-			const anthropicInst = this.loadAnthropicInstrumentation(config.anthropic)
-			if (anthropicInst) instrumentations.push(anthropicInst)
+			const anthropicInst = this.loadAnthropicInstrumentation(config.anthropic);
+			if (anthropicInst) {
+				instrumentations.push(anthropicInst);
+			}
 		}
 
 		// AWS Bedrock - Traceloop package
 		if (config.bedrock) {
-			const bedrockInst = this.loadBedrockInstrumentation(config.bedrock)
-			if (bedrockInst) instrumentations.push(bedrockInst)
+			const bedrockInst = this.loadBedrockInstrumentation(config.bedrock);
+			if (bedrockInst) {
+				instrumentations.push(bedrockInst);
+			}
 		}
 
 		// Register all loaded instrumentations with OpenTelemetry
 		if (instrumentations.length > 0) {
 			try {
-				// eslint-disable-next-line @typescript-eslint/no-var-requires
-				const { registerInstrumentations } = require('@opentelemetry/instrumentation')
-				registerInstrumentations({ instrumentations })
-				this.registeredInstrumentations.push(...instrumentations)
+				const {
+					registerInstrumentations,
+				} = require("@opentelemetry/instrumentation");
+				registerInstrumentations({ instrumentations });
+				this.registeredInstrumentations.push(...instrumentations);
 				console.log(
 					`[@basalt-ai/sdk] Registered ${instrumentations.length} instrumentations.`,
-				)
+				);
 			} catch (error) {
 				console.warn(
-					'[@basalt-ai/sdk] Failed to register instrumentations. ' +
-						'Ensure @opentelemetry/instrumentation is installed.',
-				)
+					"[@basalt-ai/sdk] Failed to register instrumentations. " +
+						"Ensure @opentelemetry/instrumentation is installed.",
+				);
 			}
 		}
 	}
@@ -78,20 +88,21 @@ class InstrumentationRegistry {
 		config: boolean | ProviderInstrumentationConfig,
 	): any {
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-var-requires
-			const { OpenAIInstrumentation } = require('@opentelemetry/instrumentation-openai')
+			const {
+				OpenAIInstrumentation,
+			} = require("@opentelemetry/instrumentation-openai");
 			const captureContent =
-				typeof config === 'boolean' ? true : config.captureContent ?? true
+				typeof config === "boolean" ? true : (config.captureContent ?? true);
 
 			return new OpenAIInstrumentation({
 				captureMessageContent: captureContent,
-			})
+			});
 		} catch (error) {
 			console.warn(
-				'[@basalt-ai/sdk] Cannot enable OpenAI instrumentation: package not found.\n' +
-					'Install with: npm install @opentelemetry/instrumentation-openai',
-			)
-			return null
+				"[@basalt-ai/sdk] Cannot enable OpenAI instrumentation: package not found.\n" +
+					"Install with: npm install @opentelemetry/instrumentation-openai",
+			);
+			return null;
 		}
 	}
 
@@ -105,20 +116,21 @@ class InstrumentationRegistry {
 		config: boolean | ProviderInstrumentationConfig,
 	): any {
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-var-requires
-			const { AnthropicInstrumentation } = require('@traceloop/instrumentation-anthropic')
+			const {
+				AnthropicInstrumentation,
+			} = require("@traceloop/instrumentation-anthropic");
 			const captureContent =
-				typeof config === 'boolean' ? true : config.captureContent ?? true
+				typeof config === "boolean" ? true : (config.captureContent ?? true);
 
 			return new AnthropicInstrumentation({
 				enrich: captureContent,
-			})
+			});
 		} catch (error) {
 			console.warn(
-				'[@basalt-ai/sdk] Cannot enable Anthropic instrumentation: package not found.\n' +
-					'Install with: npm install @traceloop/instrumentation-anthropic',
-			)
-			return null
+				"[@basalt-ai/sdk] Cannot enable Anthropic instrumentation: package not found.\n" +
+					"Install with: npm install @traceloop/instrumentation-anthropic",
+			);
+			return null;
 		}
 	}
 
@@ -132,20 +144,21 @@ class InstrumentationRegistry {
 		config: boolean | ProviderInstrumentationConfig,
 	): any {
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-var-requires
-			const { AwsBedrockInstrumentation } = require('@traceloop/instrumentation-bedrock')
+			const {
+				AwsBedrockInstrumentation,
+			} = require("@traceloop/instrumentation-bedrock");
 			const captureContent =
-				typeof config === 'boolean' ? true : config.captureContent ?? true
+				typeof config === "boolean" ? true : (config.captureContent ?? true);
 
 			return new AwsBedrockInstrumentation({
 				enrich: captureContent,
-			})
+			});
 		} catch (error) {
 			console.warn(
-				'[@basalt-ai/sdk] Cannot enable Bedrock instrumentation: package not found.\n' +
-					'Install with: npm install @traceloop/instrumentation-bedrock',
-			)
-			return null
+				"[@basalt-ai/sdk] Cannot enable Bedrock instrumentation: package not found.\n" +
+					"Install with: npm install @traceloop/instrumentation-bedrock",
+			);
+			return null;
 		}
 	}
 }
@@ -174,5 +187,5 @@ class InstrumentationRegistry {
  * ```
  */
 export function instrument(config: InstrumentationConfig): void {
-	InstrumentationRegistry.getInstance().instrument(config)
+	InstrumentationRegistry.getInstance().instrument(config);
 }

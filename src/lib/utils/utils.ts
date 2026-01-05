@@ -1,11 +1,11 @@
-import type { VariablesMap } from '../resources'
+import type { VariablesMap } from "../resources";
 
-export function err<T>(e: T): { error: T, value: null } {
-	return { error: e, value: null }
+export function err<T>(e: T): { error: T; value: null } {
+	return { error: e, value: null };
 }
 
-export function ok<T>(v: T): { error: null, value: T } {
-	return { error: null, value: v }
+export function ok<T>(v: T): { error: null; value: T } {
+	return { error: null, value: v };
 }
 
 /**
@@ -17,12 +17,12 @@ export function ok<T>(v: T): { error: null, value: T } {
  */
 export function replaceVariables(str: string, variables: VariablesMap) {
 	Object.keys(variables).forEach((label) => {
-		const value = variables[label]
+		const value = variables[label];
 
-		str = value === undefined ? str : str.replaceAll(`{{${label}}}`, value)
-	})
+		str = value === undefined ? str : str.replaceAll(`{{${label}}}`, value);
+	});
 
-	return str
+	return str;
 }
 
 /**
@@ -32,17 +32,17 @@ export function replaceVariables(str: string, variables: VariablesMap) {
  * @returns The names of the variables present in the string
  */
 export function getVariableNames(str: string) {
-	const matches = str.match(/{{(.*?)}}/g)
+	const matches = str.match(/{{(.*?)}}/g);
 
-	return matches ? matches.map(match => match.slice(2, -2)) : []
+	return matches ? matches.map((match) => match.slice(2, -2)) : [];
 }
 
 export function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
-	const _difference = new Set(setA)
+	const _difference = new Set(setA);
 
 	for (const elem of setB) {
-		_difference.delete(elem)
+		_difference.delete(elem);
 	}
 
-	return _difference
+	return _difference;
 }

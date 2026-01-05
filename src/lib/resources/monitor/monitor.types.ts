@@ -1,7 +1,6 @@
-import { ExperimentParams } from './experiment.types'
-
-import { Experiment } from '../../objects/experiment'
-import { AsyncResult } from '../contract'
+import type { Experiment } from "../../objects/experiment";
+import type { AsyncResult } from "../contract";
+import type { ExperimentParams } from "./experiment.types";
 
 /**
  * @preserve
@@ -55,7 +54,10 @@ export interface IMonitorSDK {
 	 *
 	 * @returns A Experiment object that can be used to track the AI generation.
 	 */
-	createExperiment(featureSlug: string, params: ExperimentParams): AsyncResult<Experiment>
+	createExperiment(
+		featureSlug: string,
+		params: ExperimentParams,
+	): AsyncResult<Experiment>;
 }
 
-export type Metadata = Record<string, unknown>
+export type Metadata = Record<string, unknown>;

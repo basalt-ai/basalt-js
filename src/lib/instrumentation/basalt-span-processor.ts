@@ -1,7 +1,7 @@
-import type { Span, Context } from '@opentelemetry/api'
-import type { SpanProcessor } from '@opentelemetry/sdk-trace-base'
-import { BasaltContextManager } from '../telemetry/context-manager'
-import { BASALT_ATTRIBUTES } from '../telemetry/attributes'
+import type { Context, Span } from "@opentelemetry/api";
+import type { SpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { BASALT_ATTRIBUTES } from "../telemetry/attributes";
+import { BasaltContextManager } from "../telemetry/context-manager";
 
 /**
  * SpanProcessor that automatically adds Basalt context attributes to all spans.
@@ -20,17 +20,17 @@ export class BasaltSpanProcessor implements SpanProcessor {
 	 */
 	onStart(span: Span, parentContext: Context): void {
 		// Extract Basalt context attributes from the current context
-		const basaltAttrs = BasaltContextManager.extractAttributes()
+		const basaltAttrs = BasaltContextManager.extractAttributes();
 
 		// Only add attributes if Basalt context exists
 		if (Object.keys(basaltAttrs).length > 0) {
 			// Add basalt.trace marker for filtering
-			span.setAttribute(BASALT_ATTRIBUTES.TRACE, true)
-			span.setAttribute(BASALT_ATTRIBUTES.IN_TRACE, 'true')
+			span.setAttribute(BASALT_ATTRIBUTES.TRACE, true);
+			span.setAttribute(BASALT_ATTRIBUTES.IN_TRACE, "true");
 
 			// Add all Basalt context attributes
 			// This includes: user ID, org ID, experiment, feature slug, metadata
-			span.setAttributes(basaltAttrs)
+			span.setAttributes(basaltAttrs);
 		}
 	}
 
@@ -47,7 +47,7 @@ export class BasaltSpanProcessor implements SpanProcessor {
 	 * No-op for this processor.
 	 */
 	shutdown(): Promise<void> {
-		return Promise.resolve()
+		return Promise.resolve();
 	}
 
 	/**
@@ -55,6 +55,6 @@ export class BasaltSpanProcessor implements SpanProcessor {
 	 * No-op for this processor.
 	 */
 	forceFlush(): Promise<void> {
-		return Promise.resolve()
+		return Promise.resolve();
 	}
 }

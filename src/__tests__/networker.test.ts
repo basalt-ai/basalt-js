@@ -1,156 +1,157 @@
-import fixtures from '../__fixtures__/networker.json'
-import { NetworkBaseError } from '../lib/utils/errors'
-
-import Networker from '../lib/utils/networker'
+import fixtures from "../__fixtures__/networker.json";
+import { NetworkBaseError } from "../lib/utils/errors";
+import Networker from "../lib/utils/networker";
 
 declare global {
-	var fetch: jest.Mock
+	var fetch: jest.Mock;
 }
 
-const mockedFetch = jest.fn()
-const n = new Networker()
-const url = new URL('http://localhost:3000')
+const mockedFetch = jest.fn();
+const n = new Networker();
+const url = new URL("http://localhost:3000");
 
-let otelProvider: { shutdown: () => Promise<void> } | undefined
+let otelProvider: { shutdown: () => Promise<void> } | undefined;
 
-global.fetch = mockedFetch
+global.fetch = mockedFetch;
 
-describe('Networker', () => {
+describe("Networker", () => {
 	beforeAll(() => {
 		// Ensure OpenTelemetry has an active context manager in tests.
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node')
-		const provider = new NodeTracerProvider()
-		provider.register()
-		otelProvider = provider
-	})
+
+		const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
+		const provider = new NodeTracerProvider();
+		provider.register();
+		otelProvider = provider;
+	});
 
 	afterAll(async () => {
 		if (!otelProvider) {
-			return
+			return;
 		}
 
-		await otelProvider.shutdown()
-	})
+		await otelProvider.shutdown();
+	});
 
 	beforeEach(() => {
-		mockedFetch.mockReset()
-	})
+		mockedFetch.mockReset();
+	});
 
-	test('uses fetch to make http calls', async () => {
-		await n.fetch(url, 'get')
+	test("uses fetch to make http calls", async () => {
+		await n.fetch(url, "get");
 
-		expect(mockedFetch.mock.calls).toHaveLength(1)
-		expect(mockedFetch.mock.calls[0][0]).toBe(url)
-		expect(mockedFetch.mock.calls[0][1].method).toBe('get')
-	})
+		expect(mockedFetch.mock.calls).toHaveLength(1);
+		expect(mockedFetch.mock.calls[0][0]).toBe(url);
+		expect(mockedFetch.mock.calls[0][1].method).toBe("get");
+	});
 
-	test('captures unexpected fetch errors', async () => {
+	test("captures unexpected fetch errors", async () => {
 		mockedFetch.mockImplementationOnce(() => {
-			throw new Error()
-		})
+			throw new Error();
+		});
 
-		const result = await n.fetch(url, 'get')
+		const result = await n.fetch(url, "get");
 
-		expect(mockedFetch.mock.calls).toHaveLength(1)
-		expect(result.value).toBe(null)
-		expect(result.error).not.toBe(null)
-		expect(result.error?.message).toBe('Server Error')
-	})
+		expect(mockedFetch.mock.calls).toHaveLength(1);
+		expect(result.value).toBe(null);
+		expect(result.error).not.toBe(null);
+		expect(result.error?.message).toBe("Server Error");
+	});
 
-	test('rejects non-json response with failure object', async () => {
-		mockedFetch.mockImplementationOnce(
-			() => makeMockedResponse(
-				200,
-				() => Promise.reject(new Error('Failed to parse JSON')),
+	test("rejects non-json response with failure object", async () => {
+		mockedFetch.mockImplementationOnce(() =>
+			makeMockedResponse(200, () =>
+				Promise.reject(new Error("Failed to parse JSON")),
 			),
-		)
+		);
 
-		const result = await n.fetch(url, 'get')
+		const result = await n.fetch(url, "get");
 
-		expect(mockedFetch.mock.calls).toHaveLength(1)
-		expect(result.value).toBe(null)
-		expect(result.error).not.toBe(null)
-	})
+		expect(mockedFetch.mock.calls).toHaveLength(1);
+		expect(result.value).toBe(null);
+		expect(result.error).not.toBe(null);
+	});
 
-	test.each(fixtures.badHttpStatuses)(
-		'rejects %i http status with failure object',
-		async (fixture) => {
-			mockedFetch.mockImplementationOnce(() => makeMockedResponse(fixture, {}))
+	test.each(
+		fixtures.badHttpStatuses,
+	)("rejects %i http status with failure object", async (fixture) => {
+		mockedFetch.mockImplementationOnce(() => makeMockedResponse(fixture, {}));
 
-			const result = await n.fetch(url, 'get')
+		const result = await n.fetch(url, "get");
 
-			expect(mockedFetch.mock.calls).toHaveLength(1)
-			expect(result.value).toBe(null)
-			expect(result.error).toBeInstanceOf(NetworkBaseError)
-		},
-	)
+		expect(mockedFetch.mock.calls).toHaveLength(1);
+		expect(result.value).toBe(null);
+		expect(result.error).toBeInstanceOf(NetworkBaseError);
+	});
 
-	test('returns response body in result object', async () => {
-		mockedFetch.mockImplementationOnce(() => makeMockedResponse(
-			fixtures.jsonResponse.status,
-			fixtures.jsonResponse.body,
-		))
+	test("returns response body in result object", async () => {
+		mockedFetch.mockImplementationOnce(() =>
+			makeMockedResponse(
+				fixtures.jsonResponse.status,
+				fixtures.jsonResponse.body,
+			),
+		);
 
-		const result = await n.fetch(url, 'get')
+		const result = await n.fetch(url, "get");
 
-		expect(mockedFetch.mock.calls).toHaveLength(1)
-		expect(result.value).toMatchObject(fixtures.jsonResponse.body)
-		expect(result.error).toBe(null)
-	})
+		expect(mockedFetch.mock.calls).toHaveLength(1);
+		expect(result.value).toMatchObject(fixtures.jsonResponse.body);
+		expect(result.error).toBe(null);
+	});
 
-	test('injects OpenTelemetry trace context headers when active', async () => {
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const otel = require('@opentelemetry/api')
+	test("injects OpenTelemetry trace context headers when active", async () => {
+		const otel = require("@opentelemetry/api");
 		const spanContext = {
-			traceId: '11111111111111111111111111111111',
-			spanId: '2222222222222222',
+			traceId: "11111111111111111111111111111111",
+			spanId: "2222222222222222",
 			traceFlags: 1,
-		}
+		};
 
-		mockedFetch.mockImplementationOnce(() => makeMockedResponse(200, {}))
+		mockedFetch.mockImplementationOnce(() => makeMockedResponse(200, {}));
 
 		await otel.context.with(
 			otel.trace.setSpanContext(otel.context.active(), spanContext),
-			() => n.fetch(url, 'get', undefined, { Authorization: 'Bearer token' }),
-		)
+			() => n.fetch(url, "get", undefined, { Authorization: "Bearer token" }),
+		);
 
-		const requestOptions = mockedFetch.mock.calls[0][1]
-		const requestHeaders = requestOptions.headers as Headers
-		expect(requestHeaders.get('authorization')).toBe('Bearer token')
-		expect(requestHeaders.get('traceparent')).toBe(
+		const requestOptions = mockedFetch.mock.calls[0][1];
+		const requestHeaders = requestOptions.headers as Headers;
+		expect(requestHeaders.get("authorization")).toBe("Bearer token");
+		expect(requestHeaders.get("traceparent")).toBe(
 			`00-${spanContext.traceId}-${spanContext.spanId}-01`,
-		)
-	})
-})
+		);
+	});
+});
 
-const makeMockedResponse = <T>(status: number, json: (() => Promise<T>) | T) => ({
+const makeMockedResponse = <T>(
+	status: number,
+	json: (() => Promise<T>) | T,
+) => ({
 	status,
-	json: typeof json === 'function' ? json : async () => json,
+	json: typeof json === "function" ? json : async () => json,
 	headers: {},
 	ok: false,
 	redirected: false,
-	statusText: '',
-	type: 'error',
-	url: '',
+	statusText: "",
+	type: "error",
+	url: "",
 	clone() {
-		throw new Error('Function not implemented.')
+		throw new Error("Function not implemented.");
 	},
 	body: null,
 	bodyUsed: false,
 	arrayBuffer(): Promise<ArrayBuffer> {
-		throw new Error('Function not implemented.')
+		throw new Error("Function not implemented.");
 	},
 	blob(): Promise<Blob> {
-		throw new Error('Function not implemented.')
+		throw new Error("Function not implemented.");
 	},
 	formData(): Promise<FormData> {
-		throw new Error('Function not implemented.')
+		throw new Error("Function not implemented.");
 	},
 	text(): Promise<string> {
-		throw new Error('Function not implemented.')
+		throw new Error("Function not implemented.");
 	},
 	bytes(): Promise<Uint8Array> {
-		throw new Error('Function not implemented.')
+		throw new Error("Function not implemented.");
 	},
-})
+});
