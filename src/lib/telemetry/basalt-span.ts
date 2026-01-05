@@ -4,6 +4,7 @@ import type { SpanCallback, ObserveKind } from './types'
 import { BASALT_ATTRIBUTES } from './attributes'
 import { BasaltContextManager } from './context-manager'
 import { withSpan, withSpanSync } from './telemetry'
+export type { SpanHandle };
 
 function buildBasaltAttributes(
 	tracerName: string,
