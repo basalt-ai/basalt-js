@@ -110,6 +110,7 @@ import {
 	BASALT_ROOT_SPAN,
 	BasaltContextManager,
 	startObserve,
+	StartSpanHandle,
 } from "../lib/telemetry";
 
 describe("BasaltContextManager root span storage", () => {
@@ -173,7 +174,7 @@ describe("BasaltContextManager root span storage", () => {
 
 		it("should propagate root span to nested operations", () => {
 			const rootSpan = startObserve({ featureSlug: "test-feature" });
-			let nestedRootSpan;
+			let nestedRootSpan: StartSpanHandle | undefined;
 
 			BasaltContextManager.withRootSpan(rootSpan, () => {
 				nestedRootSpan = BasaltContextManager.getRootSpan();
