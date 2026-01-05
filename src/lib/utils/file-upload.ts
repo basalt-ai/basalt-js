@@ -3,6 +3,8 @@ import { FileAttachment } from '../resources/dataset/file-attachment.types'
 import GenerateUploadUrlEndpoint from '../endpoints/files/generate-upload-url'
 import { FileUploadError } from './errors'
 import { err, ok } from './utils'
+import { withBasaltSpan } from '../telemetry'
+import { BASALT_ATTRIBUTES } from '../telemetry/attributes'
 
 /**
  * Response from presigned URL generation
@@ -25,47 +27,65 @@ export async function uploadFile(
 	api: IApi,
 	attachment: FileAttachment,
 ): AsyncResult<string> {
-	// 1. Detect content type
-	const contentType = await detectContentType(attachment)
+	return withBasaltSpan(
+		'@basalt-ai/sdk',
+		'basalt.file.upload',
+		{
+			[BASALT_ATTRIBUTES.OPERATION]: 'upload',
+		},
+		async (span) => {
+			// 1. Detect content type
+			const contentType = await detectContentType(attachment)
+			span.setAttribute('basalt.file.content_type', contentType)
 
-	// 2. Get file size for validation
-	const size = await attachment.getSize()
+			// 2. Get file size for validation
+			const size = await attachment.getSize()
+			if (size !== undefined) {
+				span.setAttribute('basalt.file.size_bytes', size)
+			}
 
-	// 3. Request presigned URL
-	const presignedResult = await getPresignedUrl(
-		api,
-		attachment.getFilename(),
-		contentType,
-		size,
+			// 3. Request presigned URL
+			const presignedResult = await getPresignedUrl(
+				api,
+				attachment.getFilename(),
+				contentType,
+				size,
+			)
+
+			if (presignedResult.error) {
+				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, false)
+				return err(presignedResult.error)
+			}
+
+			const presigned = presignedResult.value
+			span.setAttribute('basalt.file.max_size_bytes', presigned.max_size_bytes)
+
+			// 4. Validate file size
+			if (size && size > presigned.max_size_bytes) {
+				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, false)
+				return err(new FileUploadError({
+					message: `File size ${size} bytes exceeds maximum ${presigned.max_size_bytes} bytes`,
+					filename: attachment.getFilename(),
+				}))
+			}
+
+			// 5. Upload to S3
+			const uploadResult = await uploadToS3(
+				presigned.upload_url,
+				attachment,
+				contentType,
+			)
+
+			if (uploadResult.error) {
+				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, false)
+				return err(uploadResult.error)
+			}
+
+			span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+			// 6. Return file_key
+			return ok(presigned.file_key)
+		},
 	)
-
-	if (presignedResult.error) {
-		return err(presignedResult.error)
-	}
-
-	const presigned = presignedResult.value
-
-	// 4. Validate file size
-	if (size && size > presigned.max_size_bytes) {
-		return err(new FileUploadError({
-			message: `File size ${size} bytes exceeds maximum ${presigned.max_size_bytes} bytes`,
-			filename: attachment.getFilename(),
-		}))
-	}
-
-	// 5. Upload to S3
-	const uploadResult = await uploadToS3(
-		presigned.upload_url,
-		attachment,
-		contentType,
-	)
-
-	if (uploadResult.error) {
-		return err(uploadResult.error)
-	}
-
-	// 6. Return file_key
-	return ok(presigned.file_key)
 }
 
 /**

@@ -11,9 +11,28 @@ const mockedFetch = jest.fn()
 const n = new Networker()
 const url = new URL('http://localhost:3000')
 
+let otelProvider: { shutdown: () => Promise<void> } | undefined
+
 global.fetch = mockedFetch
 
 describe('Networker', () => {
+	beforeAll(() => {
+		// Ensure OpenTelemetry has an active context manager in tests.
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node')
+		const provider = new NodeTracerProvider()
+		provider.register()
+		otelProvider = provider
+	})
+
+	afterAll(async () => {
+		if (!otelProvider) {
+			return
+		}
+
+		await otelProvider.shutdown()
+	})
+
 	beforeEach(() => {
 		mockedFetch.mockReset()
 	})
@@ -78,6 +97,30 @@ describe('Networker', () => {
 		expect(mockedFetch.mock.calls).toHaveLength(1)
 		expect(result.value).toMatchObject(fixtures.jsonResponse.body)
 		expect(result.error).toBe(null)
+	})
+
+	test('injects OpenTelemetry trace context headers when active', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const otel = require('@opentelemetry/api')
+		const spanContext = {
+			traceId: '11111111111111111111111111111111',
+			spanId: '2222222222222222',
+			traceFlags: 1,
+		}
+
+		mockedFetch.mockImplementationOnce(() => makeMockedResponse(200, {}))
+
+		await otel.context.with(
+			otel.trace.setSpanContext(otel.context.active(), spanContext),
+			() => n.fetch(url, 'get', undefined, { Authorization: 'Bearer token' }),
+		)
+
+		const requestOptions = mockedFetch.mock.calls[0][1]
+		const requestHeaders = requestOptions.headers as Headers
+		expect(requestHeaders.get('authorization')).toBe('Bearer token')
+		expect(requestHeaders.get('traceparent')).toBe(
+			`00-${spanContext.traceId}-${spanContext.spanId}-01`,
+		)
 	})
 })
 
