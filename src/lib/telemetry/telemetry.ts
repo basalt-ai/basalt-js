@@ -1,9 +1,7 @@
 import type {
 	Attributes,
 	Context,
-	Link,
 	Span,
-	SpanKind,
 	SpanOptions,
 	Tracer,
 } from "@opentelemetry/api";
@@ -242,7 +240,8 @@ export async function withSpan<T>(
 	if (!otel) {
 		// OpenTelemetry not available, execute function directly
 		const noOpSpan = createNoOpTracer().startSpan(spanName);
-		return fn(noOpSpan);
+		const spanHandle = new SpanHandle(noOpSpan);
+		return fn(spanHandle);
 	}
 
 	const tracer = getTracer(tracerName, __SDK_VERSION__);
@@ -256,7 +255,8 @@ export async function withSpan<T>(
 		},
 		async (span: Span) => {
 			try {
-				const result = await fn(span);
+				const spanHandle = new SpanHandle(span);
+				const result = await fn(spanHandle);
 
 				// Set OK status if no error occurred
 				span.setStatus({ code: otel.SpanStatusCode.OK });
@@ -294,11 +294,12 @@ export function withSpanSync<T>(
 	tracerName: string,
 	spanName: string,
 	attributes: Record<string, unknown>,
-	fn: (span: Span) => T,
+	fn: (span: SpanHandle) => T,
 ): T {
 	if (!otel) {
 		const noOpSpan = createNoOpTracer().startSpan(spanName);
-		return fn(noOpSpan);
+		const spanHandle = new SpanHandle(noOpSpan);
+		return fn(spanHandle);
 	}
 
 	const tracer = getTracer(tracerName, __SDK_VERSION__);
@@ -312,7 +313,8 @@ export function withSpanSync<T>(
 		},
 		(span: Span) => {
 			try {
-				const result = fn(span);
+				const spanHandle = new SpanHandle(span);
+				const result = fn(spanHandle);
 				span.setStatus({ code: otel.SpanStatusCode.OK });
 				return result;
 			} catch (error) {

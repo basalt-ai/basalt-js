@@ -1,9 +1,8 @@
-import type { Span } from "@opentelemetry/api";
 import { BASALT_ATTRIBUTES } from "./attributes";
 import { BasaltContextManager } from "./context-manager";
-import { SpanHandle } from "./span-handle";
+import type { SpanHandle } from "./span-handle";
 import { withSpan, withSpanSync } from "./telemetry";
-import type { ObserveKind, SpanCallback } from "./types";
+import type { ObserveKind } from "./types";
 
 export type { SpanHandle };
 
@@ -13,6 +12,7 @@ function buildBasaltAttributes(
 	attributes: Record<string, unknown>,
 ): Record<string, unknown> {
 	// Extract kind from attributes if provided
+	// biome-ignore lint/complexity/useLiteralKeys: false
 	const kind = attributes["kind"] as ObserveKind | undefined;
 	const { kind: _, ...restAttributes } = attributes;
 
@@ -32,18 +32,14 @@ export async function withBasaltSpan<T>(
 	tracerName: string,
 	spanName: string,
 	attributes: Record<string, unknown>,
-	fn: SpanCallback<T>,
+	fn: (span: SpanHandle) => Promise<T>,
 ): Promise<T> {
 	const mergedAttributes = buildBasaltAttributes(
 		tracerName,
 		spanName,
 		attributes,
 	);
-	return withSpan(tracerName, spanName, mergedAttributes, (span: Span) => {
-		// Wrap raw OTel span in SpanHandle to provide setInput/setOutput methods
-		const spanHandle = new SpanHandle(span);
-		return fn(spanHandle);
-	});
+	return withSpan(tracerName, spanName, mergedAttributes, fn);
 }
 
 export function withBasaltSpanSync<T>(
@@ -57,9 +53,5 @@ export function withBasaltSpanSync<T>(
 		spanName,
 		attributes,
 	);
-	return withSpanSync(tracerName, spanName, mergedAttributes, (span: Span) => {
-		// Wrap raw OTel span in SpanHandle to provide setInput/setOutput methods
-		const spanHandle = new SpanHandle(span);
-		return fn(spanHandle);
-	});
+	return withSpanSync(tracerName, spanName, mergedAttributes, fn);
 }
