@@ -15,9 +15,11 @@
 		"node": ">=18.0.0"
 	},
 	"scripts": {
-		"test": "jest"
+		"test": "jest",
+		"type-check": "tsc --noEmit"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "2.3.11",
 		"@swc/core": "1.15.8",
 		"@swc/helpers": "0.5.18",
 		"@swc/jest": "0.2.39",
