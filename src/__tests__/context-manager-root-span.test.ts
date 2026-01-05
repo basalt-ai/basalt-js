@@ -41,7 +41,7 @@ jest.mock("@opentelemetry/api", () => {
 
 	const mockTracer = {
 		startSpan: jest.fn(() => mockSpan),
-		startActiveSpan: jest.fn((name, options, fn) => {
+		startActiveSpan: jest.fn((_name, options, fn) => {
 			if (typeof options === "function") {
 				return options(mockSpan);
 			}
@@ -57,7 +57,7 @@ jest.mock("@opentelemetry/api", () => {
 		},
 		context: {
 			active: jest.fn(() => mockContext),
-			with: jest.fn((ctx, fn) => {
+			with: jest.fn((_ctx, fn) => {
 				const previousStorage = contextStorage;
 				contextStorage = new Map(contextStorage);
 				const result = fn();

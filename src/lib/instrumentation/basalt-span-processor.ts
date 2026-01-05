@@ -18,7 +18,7 @@ export class BasaltSpanProcessor implements SpanProcessor {
 	 * Called when a span is started.
 	 * Extracts Basalt context and adds it as span attributes.
 	 */
-	onStart(span: Span, parentContext: Context): void {
+	onStart(span: Span, _parentContext: Context): void {
 		// Extract Basalt context attributes from the current context
 		const basaltAttrs = BasaltContextManager.extractAttributes();
 

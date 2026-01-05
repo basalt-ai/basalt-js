@@ -1,4 +1,4 @@
-import type { Attributes, Span } from "@opentelemetry/api";
+import type { Attributes } from "@opentelemetry/api";
 import type { SpanHandle } from "./span-handle";
 
 /**

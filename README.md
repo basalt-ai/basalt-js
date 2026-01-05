@@ -202,7 +202,7 @@ If you were using the legacy manual monitoring system (removed in v2.x), migrate
 const result = await basalt.prompt.get('my-prompt');
 const generation = result.generation; // No longer available
 
-await basalt.monitor.createExperiment(...); // No longer available
+await basalt.monitor.createExperiment(...)
 trace.end(); // No longer available
 ```
 

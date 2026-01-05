@@ -2,7 +2,7 @@
  * Interface for the Prompt SDK.
  */
 
-import { type AsyncResult, ErrObj } from "../contract";
+import type { AsyncResult } from "../contract";
 
 /**
  * @preserve

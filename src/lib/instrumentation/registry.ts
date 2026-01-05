@@ -69,7 +69,7 @@ class InstrumentationRegistry {
 				console.log(
 					`[@basalt-ai/sdk] Registered ${instrumentations.length} instrumentations.`,
 				);
-			} catch (error) {
+			} catch (_error) {
 				console.warn(
 					"[@basalt-ai/sdk] Failed to register instrumentations. " +
 						"Ensure @opentelemetry/instrumentation is installed.",
@@ -97,7 +97,7 @@ class InstrumentationRegistry {
 			return new OpenAIInstrumentation({
 				captureMessageContent: captureContent,
 			});
-		} catch (error) {
+		} catch (_error) {
 			console.warn(
 				"[@basalt-ai/sdk] Cannot enable OpenAI instrumentation: package not found.\n" +
 					"Install with: npm install @opentelemetry/instrumentation-openai",
@@ -125,7 +125,7 @@ class InstrumentationRegistry {
 			return new AnthropicInstrumentation({
 				enrich: captureContent,
 			});
-		} catch (error) {
+		} catch (_error) {
 			console.warn(
 				"[@basalt-ai/sdk] Cannot enable Anthropic instrumentation: package not found.\n" +
 					"Install with: npm install @traceloop/instrumentation-anthropic",
@@ -153,7 +153,7 @@ class InstrumentationRegistry {
 			return new AwsBedrockInstrumentation({
 				enrich: captureContent,
 			});
-		} catch (error) {
+		} catch (_error) {
 			console.warn(
 				"[@basalt-ai/sdk] Cannot enable Bedrock instrumentation: package not found.\n" +
 					"Install with: npm install @traceloop/instrumentation-bedrock",

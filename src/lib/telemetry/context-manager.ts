@@ -31,7 +31,7 @@ export class BasaltContextManager {
 		}
 
 		try {
-			const otel = require("@opentelemetry/api");
+			const _otel = require("@opentelemetry/api");
 			return otelContext.setValue(BASALT_CONTEXT_KEY, ctx);
 		} catch {
 			return undefined;

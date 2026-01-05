@@ -196,7 +196,7 @@ async function prepareUploadBody(
 async function readFileFromPath(path: string): Promise<Buffer> {
 	try {
 		// Dynamic import for Node.js fs/promises
-		const fs = await import("fs/promises");
+		const fs = await import("node:fs/promises");
 		return await fs.readFile(path);
 	} catch (error) {
 		throw new Error(

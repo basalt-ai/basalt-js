@@ -24,7 +24,7 @@ jest.mock("@opentelemetry/api", () => {
 
 	const mockTracer = {
 		startSpan: jest.fn(() => mockSpan),
-		startActiveSpan: jest.fn((name, options, fn) => {
+		startActiveSpan: jest.fn((_name, options, fn) => {
 			if (typeof options === "function") {
 				return options(mockSpan);
 			}
@@ -35,12 +35,12 @@ jest.mock("@opentelemetry/api", () => {
 	const mockContext = {
 		active: jest.fn(() => ({
 			getValue: jest.fn(),
-			setValue: jest.fn((key, value) => ({
+			setValue: jest.fn((_key, _value) => ({
 				getValue: jest.fn(),
 				setValue: jest.fn(),
 			})),
 		})),
-		with: jest.fn((ctx, fn) => fn()),
+		with: jest.fn((_ctx, fn) => fn()),
 	};
 
 	return {
@@ -477,7 +477,7 @@ describe("observe() API", () => {
 
 	it("should handle errors and record exceptions", async () => {
 		await expect(
-			observe({ name: "failing-operation" }, async (span) => {
+			observe({ name: "failing-operation" }, async (_span) => {
 				throw new Error("Operation failed");
 			}),
 		).rejects.toThrow("Operation failed");
