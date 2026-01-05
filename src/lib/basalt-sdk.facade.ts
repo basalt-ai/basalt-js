@@ -4,6 +4,9 @@ import DatasetSDK from './sdk/dataset-sdk'
 import MonitorSDK from './sdk/monitor-sdk'
 import PromptSDK from './sdk/prompt-sdk'
 import { TelemetryManager } from './telemetry/manager'
+import { observe, startObserve } from './telemetry/telemetry'
+import type { ObserveOptions, StartObserveOptions } from './telemetry/types'
+import { SpanHandle, StartSpanHandle } from './telemetry/span-handle'
 import Api from './utils/api'
 import Logger from './utils/logger'
 import MemoryCache from './utils/memorycache'
@@ -96,6 +99,68 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 		} catch (error) {
 			console.warn('Error during SDK shutdown:', error)
 		}
+	}
+
+	/**
+	 * Execute a function within an observation span that automatically wraps all nested operations
+	 * 
+	 * This creates an active span marked with Basalt metadata that becomes the parent for all
+	 * child operations. The span allows setting experiment, identity, and evaluation configuration.
+	 * 
+	 * Use this at operation entry points (request handlers, background jobs, CLI commands)
+	 * to automatically wrap all nested SDK and manual span operations in a single parent span.
+	 * 
+	 * @param options - Configuration for the observation span
+	 * @param fn - Async function to execute within the observation span context
+	 * @returns Result of the function execution
+	 * 
+	 * @example
+	 * ```typescript
+	 * await basalt.observe(
+	 *   { name: 'process-user-request' },
+	 *   async (span) => {
+	 *     span.setExperiment('recommendation-v2')
+	 *       .setIdentity({ userId: '123', organizationId: 'acme' });
+	 *     
+	 *     // All operations automatically become child spans
+	 *     await basalt.prompt.get({ slug: 'greeting' });
+	 *     const result = await processData();
+	 *     return result;
+	 *   }
+	 * );
+	 * ```
+	 */
+	public async observe<T>(
+		options: ObserveOptions,
+		fn: (span: SpanHandle) => Promise<T>
+	): Promise<T> {
+		return observe(options, fn)
+	}
+
+	/**
+	 * Start a root observation span with experiment and identity context
+	 * Returns a handle that must be manually ended
+	 * 
+	 * @param options Root observation options including experiment and identity (featureSlug is required)
+	 * @returns StartSpanHandle that must be manually ended
+	 * 
+	 * @example
+	 * ```typescript
+	 * const span = basalt.startObserve({
+	 *   name: 'my-root-operation',
+	 *   featureSlug: 'my-feature',
+	 *   experiment: { id: 'exp-123' },
+	 *   identity: { userId: 'user-1', organizationId: 'org-1' }
+	 * })
+	 * try {
+	 *   // ... perform work
+	 * } finally {
+	 *   span.end()
+	 * }
+	 * ```
+	 */
+	public startObserve(options: StartObserveOptions): StartSpanHandle {
+		return startObserve(options)
 	}
 
 	public get prompt() {

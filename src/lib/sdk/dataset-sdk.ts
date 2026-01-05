@@ -47,12 +47,17 @@ export default class DatasetSDK implements IDatasetSDK {
    *
    * @returns A promise with an array of dataset list responses.
    */
-	async list(): AsyncResult<DatasetListResponse[]> {
+	async list(options?: { kind?: import('../telemetry/types').ObserveKind }): AsyncResult<DatasetListResponse[]> {
 		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.dataset.list',
 			{
-				[BASALT_ATTRIBUTES.OPERATION]: 'list',
+				kind: options?.kind,
+				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
+					'basalt.api.client': 'datasets',
+					'basalt.api.operation': 'list',
+					'basalt.internal.api': true,
+				}),
 			},
 			async (span) => {
 				const result = await this._listDatasets()
@@ -74,13 +79,18 @@ export default class DatasetSDK implements IDatasetSDK {
    * @param options - Optional parameters for the request.
    * @returns A promise with the dataset response.
    */
-	async get(slug: string): AsyncResult<DatasetResponse> {
+	async get(slug: string, options?: { kind?: import('../telemetry/types').ObserveKind }): AsyncResult<DatasetResponse> {
 		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.dataset.get',
 			{
-				[BASALT_ATTRIBUTES.OPERATION]: 'get',
-				[BASALT_ATTRIBUTES.DATASET_SLUG]: slug,
+				kind: options?.kind,
+				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
+					'basalt.api.client': 'datasets',
+					'basalt.api.operation': 'get',
+					'basalt.internal.api': true,
+					'basalt.dataset.slug': slug,
+				}),
 			},
 			async (span) => {
 				const result = await this._getDatasetWithCache({ slug }, span)
@@ -106,9 +116,14 @@ export default class DatasetSDK implements IDatasetSDK {
 			'@basalt-ai/sdk',
 			'basalt.dataset.addRow',
 			{
-				[BASALT_ATTRIBUTES.OPERATION]: 'create',
-				[BASALT_ATTRIBUTES.DATASET_SLUG]: slug,
-				'basalt.dataset.is_playground': options.isPlayground,
+				kind: options.kind,
+				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
+					'basalt.api.client': 'datasets',
+					'basalt.api.operation': 'create',
+					'basalt.internal.api': true,
+					'basalt.dataset.slug': slug,
+					'basalt.dataset.is_playground': options.isPlayground,
+				}),
 			},
 			async (span) => {
 				const result = await this._createDatasetItem({ slug, ...options })

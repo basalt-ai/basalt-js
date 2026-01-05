@@ -1,6 +1,20 @@
 import type { Attributes, Span } from '@opentelemetry/api'
 
 /**
+ * Span kind classification for Basalt observations
+ * Matches Python SDK ObserveKind enum
+ */
+export enum ObserveKind {
+	ROOT = 'basalt_trace',
+	SPAN = 'span',
+	GENERATION = 'generation',
+	RETRIEVAL = 'retrieval',
+	FUNCTION = 'function',
+	TOOL = 'tool',
+	EVENT = 'event',
+}
+
+/**
  * Basalt-specific context that can be attached to spans
  */
 export interface BasaltContext {
@@ -55,6 +69,53 @@ export interface SpanOptions {
 	 * Whether to record exceptions in the span
 	 */
 	recordException?: boolean
+}
+
+/**
+ * Options for creating child observation spans (observe)
+ * Does not include experiment or identity (use StartObserveOptions for root spans)
+ */
+export interface ObserveOptions {
+	readonly name?: string
+	readonly attributes?: Record<string, unknown>
+	readonly spanKind?: number
+}
+
+/**
+ * Experiment metadata for trace observation
+ */
+export interface TraceExperiment {
+	id: string
+	name?: string
+	featureSlug?: string
+}
+
+/**
+ * Options for starting a root observation span (startObserve)
+ * Includes experiment and identity parameters for root spans only
+ */
+export interface StartObserveOptions {
+	readonly name?: string
+	readonly attributes?: Record<string, unknown>
+	readonly spanKind?: number
+	/**
+	 * Feature slug for the observation (mandatory)
+	 */
+	readonly featureSlug: string
+	/**
+	 * Experiment context for A/B testing
+	 */
+	readonly experiment?: TraceExperiment
+	/**
+	 * Identity information for tracking
+	 */
+	readonly identity?: {
+		userId?: string
+		userName?: string
+		organizationId?: string
+		organizationName?: string
+		[key: string]: unknown
+	}
 }
 
 /**

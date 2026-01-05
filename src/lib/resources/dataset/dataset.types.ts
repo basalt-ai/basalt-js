@@ -129,6 +129,11 @@ export interface CreateDatasetItemOptions {
 	idealOutput?: string
 	metadata?: Record<string, unknown>
 	isPlayground?: boolean
+	/**
+	 * @var kind - Span kind for this operation.
+	 * @default ObserveKind.SPAN
+	 */
+	kind?: import('../../telemetry/types').ObserveKind
 }
 
 /**

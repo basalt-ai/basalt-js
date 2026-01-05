@@ -82,13 +82,18 @@ export default class PromptSDK implements IPromptSDK {
 			'@basalt-ai/sdk',
 			'basalt.prompt.get',
 			{
-				[BASALT_ATTRIBUTES.OPERATION]: 'get',
-				[BASALT_ATTRIBUTES.PROMPT_SLUG]: params.slug,
-				[BASALT_ATTRIBUTES.PROMPT_VERSION]: params.version,
-				[BASALT_ATTRIBUTES.PROMPT_TAG]: params.tag,
-				[BASALT_ATTRIBUTES.PROMPT_VARIABLES_COUNT]: params.variables
-					? Object.keys(params.variables).length
-					: 0,
+				kind: params.kind,
+				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
+					'basalt.api.client': 'prompts',
+					'basalt.api.operation': 'get',
+					'basalt.internal.api': true,
+					'basalt.prompt.slug': params.slug,
+					...(params.version && { 'basalt.prompt.version': params.version }),
+					...(params.tag && { 'basalt.prompt.tag': params.tag }),
+				}),
+				...(params.variables && {
+					[BASALT_ATTRIBUTES.SPAN_VARIABLES]: JSON.stringify(params.variables),
+				}),
 			},
 			async (span) => {
 				const prompt = await this._getPromptWithCache(params, span)
@@ -116,8 +121,13 @@ export default class PromptSDK implements IPromptSDK {
 			'@basalt-ai/sdk',
 			'basalt.prompt.list',
 			{
-				[BASALT_ATTRIBUTES.OPERATION]: 'list',
-				[BASALT_ATTRIBUTES.PROMPT_FEATURE_SLUG]: options?.featureSlug,
+				kind: options?.kind,
+				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
+					'basalt.api.client': 'prompts',
+					'basalt.api.operation': 'list',
+					'basalt.internal.api': true,
+					...(options?.featureSlug && { 'basalt.prompt.feature_slug': options.featureSlug }),
+				}),
 			},
 			async (span) => {
 				const result = await this._listPrompts(options)
@@ -161,10 +171,15 @@ export default class PromptSDK implements IPromptSDK {
 			'@basalt-ai/sdk',
 			'basalt.prompt.describe',
 			{
-				[BASALT_ATTRIBUTES.OPERATION]: 'describe',
-				[BASALT_ATTRIBUTES.PROMPT_SLUG]: params.slug,
-				[BASALT_ATTRIBUTES.PROMPT_VERSION]: params.version,
-				[BASALT_ATTRIBUTES.PROMPT_TAG]: params.tag,
+				kind: params.kind,
+				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
+					'basalt.api.client': 'prompts',
+					'basalt.api.operation': 'describe',
+					'basalt.internal.api': true,
+					'basalt.prompt.slug': params.slug,
+					...(params.version && { 'basalt.prompt.version': params.version }),
+					...(params.tag && { 'basalt.prompt.tag': params.tag }),
+				}),
 			},
 			async (span) => {
 				const result = await this._describePrompt(params)
