@@ -149,41 +149,45 @@ export namespace BasaltContextManager {
 			);
 
 			if (validPrompts.length > 0) {
-				if (validPrompts.length === 1) {
-					const prompt = validPrompts[0];
-					attributes["basalt.prompt.slug"] = prompt.slug;
+				const prompt = validPrompts[0];
 
-					if (prompt.version) {
-						attributes["basalt.prompt.version"] = prompt.version;
-					}
-
-					if (prompt.tag) {
-						attributes["basalt.prompt.tag"] = prompt.tag;
-					}
-
-					if (prompt.model?.provider) {
-						attributes["basalt.prompt.model.provider"] = prompt.model.provider;
-					}
-
-					if (prompt.model?.model) {
-						attributes["basalt.prompt.model.model"] = prompt.model.model;
-					}
-
-					if (
-						prompt.variables &&
-						Object.keys(prompt.variables).length > 0
-					) {
-						try {
-							attributes["basalt.prompt.variables"] = JSON.stringify(
-								prompt.variables,
-							);
-						} catch {
-							attributes["basalt.prompt.variables"] = "[Serialization Error]";
-						}
-					}
-
-					attributes["basalt.prompt.from_cache"] = prompt.fromCache;
+				// Record how many valid prompts were present when more than one exists
+				if (validPrompts.length > 1) {
+					attributes["basalt.prompts.count"] = validPrompts.length;
 				}
+
+				attributes["basalt.prompt.slug"] = prompt.slug;
+
+				if (prompt.version) {
+					attributes["basalt.prompt.version"] = prompt.version;
+				}
+
+				if (prompt.tag) {
+					attributes["basalt.prompt.tag"] = prompt.tag;
+				}
+
+				if (prompt.model?.provider) {
+					attributes["basalt.prompt.model.provider"] = prompt.model.provider;
+				}
+
+				if (prompt.model?.model) {
+					attributes["basalt.prompt.model.model"] = prompt.model.model;
+				}
+
+				if (
+					prompt.variables &&
+					Object.keys(prompt.variables).length > 0
+				) {
+					try {
+						attributes["basalt.prompt.variables"] = JSON.stringify(
+							prompt.variables,
+						);
+					} catch {
+						attributes["basalt.prompt.variables"] = "[Serialization Error]";
+					}
+				}
+
+				attributes["basalt.prompt.from_cache"] = prompt.fromCache;
 			}
 		}
 
