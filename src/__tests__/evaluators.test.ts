@@ -150,17 +150,13 @@ describe("withEvaluators", () => {
 	});
 
 	it("should support evaluation config", () => {
-		const result = withEvaluators(
-			["quality"],
-			() => {
-				const ctx = BasaltContextManager.getContext();
-				expect(ctx?.evaluators).toEqual(["quality"]);
-				return "success";
-			},
-		);
+		const result = withEvaluators(["quality"], () => {
+			const ctx = BasaltContextManager.getContext();
+			expect(ctx?.evaluators).toEqual(["quality"]);
+			return "success";
+		});
 		expect(result).toBe("success");
 	});
-
 
 	it("should clean up context after callback", () => {
 		withEvaluators(["quality"], () => {
@@ -217,14 +213,11 @@ describe("attachEvaluator", () => {
 	});
 
 	it("should support evaluation config", () => {
-		const result = attachEvaluator(
-			"quality",
-			() => {
-				const ctx = BasaltContextManager.getContext();
-				expect(ctx?.evaluators).toEqual(["quality"]);
-				return "success";
-			},
-		);
+		const result = attachEvaluator("quality", () => {
+			const ctx = BasaltContextManager.getContext();
+			expect(ctx?.evaluators).toEqual(["quality"]);
+			return "success";
+		});
 		expect(result).toBe("success");
 	});
 
@@ -268,7 +261,6 @@ describe("Context attribute extraction", () => {
 			);
 		});
 	});
-
 
 	it("should not add evaluator attributes if no evaluators", () => {
 		const attrs = BasaltContextManager.extractAttributes();

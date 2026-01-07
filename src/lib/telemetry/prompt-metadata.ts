@@ -45,7 +45,7 @@ export function getPromptMetadata(
 		return undefined;
 	}
 
-    return (prompt as unknown as Record<symbol, PromptContextMetadata | undefined>)[
-        PROMPT_METADATA_KEY
-    ];
+	return (
+		prompt as unknown as Record<symbol, PromptContextMetadata | undefined>
+	)[PROMPT_METADATA_KEY];
 }

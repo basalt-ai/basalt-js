@@ -109,8 +109,8 @@ jest.mock("@opentelemetry/api", () => {
 import {
 	BASALT_ROOT_SPAN,
 	BasaltContextManager,
+	type StartSpanHandle,
 	startObserve,
-	StartSpanHandle,
 } from "../lib/telemetry";
 
 describe("BasaltContextManager root span storage", () => {

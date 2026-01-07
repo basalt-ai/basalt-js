@@ -20,11 +20,11 @@ import type {
 	VariablesMap,
 } from "../resources";
 import { type SpanHandle, withBasaltSpan } from "../telemetry";
+import { BASALT_ATTRIBUTES, CACHE_TYPES } from "../telemetry/attributes";
 import {
 	attachPromptMetadata,
 	type PromptContextMetadata,
 } from "../telemetry/prompt-metadata";
-import { BASALT_ATTRIBUTES, CACHE_TYPES } from "../telemetry/attributes";
 import { renderTemplate } from "../utils/template";
 import { err, ok } from "../utils/utils";
 

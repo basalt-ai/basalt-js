@@ -38,10 +38,7 @@ import type { BasaltContext } from "./types";
  * @param fn - Callback function to execute (sync or async)
  * @returns The result of the callback function
  */
-export function withEvaluators<T>(
-	evaluators: string[],
-	fn: () => T,
-): T {
+export function withEvaluators<T>(evaluators: string[], fn: () => T): T {
 	// Validate evaluators array
 	if (!Array.isArray(evaluators)) {
 		return fn();
@@ -88,9 +85,6 @@ export function withEvaluators<T>(
  * @param fn - Callback function to execute (sync or async)
  * @returns The result of the callback function
  */
-export function attachEvaluator<T>(
-	evaluator: string,
-	fn: () => T,
-): T {
+export function attachEvaluator<T>(evaluator: string, fn: () => T): T {
 	return withEvaluators([evaluator], fn);
 }
