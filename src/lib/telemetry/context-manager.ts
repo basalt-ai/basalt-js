@@ -294,30 +294,37 @@ export namespace BasaltContextManager {
 					? { ...(existing?.evaluationConfig ?? {}), ...updates.evaluationConfig }
 					: undefined;
 
-			// Merge prompts: override by slug
-			let mergedPrompts: PromptMetadata[] | undefined;
-			if (updates.prompts || existing?.prompts) {
-				const existingPrompts = existing?.prompts || [];
-				const newPrompts = updates.prompts || [];
+			const mergePromptsBySlug = (
+				existingPrompts: PromptMetadata[] | undefined,
+				newPrompts: PromptMetadata[] | undefined,
+			): PromptMetadata[] | undefined => {
+				const basePrompts = existingPrompts || [];
+				const additionalPrompts = newPrompts || [];
+
+				if (basePrompts.length === 0 && additionalPrompts.length === 0) {
+					return undefined;
+				}
 
 				const promptMap = new Map<string, PromptMetadata>();
 
-				for (const prompt of existingPrompts) {
+				for (const prompt of basePrompts) {
 					if (prompt?.slug && prompt.slug.trim().length > 0) {
 						promptMap.set(prompt.slug, prompt);
 					}
 				}
 
-				for (const prompt of newPrompts) {
+				for (const prompt of additionalPrompts) {
 					if (prompt?.slug && prompt.slug.trim().length > 0) {
 						promptMap.set(prompt.slug, prompt);
 					}
 				}
 
 				const combined = Array.from(promptMap.values());
-				mergedPrompts = combined.length > 0 ? combined : undefined;
-			}
+				return combined.length > 0 ? combined : undefined;
+			};
 
+			// Merge prompts: override by slug
+			const mergedPrompts = mergePromptsBySlug(existing?.prompts, updates.prompts);
 			const merged: BasaltContext = {
 				...(existing ?? {}),
 				...updates,
