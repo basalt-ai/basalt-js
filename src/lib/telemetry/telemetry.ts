@@ -83,9 +83,9 @@ function createNoOpTracer(): Tracer {
 		addEvent: () => noOpSpan,
 		setStatus: () => noOpSpan,
 		updateName: () => noOpSpan,
-		end: () => { },
+		end: () => {},
 		isRecording: () => false,
-		recordException: () => { },
+		recordException: () => {},
 		addLink: () => noOpSpan,
 		addLinks: () => noOpSpan,
 	};
@@ -336,7 +336,6 @@ export async function withSpan<T>(
 				// Always end the span
 				span.end();
 			}
-
 		},
 	);
 }
@@ -388,7 +387,6 @@ export function withSpanSync<T>(
 			} finally {
 				span.end();
 			}
-
 		},
 	);
 }
@@ -498,7 +496,9 @@ export async function observe<T>(
 		const handle = new SpanHandle(span);
 
 		// Store in Basalt context for additional metadata access
-		const contextWithHandle = BasaltContextManager.setRootSpan(handle as StartSpanHandle);
+		const contextWithHandle = BasaltContextManager.setRootSpan(
+			handle as StartSpanHandle,
+		);
 
 		try {
 			// Execute user function within the active span context
@@ -520,7 +520,6 @@ export async function observe<T>(
 			// Span is automatically ended by startActiveSpan
 			span.end();
 		}
-
 	});
 }
 

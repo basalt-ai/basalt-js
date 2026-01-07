@@ -159,7 +159,7 @@ describe("StartSpanHandle", () => {
 
 	describe("setExperiment", () => {
 		it("should set experiment attributes", () => {
-			const result = rootSpan.setExperiment("exp-123")
+			const result = rootSpan.setExperiment("exp-123");
 
 			expect(result).toBe(rootSpan); // Should return this for chaining
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
@@ -714,9 +714,7 @@ describe("startObserve() API with inline experiment/identity", () => {
 		});
 
 		// Method chaining still works
-		span
-			.setExperiment("chained-exp")
-			.setIdentity({ userId: "user-456" });
+		span.setExperiment("chained-exp").setIdentity({ userId: "user-456" });
 
 		expect(span).toBeInstanceOf(StartSpanHandle);
 		span.end();

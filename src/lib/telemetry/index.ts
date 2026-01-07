@@ -16,9 +16,9 @@ export {
 export { withBasaltSpan, withBasaltSpanSync } from "./basalt-span";
 export { BASALT_ROOT_SPAN, BasaltContextManager } from "./context-manager";
 export { attachEvaluator, withEvaluators } from "./evaluators";
-export { withPrompt, withPrompts } from "./prompts";
 export type { TelemetryManagerConfig } from "./manager";
 export { TelemetryManager } from "./manager";
+export { withPrompt, withPrompts } from "./prompts";
 export { SpanHandle, StartSpanHandle } from "./span-handle";
 export {
 	extractClientFromPath,

@@ -86,11 +86,11 @@ export const BASALT_ATTRIBUTES = {
 
 /**
  * Prefix for arbitrary metadata attributes.
- * 
+ *
  * Usage: basalt.meta.<key>
- * 
+ *
  * Type: any
- * 
+ *
  * Examples: basalt.meta.session_id, basalt.meta.request_id
  */
 export const METADATA_PREFIX = "basalt.meta.";

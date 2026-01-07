@@ -141,11 +141,11 @@ describe("withPrompt", () => {
 		});
 		const promptB = withPromptMetadata(
 			makePromptResponse({
-			model: {
-				...defaultModel,
-				model: "3-haiku",
-			},
-		}),
+				model: {
+					...defaultModel,
+					model: "3-haiku",
+				},
+			}),
 			{
 				slug: "prompt-b",
 				fromCache: true,
@@ -171,11 +171,11 @@ describe("withPrompt", () => {
 		});
 		const promptB = withPromptMetadata(
 			makePromptResponse({
-			model: {
-				...defaultModel,
-				model: "3-haiku",
-			},
-		}),
+				model: {
+					...defaultModel,
+					model: "3-haiku",
+				},
+			}),
 			{
 				slug: "prompt-a",
 				version: "2",
@@ -243,14 +243,11 @@ describe("withPrompt", () => {
 	});
 
 	it("should handle invalid prompt data", () => {
-		const result = withPrompt(
-			undefined as unknown as PromptResponse,
-			() => {
-				const ctx = BasaltContextManager.getContext();
-				expect(ctx?.prompts).toBeUndefined();
-				return "success";
-			},
-		);
+		const result = withPrompt(undefined as unknown as PromptResponse, () => {
+			const ctx = BasaltContextManager.getContext();
+			expect(ctx?.prompts).toBeUndefined();
+			return "success";
+		});
 		expect(result).toBe("success");
 	});
 

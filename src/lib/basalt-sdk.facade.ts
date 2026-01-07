@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/complexity/useLiteralKeys: <explanation> */
 import BasaltSDK from "./basalt-sdk";
 import type { InstrumentationConfig } from "./instrumentation";
 import { instrument as instrumentProviders } from "./instrumentation";

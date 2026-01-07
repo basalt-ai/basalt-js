@@ -174,10 +174,7 @@ export namespace BasaltContextManager {
 					attributes["basalt.prompt.model.model"] = prompt.model.model;
 				}
 
-				if (
-					prompt.variables &&
-					Object.keys(prompt.variables).length > 0
-				) {
+				if (prompt.variables && Object.keys(prompt.variables).length > 0) {
 					try {
 						attributes["basalt.prompt.variables"] = JSON.stringify(
 							prompt.variables,
@@ -295,7 +292,10 @@ export namespace BasaltContextManager {
 			// Merge evaluation config
 			const mergedEvalConfig =
 				updates.evaluationConfig || existing?.evaluationConfig
-					? { ...(existing?.evaluationConfig ?? {}), ...updates.evaluationConfig }
+					? {
+							...(existing?.evaluationConfig ?? {}),
+							...updates.evaluationConfig,
+						}
 					: undefined;
 
 			const mergePromptsBySlug = (
@@ -328,7 +328,10 @@ export namespace BasaltContextManager {
 			};
 
 			// Merge prompts: override by slug
-			const mergedPrompts = mergePromptsBySlug(existing?.prompts, updates.prompts);
+			const mergedPrompts = mergePromptsBySlug(
+				existing?.prompts,
+				updates.prompts,
+			);
 			const merged: BasaltContext = {
 				...(existing ?? {}),
 				...updates,

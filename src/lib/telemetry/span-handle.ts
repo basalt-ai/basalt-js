@@ -191,7 +191,7 @@ export class StartSpanHandle extends SpanHandle {
 	 */
 	setExperiment(experiment_id: string): this {
 		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment_id);
-		
+
 		this.basaltContext.experiment_id = experiment_id;
 		return this;
 	}
