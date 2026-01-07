@@ -1,7 +1,7 @@
 import type { Context } from "@opentelemetry/api";
 import type { StartSpanHandle } from "./span-handle";
 import { flattenMetadata, getCurrentContext } from "./telemetry";
-import type { BasaltContext } from "./types";
+import type { BasaltContext, PromptMetadata } from "./types";
 
 /**
  * Symbol key for storing Basalt context in OpenTelemetry context
@@ -139,6 +139,54 @@ export namespace BasaltContextManager {
 			}
 		}
 
+		// Add prompt attributes
+		if (ctx.prompts && ctx.prompts.length > 0) {
+			const validPrompts = ctx.prompts.filter(
+				(prompt) =>
+					prompt &&
+					typeof prompt.slug === "string" &&
+					prompt.slug.trim().length > 0,
+			);
+
+			if (validPrompts.length > 0) {
+				if (validPrompts.length === 1) {
+					const prompt = validPrompts[0];
+					attributes["basalt.prompt.slug"] = prompt.slug;
+
+					if (prompt.version) {
+						attributes["basalt.prompt.version"] = prompt.version;
+					}
+
+					if (prompt.tag) {
+						attributes["basalt.prompt.tag"] = prompt.tag;
+					}
+
+					if (prompt.model?.provider) {
+						attributes["basalt.prompt.model.provider"] = prompt.model.provider;
+					}
+
+					if (prompt.model?.model) {
+						attributes["basalt.prompt.model.model"] = prompt.model.model;
+					}
+
+					if (
+						prompt.variables &&
+						Object.keys(prompt.variables).length > 0
+					) {
+						try {
+							attributes["basalt.prompt.variables"] = JSON.stringify(
+								prompt.variables,
+							);
+						} catch {
+							attributes["basalt.prompt.variables"] = "[Serialization Error]";
+						}
+					}
+
+					attributes["basalt.prompt.from_cache"] = prompt.fromCache;
+				}
+			}
+		}
+
 		return attributes;
 	}
 
@@ -169,6 +217,30 @@ export namespace BasaltContextManager {
 				? { ...existing.evaluationConfig, ...updates.evaluationConfig }
 				: undefined;
 
+		// Merge prompts: override by slug
+		let mergedPrompts: PromptMetadata[] | undefined;
+		if (updates.prompts || existing.prompts) {
+			const existingPrompts = existing.prompts || [];
+			const newPrompts = updates.prompts || [];
+
+			const promptMap = new Map<string, PromptMetadata>();
+
+			for (const prompt of existingPrompts) {
+				if (prompt?.slug && prompt.slug.trim().length > 0) {
+					promptMap.set(prompt.slug, prompt);
+				}
+			}
+
+			for (const prompt of newPrompts) {
+				if (prompt?.slug && prompt.slug.trim().length > 0) {
+					promptMap.set(prompt.slug, prompt);
+				}
+			}
+
+			const combined = Array.from(promptMap.values());
+			mergedPrompts = combined.length > 0 ? combined : undefined;
+		}
+
 		const merged: BasaltContext = {
 			...existing,
 			...updates,
@@ -185,6 +257,7 @@ export namespace BasaltContextManager {
 				: existing.metadata,
 			evaluators: mergedEvaluators,
 			evaluationConfig: mergedEvalConfig,
+			prompts: mergedPrompts,
 		};
 
 		return setContext(merged);
@@ -221,6 +294,30 @@ export namespace BasaltContextManager {
 					? { ...(existing?.evaluationConfig ?? {}), ...updates.evaluationConfig }
 					: undefined;
 
+			// Merge prompts: override by slug
+			let mergedPrompts: PromptMetadata[] | undefined;
+			if (updates.prompts || existing?.prompts) {
+				const existingPrompts = existing?.prompts || [];
+				const newPrompts = updates.prompts || [];
+
+				const promptMap = new Map<string, PromptMetadata>();
+
+				for (const prompt of existingPrompts) {
+					if (prompt?.slug && prompt.slug.trim().length > 0) {
+						promptMap.set(prompt.slug, prompt);
+					}
+				}
+
+				for (const prompt of newPrompts) {
+					if (prompt?.slug && prompt.slug.trim().length > 0) {
+						promptMap.set(prompt.slug, prompt);
+					}
+				}
+
+				const combined = Array.from(promptMap.values());
+				mergedPrompts = combined.length > 0 ? combined : undefined;
+			}
+
 			const merged: BasaltContext = {
 				...(existing ?? {}),
 				...updates,
@@ -236,6 +333,7 @@ export namespace BasaltContextManager {
 					: existing?.metadata,
 				evaluators: mergedEvaluators,
 				evaluationConfig: mergedEvalConfig,
+				prompts: mergedPrompts,
 			};
 
 			const newContext = currentContext.setValue(BASALT_CONTEXT_KEY, merged);
