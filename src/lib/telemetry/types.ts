@@ -40,11 +40,7 @@ export interface BasaltContext {
 	/**
 	 * Experiment context for A/B testing
 	 */
-	experiment?: {
-		id: string;
-		name?: string;
-		featureSlug?: string;
-	};
+	experiment_id?: string;
 
 	/**
 	 * Feature slug for the current operation
@@ -97,7 +93,7 @@ export interface TraceExperiment {
  */
 export interface StartObserveOptions {
 	readonly name?: string;
-	readonly attributes?: Record<string, unknown>;
+	readonly metadata?: Record<string, unknown>;
 	readonly spanKind?: number;
 	/**
 	 * Feature slug for the observation (mandatory)
@@ -106,7 +102,7 @@ export interface StartObserveOptions {
 	/**
 	 * Experiment context for A/B testing
 	 */
-	readonly experiment?: TraceExperiment;
+	readonly experiment_id?: string;
 	/**
 	 * Identity information for tracking
 	 */

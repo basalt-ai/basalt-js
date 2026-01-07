@@ -161,27 +161,10 @@ export class StartSpanHandle extends SpanHandle {
 	 * @param experiment Experiment metadata with id, name, and featureSlug
 	 * @returns this for method chaining
 	 */
-	setExperiment(experiment: {
-		id: string;
-		name?: string;
-		featureSlug?: string;
-	}): this {
-		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment.id);
-		if (experiment.name) {
-			this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_NAME, experiment.name);
-		}
-		if (experiment.featureSlug) {
-			this.setAttribute(
-				BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG,
-				experiment.featureSlug,
-			);
-		}
-		this.basaltContext.experiment = {
-			id: experiment.id,
-			name: experiment.name ?? this.basaltContext.experiment?.name,
-			featureSlug:
-				experiment.featureSlug ?? this.basaltContext.experiment?.featureSlug,
-		};
+	setExperiment(experiment_id: string): this {
+		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment_id);
+		
+		this.basaltContext.experiment_id = experiment_id;
 		return this;
 	}
 

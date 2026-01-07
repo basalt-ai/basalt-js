@@ -5,7 +5,7 @@ import type {
 	SpanOptions,
 	Tracer,
 } from "@opentelemetry/api";
-import { BASALT_ATTRIBUTES } from "./attributes";
+import { BASALT_ATTRIBUTES, METADATA_PREFIX } from "./attributes";
 import { BasaltContextManager } from "./context-manager";
 import { SpanHandle, StartSpanHandle } from "./span-handle";
 import type {
@@ -407,7 +407,7 @@ export async function observe<T>(
 	if (!otel) {
 		// Execute without tracing if OTel not available
 		const noOpSpan = createNoOpTracer().startSpan(name);
-		const handle = new SpanHandle(noOpSpan as any);
+		const handle = new SpanHandle(noOpSpan);
 		try {
 			return await fn(handle);
 		} finally {
@@ -433,10 +433,10 @@ export async function observe<T>(
 
 	// Use startActiveSpan to automatically make this span the active parent
 	return await tracer.startActiveSpan(name, spanOptions, async (span: Span) => {
-		const handle = new SpanHandle(span as any);
+		const handle = new SpanHandle(span);
 
 		// Store in Basalt context for additional metadata access
-		const contextWithHandle = BasaltContextManager.setRootSpan(handle as any);
+		const contextWithHandle = BasaltContextManager.setRootSpan(handle as StartSpanHandle);
 
 		try {
 			// Execute user function within the active span context
@@ -470,10 +470,10 @@ export async function observe<T>(
 export function startObserve(options: StartObserveOptions): StartSpanHandle {
 	const {
 		name = "basalt.observe",
-		attributes = {},
+		metadata,
 		spanKind,
 		featureSlug,
-		experiment,
+		experiment_id,
 		identity,
 	} = options;
 
@@ -491,7 +491,7 @@ export function startObserve(options: StartObserveOptions): StartSpanHandle {
 		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
 		[BASALT_ATTRIBUTES.ROOT]: true,
 		"basalt.observe": true,
-		...attributes,
+		...flattenMetadata(metadata, METADATA_PREFIX),
 	};
 
 	const spanOptions: SpanOptions = {
@@ -504,8 +504,8 @@ export function startObserve(options: StartObserveOptions): StartSpanHandle {
 	const handle = new StartSpanHandle(span, featureSlug);
 
 	// Auto-apply experiment if provided
-	if (experiment) {
-		handle.setExperiment(experiment);
+	if (experiment_id) {
+		handle.setExperiment(experiment_id);
 	}
 
 	// Auto-apply identity if provided
