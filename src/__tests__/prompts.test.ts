@@ -435,3 +435,217 @@ describe("withPrompts", () => {
 		expect(result).toBe("success");
 	});
 });
+
+describe("Prompt attribute extraction", () => {
+	it("should extract all prompt attributes correctly", () => {
+		const promptResponse = withPromptMetadata(makePromptResponse(), {
+			slug: "test-prompt",
+			version: "1.0.0",
+			tag: "production",
+			variables: { query: "hello", context: "world" },
+			fromCache: true,
+		});
+
+		withPrompt(promptResponse, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+
+			expect(attrs["basalt.prompt.slug"]).toBe("test-prompt");
+			expect(attrs["basalt.prompt.version"]).toBe("1.0.0");
+			expect(attrs["basalt.prompt.tag"]).toBe("production");
+			expect(attrs["basalt.prompt.model.provider"]).toBe("anthropic");
+			expect(attrs["basalt.prompt.model.model"]).toBe("3.5-sonnet");
+			expect(attrs["basalt.prompt.variables"]).toBe(
+				JSON.stringify({ query: "hello", context: "world" }),
+			);
+			expect(attrs["basalt.prompt.from_cache"]).toBe(true);
+		});
+	});
+
+	it("should extract minimal prompt attributes when optional fields are missing", () => {
+		const promptResponse = withPromptMetadata(
+			makePromptResponse({
+				model: {
+					...defaultModel,
+					model: "3-haiku",
+				},
+			}),
+			{
+				slug: "minimal-prompt",
+				fromCache: false,
+			},
+		);
+
+		withPrompt(promptResponse, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+
+			expect(attrs["basalt.prompt.slug"]).toBe("minimal-prompt");
+			expect(attrs["basalt.prompt.from_cache"]).toBe(false);
+			expect(attrs["basalt.prompt.model.provider"]).toBe("anthropic");
+			expect(attrs["basalt.prompt.model.model"]).toBe("3-haiku");
+			expect(attrs["basalt.prompt.version"]).toBeUndefined();
+			expect(attrs["basalt.prompt.tag"]).toBeUndefined();
+			expect(attrs["basalt.prompt.variables"]).toBeUndefined();
+		});
+	});
+
+	it("should not add prompt attributes if no prompts in context", () => {
+		const attrs = BasaltContextManager.extractAttributes();
+
+		expect(attrs["basalt.prompt.slug"]).toBeUndefined();
+		expect(attrs["basalt.prompt.version"]).toBeUndefined();
+		expect(attrs["basalt.prompt.tag"]).toBeUndefined();
+		expect(attrs["basalt.prompt.model.provider"]).toBeUndefined();
+		expect(attrs["basalt.prompt.model.model"]).toBeUndefined();
+		expect(attrs["basalt.prompt.variables"]).toBeUndefined();
+		expect(attrs["basalt.prompt.from_cache"]).toBeUndefined();
+	});
+
+	it("should use first valid prompt when multiple prompts exist", () => {
+		const promptA = withPromptMetadata(makePromptResponse(), {
+			slug: "prompt-a",
+			version: "1.0.0",
+			tag: "staging",
+			fromCache: false,
+		});
+		const promptB = withPromptMetadata(
+			makePromptResponse({
+				model: {
+					...defaultModel,
+					model: "3-opus",
+				},
+			}),
+			{
+				slug: "prompt-b",
+				version: "2.0.0",
+				tag: "production",
+				fromCache: true,
+			},
+		);
+
+		withPrompts([promptA, promptB], () => {
+			const attrs = BasaltContextManager.extractAttributes();
+
+			// Should use first prompt (prompt-a)
+			expect(attrs["basalt.prompt.slug"]).toBe("prompt-a");
+			expect(attrs["basalt.prompt.version"]).toBe("1.0.0");
+			expect(attrs["basalt.prompt.tag"]).toBe("staging");
+			expect(attrs["basalt.prompt.from_cache"]).toBe(false);
+			expect(attrs["basalt.prompts.count"]).toBe(2);
+		});
+	});
+
+	it("should not add prompts.count when only one prompt exists", () => {
+		const promptResponse = withPromptMetadata(makePromptResponse(), {
+			slug: "single-prompt",
+			fromCache: false,
+		});
+
+		withPrompt(promptResponse, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+
+			expect(attrs["basalt.prompt.slug"]).toBe("single-prompt");
+			expect(attrs["basalt.prompts.count"]).toBeUndefined();
+		});
+	});
+
+	it("should handle variables serialization error gracefully", () => {
+		const circularRef: Record<string, unknown> = { key: "value" };
+		circularRef.circular = circularRef;
+
+		const promptResponse = withPromptMetadata(makePromptResponse(), {
+			slug: "circular-vars",
+			variables: circularRef,
+			fromCache: false,
+		});
+
+		withPrompt(promptResponse, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+
+			expect(attrs["basalt.prompt.slug"]).toBe("circular-vars");
+			expect(attrs["basalt.prompt.variables"]).toBe("[Serialization Error]");
+		});
+	});
+
+	it("should not include variables attribute when variables object is empty", () => {
+		const promptResponse = withPromptMetadata(makePromptResponse(), {
+			slug: "no-vars",
+			variables: {},
+			fromCache: false,
+		});
+
+		withPrompt(promptResponse, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+
+			expect(attrs["basalt.prompt.slug"]).toBe("no-vars");
+			expect(attrs["basalt.prompt.variables"]).toBeUndefined();
+		});
+	});
+
+	it("should extract correct provider and model from different model configs", () => {
+		const promptResponse = withPromptMetadata(
+			makePromptResponse({
+				model: {
+					...defaultModel,
+					provider: "openai",
+					model: "gpt-4",
+				},
+			}),
+			{
+				slug: "openai-prompt",
+				fromCache: true,
+			},
+		);
+
+		withPrompt(promptResponse, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+
+			expect(attrs["basalt.prompt.model.provider"]).toBe("openai");
+			expect(attrs["basalt.prompt.model.model"]).toBe("gpt-4");
+		});
+	});
+
+	it("should default to 'unknown' for missing model fields", () => {
+		// Create a prompt response where model fields are missing
+		const promptResponseWithoutModel = {
+			text: "Hello there",
+			systemText: undefined,
+			model: undefined as unknown as typeof defaultModel,
+		} as PromptResponse;
+
+		const promptResponse = withPromptMetadata(promptResponseWithoutModel, {
+			slug: "no-model",
+			fromCache: false,
+		});
+
+		withPrompt(promptResponse, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+
+			expect(attrs["basalt.prompt.slug"]).toBe("no-model");
+			// When model is missing, buildPromptMetadata defaults to "unknown"
+			expect(attrs["basalt.prompt.model.provider"]).toBe("unknown");
+			expect(attrs["basalt.prompt.model.model"]).toBe("unknown");
+		});
+	});
+
+	it("should handle fromCache boolean correctly", () => {
+		const cachedPrompt = withPromptMetadata(makePromptResponse(), {
+			slug: "cached",
+			fromCache: true,
+		});
+
+		withPrompt(cachedPrompt, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+			expect(attrs["basalt.prompt.from_cache"]).toBe(true);
+		});
+
+		const notCachedPrompt = withPromptMetadata(makePromptResponse(), {
+			slug: "not-cached",
+			fromCache: false,
+		});
+
+		withPrompt(notCachedPrompt, () => {
+			const attrs = BasaltContextManager.extractAttributes();
+			expect(attrs["basalt.prompt.from_cache"]).toBe(false);
+		});
+	});
+});
