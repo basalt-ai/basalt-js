@@ -40,11 +40,7 @@ export interface BasaltContext {
 	/**
 	 * Experiment context for A/B testing
 	 */
-	experiment?: {
-		id: string;
-		name?: string;
-		featureSlug?: string;
-	};
+	experiment_id?: string;
 
 	/**
 	 * Feature slug for the current operation
@@ -55,6 +51,20 @@ export interface BasaltContext {
 	 * Arbitrary metadata to attach to spans
 	 */
 	metadata?: Record<string, unknown>;
+
+	/**
+	 * Evaluators to run on spans created within this context
+	 * Array of evaluator slugs like ["hallucinations", "clarity"]
+	 */
+	evaluators?: string[];
+
+	/**
+	 * Evaluation configuration for spans in this context
+	 */
+	evaluationConfig?: {
+		sample_rate?: number;
+		[key: string]: unknown;
+	};
 }
 
 /**
@@ -97,7 +107,7 @@ export interface TraceExperiment {
  */
 export interface StartObserveOptions {
 	readonly name?: string;
-	readonly attributes?: Record<string, unknown>;
+	readonly metadata?: Record<string, unknown>;
 	readonly spanKind?: number;
 	/**
 	 * Feature slug for the observation (mandatory)
@@ -106,7 +116,7 @@ export interface StartObserveOptions {
 	/**
 	 * Experiment context for A/B testing
 	 */
-	readonly experiment?: TraceExperiment;
+	readonly experiment_id?: string;
 	/**
 	 * Identity information for tracking
 	 */
@@ -115,6 +125,18 @@ export interface StartObserveOptions {
 		userName?: string;
 		organizationId?: string;
 		organizationName?: string;
+		[key: string]: unknown;
+	};
+	/**
+	 * Evaluators to run on this observation
+	 * Array of evaluator slugs like ["hallucinations", "clarity"]
+	 */
+	readonly evaluators?: string[];
+	/**
+	 * Evaluation configuration for this observation (root spans only)
+	 */
+	readonly evaluationConfig?: {
+		sample_rate?: number;
 		[key: string]: unknown;
 	};
 }
@@ -134,3 +156,31 @@ export type AttributeValue = string | number | boolean | null | undefined;
  * Dictionary of attributes
  */
 export type AttributeDict = Record<string, AttributeValue>;
+
+/**
+ * Configuration for evaluation behavior
+ */
+export interface EvaluationConfig {
+	/**
+	 * Sample rate for evaluation (0-1)
+	 */
+	sample_rate?: number;
+	/**
+	 * Additional configuration options
+	 */
+	[key: string]: unknown;
+}
+
+/**
+ * Options for withEvaluators function
+ */
+export interface WithEvaluatorsOptions {
+	/**
+	 * Evaluator slugs to attach
+	 */
+	evaluators: string[];
+	/**
+	 * Optional evaluation configuration
+	 */
+	evaluationConfig?: EvaluationConfig;
+}
