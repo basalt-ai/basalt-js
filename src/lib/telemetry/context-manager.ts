@@ -119,6 +119,26 @@ export namespace BasaltContextManager {
 		const metadataAttrs = flattenMetadata(ctx.metadata);
 		Object.assign(attributes, metadataAttrs);
 
+		// Add evaluator attributes
+		if (ctx.evaluators && ctx.evaluators.length > 0) {
+			const validEvaluators = ctx.evaluators.filter(
+				(e) => e && typeof e === "string" && e.trim().length > 0,
+			);
+
+			if (validEvaluators.length > 0) {
+				attributes["basalt.span.evaluators"] = JSON.stringify(validEvaluators);
+			}
+		}
+
+		// Add evaluation config attributes
+		if (ctx.evaluationConfig?.sample_rate !== undefined) {
+			const sampleRate = ctx.evaluationConfig.sample_rate;
+			if (typeof sampleRate === "number" && !Number.isNaN(sampleRate)) {
+				const clampedRate = Math.max(0, Math.min(1, sampleRate));
+				attributes["basalt.span.evaluation.sample_rate"] = clampedRate;
+			}
+		}
+
 		return attributes;
 	}
 
@@ -132,6 +152,23 @@ export namespace BasaltContextManager {
 		updates: Partial<BasaltContext>,
 	): Context | undefined {
 		const existing = getContext() || {};
+
+		// Merge evaluators: combine arrays and deduplicate
+		let mergedEvaluators: string[] | undefined;
+		if (updates.evaluators || existing.evaluators) {
+			const existingEvals = existing.evaluators || [];
+			const newEvals = updates.evaluators || [];
+			const combined = [...existingEvals, ...newEvals];
+			const deduplicated = Array.from(new Set(combined));
+			mergedEvaluators = deduplicated.length > 0 ? deduplicated : undefined;
+		}
+
+		// Merge evaluation config
+		const mergedEvalConfig =
+			updates.evaluationConfig || existing.evaluationConfig
+				? { ...existing.evaluationConfig, ...updates.evaluationConfig }
+				: undefined;
+
 		const merged: BasaltContext = {
 			...existing,
 			...updates,
@@ -146,6 +183,8 @@ export namespace BasaltContextManager {
 			metadata: updates.metadata
 				? { ...existing.metadata, ...updates.metadata }
 				: existing.metadata,
+			evaluators: mergedEvaluators,
+			evaluationConfig: mergedEvalConfig,
 		};
 
 		return setContext(merged);
@@ -165,6 +204,23 @@ export namespace BasaltContextManager {
 			const existing = currentContext.getValue(BASALT_CONTEXT_KEY) as
 				| BasaltContext
 				| undefined;
+
+			// Merge evaluators: combine and deduplicate
+			let mergedEvaluators: string[] | undefined;
+			if (updates.evaluators || existing?.evaluators) {
+				const existingEvals = existing?.evaluators || [];
+				const newEvals = updates.evaluators || [];
+				const combined = [...existingEvals, ...newEvals];
+				const deduplicated = Array.from(new Set(combined));
+				mergedEvaluators = deduplicated.length > 0 ? deduplicated : undefined;
+			}
+
+			// Merge evaluation config
+			const mergedEvalConfig =
+				updates.evaluationConfig || existing?.evaluationConfig
+					? { ...(existing?.evaluationConfig ?? {}), ...updates.evaluationConfig }
+					: undefined;
+
 			const merged: BasaltContext = {
 				...(existing ?? {}),
 				...updates,
@@ -178,6 +234,8 @@ export namespace BasaltContextManager {
 				metadata: updates.metadata
 					? { ...(existing?.metadata ?? {}), ...updates.metadata }
 					: existing?.metadata,
+				evaluators: mergedEvaluators,
+				evaluationConfig: mergedEvalConfig,
 			};
 
 			const newContext = currentContext.setValue(BASALT_CONTEXT_KEY, merged);
