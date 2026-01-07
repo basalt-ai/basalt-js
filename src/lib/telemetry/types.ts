@@ -113,6 +113,18 @@ export interface StartObserveOptions {
 		organizationName?: string;
 		[key: string]: unknown;
 	};
+	/**
+	 * Evaluators to run on this observation
+	 * Array of evaluator slugs like ["hallucinations", "clarity"]
+	 */
+	readonly evaluators?: string[];
+	/**
+	 * Evaluation configuration for this observation (root spans only)
+	 */
+	readonly evaluationConfig?: {
+		sample_rate?: number;
+		[key: string]: unknown;
+	};
 }
 
 /**

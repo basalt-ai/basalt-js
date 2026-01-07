@@ -538,6 +538,8 @@ export function startObserve(options: StartObserveOptions): StartSpanHandle {
 		featureSlug,
 		experiment_id,
 		identity,
+		evaluators,
+		evaluationConfig,
 	} = options;
 
 	if (!otel) {
@@ -574,6 +576,16 @@ export function startObserve(options: StartObserveOptions): StartSpanHandle {
 	// Auto-apply identity if provided
 	if (identity) {
 		handle.setIdentity(identity);
+	}
+
+	// Auto-apply evaluators if provided
+	if (evaluators && evaluators.length > 0) {
+		handle.setEvaluators(evaluators);
+	}
+
+	// Auto-apply evaluation sample rate if provided
+	if (evaluationConfig?.sample_rate !== undefined) {
+		handle.setSampleRate(evaluationConfig.sample_rate);
 	}
 
 	// Store in context for child span access (but context doesn't become active)

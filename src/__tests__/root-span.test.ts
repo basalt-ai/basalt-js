@@ -125,7 +125,7 @@ describe("startObserve", () => {
 	it("should set root span attributes", () => {
 		const rootSpan = startObserve({
 			featureSlug: "test-feature",
-			attributes: {
+			metadata: {
 				"custom.attribute": "value",
 			},
 		});
@@ -210,6 +210,70 @@ describe("StartSpanHandle", () => {
 		});
 	});
 
+	describe("setSampleRate", () => {
+		it("should set sample rate as number", () => {
+			const result = rootSpan.setSampleRate(0.5);
+
+			expect(result).toBe(rootSpan);
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE,
+				0.5,
+			);
+		});
+
+		it("should clamp sample rate to [0, 1] range", () => {
+			// Test negative value
+			rootSpan.setSampleRate(-0.5);
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE,
+				0,
+			);
+
+			// Test value > 1
+			rootSpan.setSampleRate(1.5);
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE,
+				1,
+			);
+		});
+
+		it("should handle edge cases for sample rate", () => {
+			// Test 0
+			rootSpan.setSampleRate(0);
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE,
+				0,
+			);
+
+			// Test 1
+			rootSpan.setSampleRate(1);
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE,
+				1,
+			);
+		});
+
+		it("should skip invalid sample rates", () => {
+			const callCount = mockSpan.setAttribute.mock.calls.length;
+
+			// Test NaN
+			rootSpan.setSampleRate(Number.NaN);
+			expect(mockSpan.setAttribute.mock.calls.length).toBe(callCount);
+
+			// Test non-number (cast as any to bypass TypeScript)
+			rootSpan.setSampleRate("0.5" as any);
+			expect(mockSpan.setAttribute.mock.calls.length).toBe(callCount);
+		});
+
+		it("should support method chaining", () => {
+			const result = rootSpan
+				.setSampleRate(0.5)
+				.setIdentity({ userId: "user-1" });
+
+			expect(result).toBe(rootSpan);
+		});
+	});
+
 	describe("setIdentity", () => {
 		it("should set identity attributes with userId and organizationId", () => {
 			const result = rootSpan.setIdentity({
@@ -270,7 +334,7 @@ describe("StartSpanHandle", () => {
 		it("should support method chaining", () => {
 			const result = rootSpan
 				.setIdentity({ userId: "user-1" })
-				.setExperiment({ id: "exp-1" })
+				.setExperiment("exp-1")
 				.setEvaluationConfig({ key: "value" });
 
 			expect(result).toBe(rootSpan);
@@ -373,6 +437,57 @@ describe("SpanHandle", () => {
 			expect(rootSpan.isRootSpan()).toBe(true);
 		});
 	});
+
+	describe("setEvaluators", () => {
+		it("should set evaluators as JSON array string", () => {
+			const evaluators = ["hallucinations", "clarity"];
+			const result = rootSpan.setEvaluators(evaluators);
+
+			expect(result).toBe(rootSpan); // Method chaining
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.SPAN_EVALUATORS,
+				JSON.stringify(evaluators),
+			);
+		});
+
+		it("should filter out empty and invalid evaluator strings", () => {
+			const evaluators = [
+				"hallucinations",
+				"",
+				"  ",
+				"clarity",
+				null,
+				undefined,
+			];
+			rootSpan.setEvaluators(evaluators as any);
+
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.SPAN_EVALUATORS,
+				JSON.stringify(["hallucinations", "clarity"]),
+			);
+		});
+
+		it("should skip setting attribute for empty array", () => {
+			const callCount = mockSpan.setAttribute.mock.calls.length;
+			rootSpan.setEvaluators([]);
+
+			// Should not call setAttribute
+			expect(mockSpan.setAttribute.mock.calls.length).toBe(callCount);
+		});
+
+		it("should skip setting attribute if all evaluators are invalid", () => {
+			const callCount = mockSpan.setAttribute.mock.calls.length;
+			rootSpan.setEvaluators(["", "  ", null] as any);
+
+			expect(mockSpan.setAttribute.mock.calls.length).toBe(callCount);
+		});
+
+		it("should support method chaining", () => {
+			const result = rootSpan.setEvaluators(["toxicity"]);
+
+			expect(result).toBe(rootSpan);
+		});
+	});
 });
 
 describe("Integration: Complete workflow", () => {
@@ -384,7 +499,7 @@ describe("Integration: Complete workflow", () => {
 		const rootSpan = startObserve({
 			name: "user-registration",
 			featureSlug: "auth-service",
-			attributes: {
+			metadata: {
 				"service.name": "auth-service",
 			},
 		});
@@ -396,7 +511,7 @@ describe("Integration: Complete workflow", () => {
 				organizationId: "org-456",
 				registrationSource: "web",
 			})
-			.setExperiment({ id: "onboarding-v2", name: "Onboarding V2" })
+			.setExperiment("onboarding-v2")
 			.setEvaluationConfig({
 				model: "gpt-4",
 				temperature: 0.7,
@@ -433,6 +548,34 @@ describe("Integration: Complete workflow", () => {
 		} finally {
 			rootSpan.end();
 		}
+
+		expect(rootSpan).toBeInstanceOf(StartSpanHandle);
+	});
+
+	it("should support complete root span with evaluators and sample rate", () => {
+		const rootSpan = startObserve({
+			name: "llm-evaluation-workflow",
+			featureSlug: "eval-service",
+			experiment_id: "eval-exp-v1",
+			identity: {
+				userId: "evaluator-123",
+				organizationId: "org-456",
+			},
+			evaluators: ["hallucinations", "clarity", "toxicity"],
+			evaluationConfig: {
+				sample_rate: 0.8,
+			},
+		});
+
+		// All methods should work together
+		rootSpan
+			.setEvaluators(["additional-eval"]) // Can override
+			.setSampleRate(0.9) // Can override
+			.setAttributes({
+				"eval.version": "v2",
+			});
+
+		rootSpan.end();
 
 		expect(rootSpan).toBeInstanceOf(StartSpanHandle);
 	});
@@ -531,10 +674,7 @@ describe("startObserve() API with inline experiment/identity", () => {
 		const span = startObserve({
 			name: "test-root-span",
 			featureSlug: "test-feature",
-			experiment: {
-				id: "exp-123",
-				name: "Test Experiment",
-			},
+			experiment_id: "exp-123",
 		});
 
 		expect(span).toBeInstanceOf(StartSpanHandle);
@@ -559,10 +699,7 @@ describe("startObserve() API with inline experiment/identity", () => {
 		const span = startObserve({
 			name: "llm-request",
 			featureSlug: "test-feature",
-			experiment: {
-				id: "llm-v2",
-				name: "LLM V2",
-			},
+			experiment_id: "llm-v2",
 			identity: { userId: "tester" },
 		});
 
@@ -578,10 +715,80 @@ describe("startObserve() API with inline experiment/identity", () => {
 
 		// Method chaining still works
 		span
-			.setExperiment({ id: "chained-exp" })
+			.setExperiment("chained-exp")
 			.setIdentity({ userId: "user-456" });
 
 		expect(span).toBeInstanceOf(StartSpanHandle);
+		span.end();
+	});
+
+	it("should create root span with evaluators and evaluationConfig in options", () => {
+		const span = startObserve({
+			name: "llm-evaluation",
+			featureSlug: "test-feature",
+			evaluators: ["hallucinations", "clarity"],
+			evaluationConfig: {
+				sample_rate: 0.5,
+			},
+		});
+
+		expect(span).toBeInstanceOf(StartSpanHandle);
+		span.end();
+	});
+
+	it("should auto-apply evaluators via options", () => {
+		const otel = require("@opentelemetry/api");
+		jest.clearAllMocks();
+
+		const span = startObserve({
+			featureSlug: "auto-eval",
+			evaluators: ["toxicity", "clarity"],
+		});
+
+		const mockSpan = otel.trace.getTracer().startSpan();
+		expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+			BASALT_ATTRIBUTES.SPAN_EVALUATORS,
+			expect.stringContaining("toxicity"),
+		);
+
+		span.end();
+	});
+
+	it("should auto-apply sample rate via evaluationConfig", () => {
+		const otel = require("@opentelemetry/api");
+		jest.clearAllMocks();
+
+		const span = startObserve({
+			featureSlug: "auto-sample",
+			evaluationConfig: { sample_rate: 0.75 },
+		});
+
+		const mockSpan = otel.trace.getTracer().startSpan();
+		expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+			BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE,
+			0.75,
+		);
+
+		span.end();
+	});
+
+	it("should skip auto-apply for empty evaluators", () => {
+		const otel = require("@opentelemetry/api");
+		jest.clearAllMocks();
+
+		const span = startObserve({
+			featureSlug: "empty-eval",
+			evaluators: [],
+		});
+
+		const mockSpan = otel.trace.getTracer().startSpan();
+
+		// Should not call setAttribute for evaluators (empty array)
+		const evaluatorCalls = mockSpan.setAttribute.mock.calls.filter(
+			([key]: [string]) => key === BASALT_ATTRIBUTES.SPAN_EVALUATORS,
+		);
+		expect(evaluatorCalls.length).toBe(0);
+
 		span.end();
 	});
 });

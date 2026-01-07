@@ -107,6 +107,34 @@ export class SpanHandle {
 	}
 
 	/**
+	 * Set evaluators for this span
+	 * Evaluators are stored as a JSON array of slugs
+	 *
+	 * @param evaluators - Array of evaluator slugs (e.g., ["hallucinations", "clarity"])
+	 * @returns this for method chaining
+	 */
+	setEvaluators(evaluators: string[]): this {
+		// Filter out empty/invalid strings
+		const validEvaluators = evaluators.filter(
+			(e) => e && typeof e === "string" && e.trim().length > 0,
+		);
+
+		if (validEvaluators.length === 0) {
+			return this;
+		}
+
+		try {
+			this.setAttribute(
+				BASALT_ATTRIBUTES.SPAN_EVALUATORS,
+				JSON.stringify(validEvaluators),
+			);
+		} catch {
+			// Skip if JSON serialization fails
+		}
+		return this;
+	}
+
+	/**
 	 * Type guard to check if this is a root span handle
 	 */
 	isRootSpan(): this is StartSpanHandle {
@@ -180,6 +208,26 @@ export class StartSpanHandle extends SpanHandle {
 			BASALT_ATTRIBUTES.EVALUATION_CONFIG,
 			JSON.stringify(config),
 		);
+		return this;
+	}
+
+	/**
+	 * Set evaluation sample rate for this observation
+	 * Sample rate controls what percentage of observations are evaluated
+	 *
+	 * @param sampleRate - Number between 0 and 1 (0% to 100%)
+	 * @returns this for method chaining
+	 */
+	setSampleRate(sampleRate: number): this {
+		// Validate sample rate is a valid number
+		if (typeof sampleRate !== "number" || Number.isNaN(sampleRate)) {
+			return this;
+		}
+
+		// Clamp to [0, 1] range
+		const clampedRate = Math.max(0, Math.min(1, sampleRate));
+
+		this.setAttribute(BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE, clampedRate);
 		return this;
 	}
 
