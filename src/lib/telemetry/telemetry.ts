@@ -16,15 +16,28 @@ import type {
 } from "./types";
 
 /**
+ * Cached OpenTelemetry API instance
+ */
+let otelCache: typeof import("@opentelemetry/api") | undefined;
+
+/**
  * Safely import OpenTelemetry API
  * Returns undefined if @opentelemetry/api is not installed
+ * Caches the result to avoid repeated imports
  */
 function safelyImportOtel(): typeof import("@opentelemetry/api") | undefined {
-	try {
-		return require("@opentelemetry/api");
-	} catch {
-		return undefined;
+	if (otelCache !== undefined) {
+		return otelCache;
 	}
+
+	try {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		otelCache = require("@opentelemetry/api");
+	} catch {
+		otelCache = undefined;
+	}
+
+	return otelCache;
 }
 
 const otel = safelyImportOtel();

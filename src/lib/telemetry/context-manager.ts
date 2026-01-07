@@ -17,14 +17,14 @@ export const BASALT_ROOT_SPAN = Symbol.for("basalt.context.root_span");
  * Manages Basalt-specific context (user, organization, experiment, metadata)
  * that gets propagated through OpenTelemetry spans
  */
-export class BasaltContextManager {
+export namespace BasaltContextManager {
 	/**
 	 * Set Basalt context in the current OpenTelemetry context
 	 * Returns a new context with the Basalt context attached
 	 *
 	 * @param ctx - Basalt context to set
 	 */
-	static setContext(ctx: BasaltContext): Context | undefined {
+	export function setContext(ctx: BasaltContext): Context | undefined {
 		const otelContext = getCurrentContext();
 		if (!otelContext) {
 			return undefined;
@@ -41,7 +41,7 @@ export class BasaltContextManager {
 	/**
 	 * Get Basalt context from the current OpenTelemetry context
 	 */
-	static getContext(): BasaltContext | undefined {
+	export function getContext(): BasaltContext | undefined {
 		const otelContext = getCurrentContext();
 		if (!otelContext) {
 			return undefined;
@@ -62,7 +62,7 @@ export class BasaltContextManager {
 	 * @param basaltCtx - Basalt context to use
 	 * @param fn - Function to execute
 	 */
-	static withContext<T>(basaltCtx: BasaltContext, fn: () => T): T {
+	export function withContext<T>(basaltCtx: BasaltContext, fn: () => T): T {
 		try {
 			const otel = require("@opentelemetry/api");
 			const currentContext = otel.context.active();
@@ -78,8 +78,11 @@ export class BasaltContextManager {
 	 * Extract span attributes from the current Basalt context
 	 * Returns a flat object of attributes ready to be attached to spans
 	 */
-	static extractAttributes(): Record<string, string | number | boolean> {
-		const ctx = BasaltContextManager.getContext();
+	export function extractAttributes(): Record<
+		string,
+		string | number | boolean
+	> {
+		const ctx = getContext();
 		if (!ctx) {
 			return {};
 		}
@@ -103,14 +106,8 @@ export class BasaltContextManager {
 		}
 
 		// Experiment attributes
-		if (ctx.experiment?.id) {
-			attributes["basalt.experiment.id"] = ctx.experiment.id;
-		}
-		if (ctx.experiment?.name) {
-			attributes["basalt.experiment.name"] = ctx.experiment.name;
-		}
-		if (ctx.experiment?.featureSlug) {
-			attributes["basalt.experiment.feature_slug"] = ctx.experiment.featureSlug;
+		if (ctx.experiment_id) {
+			attributes["basalt.experiment.id"] = ctx.experiment_id;
 		}
 
 		// Feature slug
@@ -131,8 +128,10 @@ export class BasaltContextManager {
 	 *
 	 * @param updates - Partial context to merge
 	 */
-	static mergeContext(updates: Partial<BasaltContext>): Context | undefined {
-		const existing = BasaltContextManager.getContext() || {};
+	export function mergeContext(
+		updates: Partial<BasaltContext>,
+	): Context | undefined {
+		const existing = getContext() || {};
 		const merged: BasaltContext = {
 			...existing,
 			...updates,
@@ -143,22 +142,23 @@ export class BasaltContextManager {
 			organization: updates.organization
 				? { ...existing.organization, ...updates.organization }
 				: existing.organization,
-			experiment: updates.experiment
-				? { ...existing.experiment, ...updates.experiment }
-				: existing.experiment,
+			experiment_id: updates.experiment_id ?? existing.experiment_id,
 			metadata: updates.metadata
 				? { ...existing.metadata, ...updates.metadata }
 				: existing.metadata,
 		};
 
-		return BasaltContextManager.setContext(merged);
+		return setContext(merged);
 	}
 
 	/**
 	 * Execute a function within a Basalt context that is merged into the current one.
 	 * This is the recommended way to "mutate" context safely across async boundaries.
 	 */
-	static withMergedContext<T>(updates: Partial<BasaltContext>, fn: () => T): T {
+	export function withMergedContext<T>(
+		updates: Partial<BasaltContext>,
+		fn: () => T,
+	): T {
 		try {
 			const otel = require("@opentelemetry/api");
 			const currentContext = otel.context.active();
@@ -174,9 +174,7 @@ export class BasaltContextManager {
 				organization: updates.organization
 					? { ...(existing?.organization ?? {}), ...updates.organization }
 					: existing?.organization,
-				experiment: updates.experiment
-					? { ...(existing?.experiment ?? {}), ...updates.experiment }
-					: existing?.experiment,
+				experiment_id: updates.experiment_id ?? existing?.experiment_id,
 				metadata: updates.metadata
 					? { ...(existing?.metadata ?? {}), ...updates.metadata }
 					: existing?.metadata,
@@ -196,7 +194,7 @@ export class BasaltContextManager {
 	 * @param handle - Root span handle to store
 	 * @param ctx - Optional context to use (defaults to active context)
 	 */
-	static setRootSpan(
+	export function setRootSpan(
 		handle: StartSpanHandle,
 		ctx?: Context,
 	): Context | undefined {
@@ -215,7 +213,7 @@ export class BasaltContextManager {
 	 * @param ctx - Optional context to use (defaults to active context)
 	 * @returns The root span handle if available
 	 */
-	static getRootSpan(ctx?: Context): StartSpanHandle | undefined {
+	export function getRootSpan(ctx?: Context): StartSpanHandle | undefined {
 		try {
 			const otel = require("@opentelemetry/api");
 			const activeContext = ctx ?? otel.context.active();
@@ -235,7 +233,7 @@ export class BasaltContextManager {
 	 * @param handle - Root span handle to use
 	 * @param fn - Function to execute
 	 */
-	static withRootSpan<T>(handle: StartSpanHandle, fn: () => T): T {
+	export function withRootSpan<T>(handle: StartSpanHandle, fn: () => T): T {
 		try {
 			const otel = require("@opentelemetry/api");
 			const runWithRoot = () => {
@@ -247,12 +245,9 @@ export class BasaltContextManager {
 				return otel.context.with(newContext, fn);
 			};
 
-			const basaltContext = (handle as any).getBasaltContext?.();
+			const basaltContext = handle.getBasaltContext?.();
 			if (basaltContext && Object.keys(basaltContext).length > 0) {
-				return BasaltContextManager.withMergedContext(
-					basaltContext,
-					runWithRoot,
-				);
+				return withMergedContext(basaltContext, runWithRoot);
 			}
 
 			return runWithRoot();

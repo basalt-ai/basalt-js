@@ -159,29 +159,17 @@ describe("StartSpanHandle", () => {
 
 	describe("setExperiment", () => {
 		it("should set experiment attributes", () => {
-			const result = rootSpan.setExperiment({
-				id: "exp-123",
-				name: "Test Experiment",
-				featureSlug: "test-exp-feature",
-			});
+			const result = rootSpan.setExperiment("exp-123")
 
 			expect(result).toBe(rootSpan); // Should return this for chaining
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
 				BASALT_ATTRIBUTES.EXPERIMENT_ID,
 				"exp-123",
 			);
-			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				BASALT_ATTRIBUTES.EXPERIMENT_NAME,
-				"Test Experiment",
-			);
-			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
-				BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG,
-				"test-exp-feature",
-			);
 		});
 
 		it("should set experiment with only required id", () => {
-			const result = rootSpan.setExperiment({ id: "exp-123" });
+			const result = rootSpan.setExperiment("exp-123");
 
 			expect(result).toBe(rootSpan);
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
@@ -192,7 +180,7 @@ describe("StartSpanHandle", () => {
 
 		it("should support method chaining", () => {
 			const result = rootSpan
-				.setExperiment({ id: "exp-123" })
+				.setExperiment("exp-123")
 				.setIdentity({ userId: "user-1" });
 
 			expect(result).toBe(rootSpan);
