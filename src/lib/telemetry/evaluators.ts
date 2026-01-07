@@ -31,7 +31,6 @@ import type { BasaltContext } from "./types";
  * const result = await withEvaluators(
  *   ["toxicity"],
  *   async () => { ... },
- *   { sample_rate: 0.5 }
  * );
  * ```
  *
@@ -82,13 +81,11 @@ export function withEvaluators<T>(
  * const result = await attachEvaluator(
  *   "toxicity",
  *   async () => { ... },
- *   { sample_rate: 0.8 }
  * );
  * ```
  *
  * @param evaluator - Single evaluator slug to attach
  * @param fn - Callback function to execute (sync or async)
- * @param evaluationConfig - Optional evaluation configuration
  * @returns The result of the callback function
  */
 export function attachEvaluator<T>(

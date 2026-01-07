@@ -20,6 +20,10 @@ import type {
 	VariablesMap,
 } from "../resources";
 import { type SpanHandle, withBasaltSpan } from "../telemetry";
+import {
+	attachPromptMetadata,
+	type PromptContextMetadata,
+} from "../telemetry/prompt-metadata";
 import { BASALT_ATTRIBUTES, CACHE_TYPES } from "../telemetry/attributes";
 import { renderTemplate } from "../utils/template";
 import { err, ok } from "../utils/utils";
@@ -258,11 +262,26 @@ export default class PromptSDK implements IPromptSDK {
 
 		const cacheEnabled = opts.cache !== false;
 		const variables = opts.variables ?? {};
+		const promptVariables =
+			opts.variables && Object.keys(opts.variables).length > 0
+				? opts.variables
+				: undefined;
+
+		const buildPromptMetadata = (
+			fromCache: boolean,
+		): PromptContextMetadata => ({
+			slug: opts.slug,
+			...(opts.version && { version: opts.version }),
+			...(opts.tag && { tag: opts.tag }),
+			...(promptVariables && { variables: promptVariables }),
+			fromCache,
+		});
 
 		if (cacheEnabled && cached) {
 			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, true);
 			span.setAttribute(BASALT_ATTRIBUTES.CACHE_TYPE, CACHE_TYPES.QUERY);
-			return ok(this._insertVariables(cached, variables));
+			const prompt = this._insertVariables(cached, variables);
+			return ok(attachPromptMetadata(prompt, buildPromptMetadata(true)));
 		}
 
 		// 2. If no cache, fetch from the API
@@ -278,7 +297,8 @@ export default class PromptSDK implements IPromptSDK {
 				this.logger.warn(`Basalt Warning: "${result.value.warning}"`);
 			}
 
-			return ok(this._insertVariables(result.value.prompt, variables));
+			const prompt = this._insertVariables(result.value.prompt, variables);
+			return ok(attachPromptMetadata(prompt, buildPromptMetadata(false)));
 		}
 
 		// 3. Api call failed, check if there is a fallback in the cache
@@ -292,7 +312,8 @@ export default class PromptSDK implements IPromptSDK {
 				`Basalt Warning: Failed to fetch prompt from API, using last result for "${opts.slug}"`,
 			);
 
-			return ok(this._insertVariables(fallback, variables));
+			const prompt = this._insertVariables(fallback, variables);
+			return ok(attachPromptMetadata(prompt, buildPromptMetadata(true)));
 		}
 
 		span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false);
