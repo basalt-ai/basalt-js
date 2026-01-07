@@ -5,7 +5,7 @@ import type {
 	SpanOptions,
 	Tracer,
 } from "@opentelemetry/api";
-import { BASALT_ATTRIBUTES } from "./attributes";
+import { BASALT_ATTRIBUTES, METADATA_PREFIX } from "./attributes";
 import { BasaltContextManager } from "./context-manager";
 import { SpanHandle, StartSpanHandle } from "./span-handle";
 import type {
@@ -16,15 +16,28 @@ import type {
 } from "./types";
 
 /**
+ * Cached OpenTelemetry API instance
+ */
+let otelCache: typeof import("@opentelemetry/api") | undefined;
+
+/**
  * Safely import OpenTelemetry API
  * Returns undefined if @opentelemetry/api is not installed
+ * Caches the result to avoid repeated imports
  */
 function safelyImportOtel(): typeof import("@opentelemetry/api") | undefined {
-	try {
-		return require("@opentelemetry/api");
-	} catch {
-		return undefined;
+	if (otelCache !== undefined) {
+		return otelCache;
 	}
+
+	try {
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		otelCache = require("@opentelemetry/api");
+	} catch {
+		otelCache = undefined;
+	}
+
+	return otelCache;
 }
 
 const otel = safelyImportOtel();
@@ -70,9 +83,9 @@ function createNoOpTracer(): Tracer {
 		addEvent: () => noOpSpan,
 		setStatus: () => noOpSpan,
 		updateName: () => noOpSpan,
-		end: () => {},
+		end: () => { },
 		isRecording: () => false,
-		recordException: () => {},
+		recordException: () => { },
 		addLink: () => noOpSpan,
 		addLinks: () => noOpSpan,
 	};
@@ -98,12 +111,16 @@ function createNoOpTracer(): Tracer {
 		contextOrFn?: Context | F,
 		fnMaybe?: F,
 	): ReturnType<F> {
-		const fn =
-			typeof optionsOrFn === "function"
-				? optionsOrFn
-				: typeof contextOrFn === "function"
-					? contextOrFn
-					: fnMaybe;
+		let fn: F;
+		if (typeof optionsOrFn === "function") {
+			fn = optionsOrFn;
+		} else if (typeof contextOrFn === "function") {
+			fn = contextOrFn;
+		} else if (fnMaybe !== undefined) {
+			fn = fnMaybe;
+		} else {
+			throw new Error("No callback function provided to startActiveSpan");
+		}
 
 		return (fn as F)(noOpSpan) as ReturnType<F>;
 	}
@@ -115,8 +132,29 @@ function createNoOpTracer(): Tracer {
 }
 
 /**
+ * Maximum length for JSON-stringified attribute values
+ * OTEL exporters may reject or truncate very large attribute values
+ */
+const MAX_JSON_ATTRIBUTE_LENGTH = 4096;
+
+/**
  * Sanitize attributes to ensure they're valid for OpenTelemetry
  * Filters out undefined/null values and converts types as needed
+ *
+ * Array handling:
+ * - Arrays with only primitives of the same type are kept as-is
+ * - Arrays with mixed primitive types are JSON-stringified
+ * - Arrays with non-primitive values filter them out, keeping only primitives
+ * - Empty arrays or arrays with no primitives are skipped entirely
+ *
+ * Examples:
+ * - `[1, 2, 3]` → `[1, 2, 3]`
+ * - `[1, "a"]` → `'[1,"a"]'` (JSON string)
+ * - `[1, {}]` → `[1]` (object filtered out)
+ * - `[{}, {}]` → skipped (no primitives)
+ *
+ * @param attrs - Raw attributes object
+ * @returns Sanitized attributes valid for OpenTelemetry
  */
 export function sanitizeAttributes(attrs: Record<string, unknown>): Attributes {
 	const sanitized: Attributes = {};
@@ -162,14 +200,22 @@ export function sanitizeAttributes(attrs: Record<string, unknown>): Attributes {
 
 			// Mixed primitive arrays aren't valid AttributeValue arrays; store as JSON string.
 			try {
-				sanitized[key] = JSON.stringify(primitives);
+				const jsonString = JSON.stringify(primitives);
+				sanitized[key] =
+					jsonString.length > MAX_JSON_ATTRIBUTE_LENGTH
+						? `${jsonString.slice(0, MAX_JSON_ATTRIBUTE_LENGTH)}... (truncated)`
+						: jsonString;
 			} catch {
 				// Skip if JSON serialization fails
 			}
 		} else if (typeof value === "object") {
 			// Convert objects to JSON string
 			try {
-				sanitized[key] = JSON.stringify(value);
+				const jsonString = JSON.stringify(value);
+				sanitized[key] =
+					jsonString.length > MAX_JSON_ATTRIBUTE_LENGTH
+						? `${jsonString.slice(0, MAX_JSON_ATTRIBUTE_LENGTH)}... (truncated)`
+						: jsonString;
 			} catch {
 				// Skip if JSON serialization fails
 			}
@@ -180,10 +226,20 @@ export function sanitizeAttributes(attrs: Record<string, unknown>): Attributes {
 }
 
 /**
- * Flatten nested metadata object with a prefix
+ * Flatten metadata object with a prefix (shallow flattening only)
+ *
+ * Only flattens top-level keys; nested objects are JSON-encoded as strings.
+ * This prevents key explosion in OpenTelemetry exporters and keeps attribute
+ * counts manageable.
+ *
+ * Examples:
+ * - `{ userId: "123" }` → `{ "basalt.meta.userId": "123" }`
+ * - `{ user: { id: 1, role: "admin" } }` → `{ "basalt.meta.user": '{"id":1,"role":"admin"}' }`
+ * - `{ count: 42 }` → `{ "basalt.meta.count": 42 }`
  *
  * @param metadata - Metadata object to flatten
- * @param prefix - Prefix for flattened keys
+ * @param prefix - Prefix for flattened keys (default: "basalt.meta.")
+ * @returns Flattened metadata with prefixed keys
  */
 export function flattenMetadata(
 	metadata: Record<string, unknown> | undefined,
@@ -209,9 +265,13 @@ export function flattenMetadata(
 		) {
 			flattened[flatKey] = value;
 		} else {
-			// Convert complex values to JSON string
+			// Convert complex values to JSON string (prevents deep key explosion)
 			try {
-				flattened[flatKey] = JSON.stringify(value);
+				const jsonString = JSON.stringify(value);
+				flattened[flatKey] =
+					jsonString.length > MAX_JSON_ATTRIBUTE_LENGTH
+						? `${jsonString.slice(0, MAX_JSON_ATTRIBUTE_LENGTH)}... (truncated)`
+						: jsonString;
 			} catch {
 				// Skip if serialization fails
 			}
@@ -276,6 +336,7 @@ export async function withSpan<T>(
 				// Always end the span
 				span.end();
 			}
+
 		},
 	);
 }
@@ -327,6 +388,7 @@ export function withSpanSync<T>(
 			} finally {
 				span.end();
 			}
+
 		},
 	);
 }
@@ -407,7 +469,7 @@ export async function observe<T>(
 	if (!otel) {
 		// Execute without tracing if OTel not available
 		const noOpSpan = createNoOpTracer().startSpan(name);
-		const handle = new SpanHandle(noOpSpan as any);
+		const handle = new SpanHandle(noOpSpan);
 		try {
 			return await fn(handle);
 		} finally {
@@ -433,10 +495,10 @@ export async function observe<T>(
 
 	// Use startActiveSpan to automatically make this span the active parent
 	return await tracer.startActiveSpan(name, spanOptions, async (span: Span) => {
-		const handle = new SpanHandle(span as any);
+		const handle = new SpanHandle(span);
 
 		// Store in Basalt context for additional metadata access
-		const contextWithHandle = BasaltContextManager.setRootSpan(handle as any);
+		const contextWithHandle = BasaltContextManager.setRootSpan(handle as StartSpanHandle);
 
 		try {
 			// Execute user function within the active span context
@@ -458,6 +520,7 @@ export async function observe<T>(
 			// Span is automatically ended by startActiveSpan
 			span.end();
 		}
+
 	});
 }
 
@@ -470,11 +533,13 @@ export async function observe<T>(
 export function startObserve(options: StartObserveOptions): StartSpanHandle {
 	const {
 		name = "basalt.observe",
-		attributes = {},
+		metadata,
 		spanKind,
 		featureSlug,
-		experiment,
+		experiment_id,
 		identity,
+		evaluators,
+		evaluationConfig,
 	} = options;
 
 	if (!otel) {
@@ -491,7 +556,7 @@ export function startObserve(options: StartObserveOptions): StartSpanHandle {
 		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
 		[BASALT_ATTRIBUTES.ROOT]: true,
 		"basalt.observe": true,
-		...attributes,
+		...flattenMetadata(metadata, METADATA_PREFIX),
 	};
 
 	const spanOptions: SpanOptions = {
@@ -504,13 +569,23 @@ export function startObserve(options: StartObserveOptions): StartSpanHandle {
 	const handle = new StartSpanHandle(span, featureSlug);
 
 	// Auto-apply experiment if provided
-	if (experiment) {
-		handle.setExperiment(experiment);
+	if (experiment_id) {
+		handle.setExperiment(experiment_id);
 	}
 
 	// Auto-apply identity if provided
 	if (identity) {
 		handle.setIdentity(identity);
+	}
+
+	// Auto-apply evaluators if provided
+	if (evaluators && evaluators.length > 0) {
+		handle.setEvaluators(evaluators);
+	}
+
+	// Auto-apply evaluation sample rate if provided
+	if (evaluationConfig?.sample_rate !== undefined) {
+		handle.setSampleRate(evaluationConfig.sample_rate);
 	}
 
 	// Store in context for child span access (but context doesn't become active)

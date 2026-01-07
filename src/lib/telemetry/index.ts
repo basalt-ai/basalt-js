@@ -15,6 +15,7 @@ export {
 } from "./attributes";
 export { withBasaltSpan, withBasaltSpanSync } from "./basalt-span";
 export { BASALT_ROOT_SPAN, BasaltContextManager } from "./context-manager";
+export { attachEvaluator, withEvaluators } from "./evaluators";
 export type { TelemetryManagerConfig } from "./manager";
 export { TelemetryManager } from "./manager";
 export { SpanHandle, StartSpanHandle } from "./span-handle";
@@ -36,10 +37,12 @@ export type {
 	AttributeDict,
 	AttributeValue,
 	BasaltContext,
+	EvaluationConfig,
 	ObserveOptions,
 	SpanCallback,
 	SpanOptions,
 	StartObserveOptions,
 	TraceExperiment,
+	WithEvaluatorsOptions,
 } from "./types";
 export { ObserveKind } from "./types";

@@ -107,6 +107,34 @@ export class SpanHandle {
 	}
 
 	/**
+	 * Set evaluators for this span
+	 * Evaluators are stored as a JSON array of slugs
+	 *
+	 * @param evaluators - Array of evaluator slugs (e.g., ["hallucinations", "clarity"])
+	 * @returns this for method chaining
+	 */
+	setEvaluators(evaluators: string[]): this {
+		// Filter out empty/invalid strings
+		const validEvaluators = evaluators.filter(
+			(e) => e && typeof e === "string" && e.trim().length > 0,
+		);
+
+		if (validEvaluators.length === 0) {
+			return this;
+		}
+
+		try {
+			this.setAttribute(
+				BASALT_ATTRIBUTES.SPAN_EVALUATORS,
+				JSON.stringify(validEvaluators),
+			);
+		} catch {
+			// Skip if JSON serialization fails
+		}
+		return this;
+	}
+
+	/**
 	 * Type guard to check if this is a root span handle
 	 */
 	isRootSpan(): this is StartSpanHandle {
@@ -161,27 +189,10 @@ export class StartSpanHandle extends SpanHandle {
 	 * @param experiment Experiment metadata with id, name, and featureSlug
 	 * @returns this for method chaining
 	 */
-	setExperiment(experiment: {
-		id: string;
-		name?: string;
-		featureSlug?: string;
-	}): this {
-		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment.id);
-		if (experiment.name) {
-			this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_NAME, experiment.name);
-		}
-		if (experiment.featureSlug) {
-			this.setAttribute(
-				BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG,
-				experiment.featureSlug,
-			);
-		}
-		this.basaltContext.experiment = {
-			id: experiment.id,
-			name: experiment.name ?? this.basaltContext.experiment?.name,
-			featureSlug:
-				experiment.featureSlug ?? this.basaltContext.experiment?.featureSlug,
-		};
+	setExperiment(experiment_id: string): this {
+		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment_id);
+		
+		this.basaltContext.experiment_id = experiment_id;
 		return this;
 	}
 
@@ -197,6 +208,26 @@ export class StartSpanHandle extends SpanHandle {
 			BASALT_ATTRIBUTES.EVALUATION_CONFIG,
 			JSON.stringify(config),
 		);
+		return this;
+	}
+
+	/**
+	 * Set evaluation sample rate for this observation
+	 * Sample rate controls what percentage of observations are evaluated
+	 *
+	 * @param sampleRate - Number between 0 and 1 (0% to 100%)
+	 * @returns this for method chaining
+	 */
+	setSampleRate(sampleRate: number): this {
+		// Validate sample rate is a valid number
+		if (typeof sampleRate !== "number" || Number.isNaN(sampleRate)) {
+			return this;
+		}
+
+		// Clamp to [0, 1] range
+		const clampedRate = Math.max(0, Math.min(1, sampleRate));
+
+		this.setAttribute(BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE, clampedRate);
 		return this;
 	}
 

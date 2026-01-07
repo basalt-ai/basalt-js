@@ -69,6 +69,10 @@ export const BASALT_ATTRIBUTES = {
 	// Evaluation configuration
 	EVALUATION_CONFIG: "basalt.evaluation.config",
 
+	// Evaluator attributes
+	SPAN_EVALUATORS: "basalt.span.evaluators",
+	EVALUATION_SAMPLE_RATE: "basalt.span.evaluation.sample_rate",
+
 	// Cache attributes
 	CACHE_HIT: "basalt.cache.hit",
 	CACHE_TYPE: "basalt.cache.type",
@@ -93,7 +97,13 @@ export const BASALT_ATTRIBUTES = {
 } as const;
 
 /**
- * Metadata attribute prefix for custom metadata
+ * Prefix for arbitrary metadata attributes.
+ * 
+ * Usage: basalt.meta.<key>
+ * 
+ * Type: any
+ * 
+ * Examples: basalt.meta.session_id, basalt.meta.request_id
  */
 export const METADATA_PREFIX = "basalt.meta.";
 
