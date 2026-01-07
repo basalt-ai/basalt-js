@@ -25,11 +25,15 @@ export function attachPromptMetadata(
 			configurable: true,
 			writable: true,
 		});
-    } catch {
-        (prompt as unknown as Record<symbol, PromptContextMetadata | undefined>)[
-            PROMPT_METADATA_KEY
-        ] = metadata;
-    }
+	} catch (error) {
+		console.error(
+			"Failed to attach prompt metadata via Object.defineProperty; falling back to direct assignment.",
+			error,
+		);
+		(prompt as unknown as Record<symbol, PromptContextMetadata | undefined>)[
+			PROMPT_METADATA_KEY
+		] = metadata;
+	}
 
 	return prompt;
 }
