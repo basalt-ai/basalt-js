@@ -65,6 +65,12 @@ export interface BasaltContext {
 		sample_rate?: number;
 		[key: string]: unknown;
 	};
+
+	/**
+	 * Prompts used within this context
+	 * Array of prompt metadata that will be attached to spans
+	 */
+	prompts?: PromptMetadata[];
 }
 
 /**
@@ -169,6 +175,21 @@ export interface EvaluationConfig {
 	 * Additional configuration options
 	 */
 	[key: string]: unknown;
+}
+
+/**
+ * Metadata about a prompt used within this context
+ */
+export interface PromptMetadata {
+	slug: string;
+	version?: string;
+	tag?: string;
+	variables?: Record<string, unknown>;
+	model: {
+		provider: string;
+		model: string;
+	};
+	fromCache: boolean;
 }
 
 /**

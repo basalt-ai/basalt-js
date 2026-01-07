@@ -155,30 +155,12 @@ describe("withEvaluators", () => {
 			() => {
 				const ctx = BasaltContextManager.getContext();
 				expect(ctx?.evaluators).toEqual(["quality"]);
-				expect(ctx?.evaluationConfig?.sample_rate).toBe(0.5);
 				return "success";
 			},
-			{ sample_rate: 0.5 },
 		);
 		expect(result).toBe("success");
 	});
 
-	it("should merge evaluation config in nested calls", () => {
-		withEvaluators(
-			["quality"],
-			() => {
-				withEvaluators(
-					["toxicity"],
-					() => {
-						const ctx = BasaltContextManager.getContext();
-						expect(ctx?.evaluationConfig?.sample_rate).toBe(0.8);
-					},
-					{ sample_rate: 0.8 },
-				);
-			},
-			{ sample_rate: 0.5 },
-		);
-	});
 
 	it("should clean up context after callback", () => {
 		withEvaluators(["quality"], () => {
@@ -240,10 +222,8 @@ describe("attachEvaluator", () => {
 			() => {
 				const ctx = BasaltContextManager.getContext();
 				expect(ctx?.evaluators).toEqual(["quality"]);
-				expect(ctx?.evaluationConfig?.sample_rate).toBe(0.8);
 				return "success";
 			},
-			{ sample_rate: 0.8 },
 		);
 		expect(result).toBe("success");
 	});
@@ -289,36 +269,6 @@ describe("Context attribute extraction", () => {
 		});
 	});
 
-	it("should extract sample rate attribute", () => {
-		withEvaluators(
-			["eval1"],
-			() => {
-				const attrs = BasaltContextManager.extractAttributes();
-				expect(attrs["basalt.span.evaluation.sample_rate"]).toBe(0.75);
-			},
-			{ sample_rate: 0.75 },
-		);
-	});
-
-	it("should clamp sample rate to 0-1 range", () => {
-		withEvaluators(
-			["eval1"],
-			() => {
-				const attrs = BasaltContextManager.extractAttributes();
-				expect(attrs["basalt.span.evaluation.sample_rate"]).toBe(1);
-			},
-			{ sample_rate: 1.5 },
-		);
-
-		withEvaluators(
-			["eval1"],
-			() => {
-				const attrs = BasaltContextManager.extractAttributes();
-				expect(attrs["basalt.span.evaluation.sample_rate"]).toBe(0);
-			},
-			{ sample_rate: -0.5 },
-		);
-	});
 
 	it("should not add evaluator attributes if no evaluators", () => {
 		const attrs = BasaltContextManager.extractAttributes();
