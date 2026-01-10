@@ -183,12 +183,12 @@ export class StartSpanHandle extends SpanHandle {
 	}
 
 	/**
-	 * Associate this observation with an experiment
-	 * Sets experiment attributes following Python SDK structure
-	 *
-	 * @param experiment Experiment metadata with id, name, and featureSlug
-	 * @returns this for method chaining
-	 */
+     * Associate this observation with an experiment
+     * Sets experiment attributes following Python SDK structure
+     *
+     * @returns this for method chaining
+     * @param experiment_id
+     */
 	setExperiment(experiment_id: string): this {
 		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment_id);
 
@@ -220,14 +220,22 @@ export class StartSpanHandle extends SpanHandle {
 	 */
 	setSampleRate(sampleRate: number): this {
 		// Validate sample rate is a valid number
-		if (typeof sampleRate !== "number" || Number.isNaN(sampleRate)) {
+		if (Number.isNaN(sampleRate)) {
 			return this;
 		}
 
 		// Clamp to [0, 1] range
 		const clampedRate = Math.max(0, Math.min(1, sampleRate));
+		const shouldEvaluate = Math.random() < clampedRate;
 
 		this.setAttribute(BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE, clampedRate);
+		this.setAttribute(BASALT_ATTRIBUTES.SHOULD_EVALUATE, shouldEvaluate);
+
+		this.basaltContext.evaluationConfig = {
+			...(this.basaltContext.evaluationConfig ?? {}),
+			sample_rate: clampedRate,
+			should_evaluate: shouldEvaluate,
+		};
 		return this;
 	}
 

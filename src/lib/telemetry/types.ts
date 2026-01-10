@@ -63,6 +63,7 @@ export interface BasaltContext {
 	 */
 	evaluationConfig?: {
 		sample_rate?: number;
+		should_evaluate?: boolean;
 		[key: string]: unknown;
 	};
 
@@ -143,6 +144,7 @@ export interface StartObserveOptions {
 	 */
 	readonly evaluationConfig?: {
 		sample_rate?: number;
+		should_evaluate?: boolean;
 		[key: string]: unknown;
 	};
 }
@@ -171,6 +173,10 @@ export interface EvaluationConfig {
 	 * Sample rate for evaluation (0-1)
 	 */
 	sample_rate?: number;
+	/**
+	 * Whether this trace should be evaluated
+	 */
+	should_evaluate?: boolean;
 	/**
 	 * Additional configuration options
 	 */

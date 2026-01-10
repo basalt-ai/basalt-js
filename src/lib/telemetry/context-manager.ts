@@ -1,7 +1,7 @@
-import type { Context } from "@opentelemetry/api";
-import type { StartSpanHandle } from "./span-handle";
-import { flattenMetadata, getCurrentContext } from "./telemetry";
-import type { BasaltContext, PromptMetadata } from "./types";
+import type {Context} from "@opentelemetry/api";
+import type {StartSpanHandle} from "./span-handle";
+import {flattenMetadata, getCurrentContext} from "./telemetry";
+import type {BasaltContext, PromptMetadata} from "./types";
 
 /**
  * Symbol key for storing Basalt context in OpenTelemetry context
@@ -133,10 +133,14 @@ export namespace BasaltContextManager {
 		// Add evaluation config attributes
 		if (ctx.evaluationConfig?.sample_rate !== undefined) {
 			const sampleRate = ctx.evaluationConfig.sample_rate;
-			if (typeof sampleRate === "number" && !Number.isNaN(sampleRate)) {
-				const clampedRate = Math.max(0, Math.min(1, sampleRate));
-				attributes["basalt.span.evaluation.sample_rate"] = clampedRate;
+			if (!Number.isNaN(sampleRate)) {
+				attributes["basalt.span.evaluation.sample_rate"] = Math.max(0, Math.min(1, sampleRate));
 			}
+		}
+
+		if (typeof ctx.evaluationConfig?.should_evaluate === "boolean") {
+			attributes["basalt.span.should_evaluate"] =
+				ctx.evaluationConfig.should_evaluate;
 		}
 
 		// Add prompt attributes
@@ -144,7 +148,6 @@ export namespace BasaltContextManager {
 			const validPrompts = ctx.prompts.filter(
 				(prompt) =>
 					prompt &&
-					typeof prompt.slug === "string" &&
 					prompt.slug.trim().length > 0,
 			);
 

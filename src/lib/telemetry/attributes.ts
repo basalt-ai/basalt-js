@@ -60,6 +60,7 @@ export const BASALT_ATTRIBUTES = {
 	// Evaluator attributes
 	SPAN_EVALUATORS: "basalt.span.evaluators",
 	EVALUATION_SAMPLE_RATE: "basalt.span.evaluation.sample_rate",
+	SHOULD_EVALUATE: "basalt.span.should_evaluate",
 
 	// Cache attributes
 	CACHE_HIT: "basalt.cache.hit",
