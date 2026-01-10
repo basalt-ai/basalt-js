@@ -1,4 +1,4 @@
-import type { ICache } from '../resources/contract'
+import type { ICache } from "../resources/contract";
 
 /**
  * In-memory implementation of the ICache interface.
@@ -8,12 +8,12 @@ export default class MemoryCache implements ICache {
 	/**
 	 * Cache record
 	 */
-	private _mem: Record<string, unknown> = {}
+	private _mem: Record<string, unknown> = {};
 
 	/**
 	 * Record for cache entry timeouts
 	 */
-	private _timeouts: Record<string, number> = {}
+	private _timeouts: Record<string, number> = {};
 
 	/**
 	 * Retrieve a value from the cache
@@ -23,10 +23,10 @@ export default class MemoryCache implements ICache {
 	 * @returns {T | undefined} - The cached value if it exists and has not expired, otherwise undefined
 	 */
 	get<T = unknown>(key: string): T | undefined {
-		const mem = this._mem[key] as T | undefined
-		const time = this._timeouts[key]
+		const mem = this._mem[key] as T | undefined;
+		const time = this._timeouts[key];
 
-		return !time || time > Date.now() ? mem : undefined
+		return !time || time > Date.now() ? mem : undefined;
 	}
 
 	/**
@@ -37,7 +37,7 @@ export default class MemoryCache implements ICache {
 	 * @param {number} [ttl=Infinity] - The time-to-live in milliseconds. Defaults to Infinity.
 	 */
 	set(key: string, value: unknown, ttl = Infinity) {
-		this._mem[key] = value
-		this._timeouts[key] = Date.now() + ttl
+		this._mem[key] = value;
+		this._timeouts[key] = Date.now() + ttl;
 	}
 }

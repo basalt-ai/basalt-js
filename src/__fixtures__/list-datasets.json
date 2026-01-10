@@ -1,29 +1,29 @@
 {
-  "validResponse": {
-    "status": 200,
-    "body": {
-      "datasets": [
-        {
-          "slug": "test-dataset",
-          "name": "Test Dataset",
-          "columns": ["input", "output"]
-        },
-        {
-          "slug": "another-dataset",
-          "name": "Another Dataset",
-          "columns": ["prompt", "completion", "metadata"]
-        }
-      ]
-    }
-  },
-  "emptyResponse": {
-    "status": 200,
-    "body": {
-      "datasets": []
-    }
-  },
-  "falsePositive": {
-    "status": 200,
-    "body": {}
-  }
+	"validResponse": {
+		"status": 200,
+		"body": {
+			"datasets": [
+				{
+					"slug": "test-dataset",
+					"name": "Test Dataset",
+					"columns": ["input", "output"]
+				},
+				{
+					"slug": "another-dataset",
+					"name": "Another Dataset",
+					"columns": ["prompt", "completion", "metadata"]
+				}
+			]
+		}
+	},
+	"emptyResponse": {
+		"status": 200,
+		"body": {
+			"datasets": []
+		}
+	},
+	"falsePositive": {
+		"status": 200,
+		"body": {}
+	}
 }

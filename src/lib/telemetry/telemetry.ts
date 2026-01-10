@@ -1,28 +1,43 @@
 import type {
-	Span,
-	Tracer,
-	Context,
 	Attributes,
-	Link,
+	Context,
+	Span,
 	SpanOptions,
-	SpanKind,
+	Tracer,
 } from "@opentelemetry/api";
-import type { SpanCallback, AttributeValue, StartObserveOptions, ObserveOptions } from "./types";
-import { SpanHandle, StartSpanHandle } from './span-handle'
-import { BasaltContextManager } from './context-manager'
-import { BASALT_ATTRIBUTES } from './attributes'
+import { BASALT_ATTRIBUTES, METADATA_PREFIX } from "./attributes";
+import { BasaltContextManager } from "./context-manager";
+import { SpanHandle, StartSpanHandle } from "./span-handle";
+import type {
+	AttributeValue,
+	ObserveOptions,
+	SpanCallback,
+	StartObserveOptions,
+} from "./types";
+
+/**
+ * Cached OpenTelemetry API instance
+ */
+let otelCache: typeof import("@opentelemetry/api") | undefined;
 
 /**
  * Safely import OpenTelemetry API
  * Returns undefined if @opentelemetry/api is not installed
+ * Caches the result to avoid repeated imports
  */
 function safelyImportOtel(): typeof import("@opentelemetry/api") | undefined {
+	if (otelCache !== undefined) {
+		return otelCache;
+	}
+
 	try {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		return require("@opentelemetry/api");
+		otelCache = require("@opentelemetry/api");
 	} catch {
-		return undefined;
+		otelCache = undefined;
 	}
+
+	return otelCache;
 }
 
 const otel = safelyImportOtel();
@@ -68,40 +83,44 @@ function createNoOpTracer(): Tracer {
 		addEvent: () => noOpSpan,
 		setStatus: () => noOpSpan,
 		updateName: () => noOpSpan,
-		end: () => { },
+		end: () => {},
 		isRecording: () => false,
-		recordException: () => { },
+		recordException: () => {},
 		addLink: () => noOpSpan,
 		addLinks: () => noOpSpan,
 	};
 
 	function startActiveSpan<F extends (span: Span) => unknown>(
 		name: string,
-		fn: F
+		fn: F,
 	): ReturnType<F>;
 	function startActiveSpan<F extends (span: Span) => unknown>(
 		name: string,
 		options: SpanOptions,
-		fn: F
+		fn: F,
 	): ReturnType<F>;
 	function startActiveSpan<F extends (span: Span) => unknown>(
 		name: string,
 		options: SpanOptions,
 		context: Context,
-		fn: F
+		fn: F,
 	): ReturnType<F>;
 	function startActiveSpan<F extends (span: Span) => unknown>(
 		_name: string,
 		optionsOrFn: SpanOptions | F,
 		contextOrFn?: Context | F,
-		fnMaybe?: F
+		fnMaybe?: F,
 	): ReturnType<F> {
-		const fn =
-			typeof optionsOrFn === "function"
-				? optionsOrFn
-				: typeof contextOrFn === "function"
-					? contextOrFn
-					: fnMaybe;
+		let fn: F;
+		if (typeof optionsOrFn === "function") {
+			fn = optionsOrFn;
+		} else if (typeof contextOrFn === "function") {
+			fn = contextOrFn;
+		} else if (fnMaybe !== undefined) {
+			fn = fnMaybe;
+		} else {
+			throw new Error("No callback function provided to startActiveSpan");
+		}
 
 		return (fn as F)(noOpSpan) as ReturnType<F>;
 	}
@@ -113,8 +132,29 @@ function createNoOpTracer(): Tracer {
 }
 
 /**
+ * Maximum length for JSON-stringified attribute values
+ * OTEL exporters may reject or truncate very large attribute values
+ */
+const MAX_JSON_ATTRIBUTE_LENGTH = 4096;
+
+/**
  * Sanitize attributes to ensure they're valid for OpenTelemetry
  * Filters out undefined/null values and converts types as needed
+ *
+ * Array handling:
+ * - Arrays with only primitives of the same type are kept as-is
+ * - Arrays with mixed primitive types are JSON-stringified
+ * - Arrays with non-primitive values filter them out, keeping only primitives
+ * - Empty arrays or arrays with no primitives are skipped entirely
+ *
+ * Examples:
+ * - `[1, 2, 3]` → `[1, 2, 3]`
+ * - `[1, "a"]` → `'[1,"a"]'` (JSON string)
+ * - `[1, {}]` → `[1]` (object filtered out)
+ * - `[{}, {}]` → skipped (no primitives)
+ *
+ * @param attrs - Raw attributes object
+ * @returns Sanitized attributes valid for OpenTelemetry
  */
 export function sanitizeAttributes(attrs: Record<string, unknown>): Attributes {
 	const sanitized: Attributes = {};
@@ -136,7 +176,7 @@ export function sanitizeAttributes(attrs: Record<string, unknown>): Attributes {
 				(v): v is string | number | boolean =>
 					typeof v === "string" ||
 					typeof v === "number" ||
-					typeof v === "boolean"
+					typeof v === "boolean",
 			);
 
 			if (primitives.length === 0) {
@@ -160,14 +200,22 @@ export function sanitizeAttributes(attrs: Record<string, unknown>): Attributes {
 
 			// Mixed primitive arrays aren't valid AttributeValue arrays; store as JSON string.
 			try {
-				sanitized[key] = JSON.stringify(primitives);
+				const jsonString = JSON.stringify(primitives);
+				sanitized[key] =
+					jsonString.length > MAX_JSON_ATTRIBUTE_LENGTH
+						? `${jsonString.slice(0, MAX_JSON_ATTRIBUTE_LENGTH)}... (truncated)`
+						: jsonString;
 			} catch {
 				// Skip if JSON serialization fails
 			}
 		} else if (typeof value === "object") {
 			// Convert objects to JSON string
 			try {
-				sanitized[key] = JSON.stringify(value);
+				const jsonString = JSON.stringify(value);
+				sanitized[key] =
+					jsonString.length > MAX_JSON_ATTRIBUTE_LENGTH
+						? `${jsonString.slice(0, MAX_JSON_ATTRIBUTE_LENGTH)}... (truncated)`
+						: jsonString;
 			} catch {
 				// Skip if JSON serialization fails
 			}
@@ -178,14 +226,24 @@ export function sanitizeAttributes(attrs: Record<string, unknown>): Attributes {
 }
 
 /**
- * Flatten nested metadata object with a prefix
+ * Flatten metadata object with a prefix (shallow flattening only)
+ *
+ * Only flattens top-level keys; nested objects are JSON-encoded as strings.
+ * This prevents key explosion in OpenTelemetry exporters and keeps attribute
+ * counts manageable.
+ *
+ * Examples:
+ * - `{ userId: "123" }` → `{ "basalt.meta.userId": "123" }`
+ * - `{ user: { id: 1, role: "admin" } }` → `{ "basalt.meta.user": '{"id":1,"role":"admin"}' }`
+ * - `{ count: 42 }` → `{ "basalt.meta.count": 42 }`
  *
  * @param metadata - Metadata object to flatten
- * @param prefix - Prefix for flattened keys
+ * @param prefix - Prefix for flattened keys (default: "basalt.meta.")
+ * @returns Flattened metadata with prefixed keys
  */
 export function flattenMetadata(
 	metadata: Record<string, unknown> | undefined,
-	prefix = "basalt.meta."
+	prefix = "basalt.meta.",
 ): Record<string, AttributeValue> {
 	if (!metadata) {
 		return {};
@@ -207,9 +265,13 @@ export function flattenMetadata(
 		) {
 			flattened[flatKey] = value;
 		} else {
-			// Convert complex values to JSON string
+			// Convert complex values to JSON string (prevents deep key explosion)
 			try {
-				flattened[flatKey] = JSON.stringify(value);
+				const jsonString = JSON.stringify(value);
+				flattened[flatKey] =
+					jsonString.length > MAX_JSON_ATTRIBUTE_LENGTH
+						? `${jsonString.slice(0, MAX_JSON_ATTRIBUTE_LENGTH)}... (truncated)`
+						: jsonString;
 			} catch {
 				// Skip if serialization fails
 			}
@@ -233,12 +295,13 @@ export async function withSpan<T>(
 	tracerName: string,
 	spanName: string,
 	attributes: Record<string, unknown>,
-	fn: SpanCallback<T>
+	fn: SpanCallback<T>,
 ): Promise<T> {
 	if (!otel) {
 		// OpenTelemetry not available, execute function directly
 		const noOpSpan = createNoOpTracer().startSpan(spanName);
-		return fn(noOpSpan);
+		const spanHandle = new SpanHandle(noOpSpan);
+		return fn(spanHandle);
 	}
 
 	const tracer = getTracer(tracerName, __SDK_VERSION__);
@@ -252,7 +315,8 @@ export async function withSpan<T>(
 		},
 		async (span: Span) => {
 			try {
-				const result = await fn(span);
+				const spanHandle = new SpanHandle(span);
+				const result = await fn(spanHandle);
 
 				// Set OK status if no error occurred
 				span.setStatus({ code: otel.SpanStatusCode.OK });
@@ -272,7 +336,7 @@ export async function withSpan<T>(
 				// Always end the span
 				span.end();
 			}
-		}
+		},
 	);
 }
 
@@ -290,11 +354,12 @@ export function withSpanSync<T>(
 	tracerName: string,
 	spanName: string,
 	attributes: Record<string, unknown>,
-	fn: (span: Span) => T
+	fn: (span: SpanHandle) => T,
 ): T {
 	if (!otel) {
 		const noOpSpan = createNoOpTracer().startSpan(spanName);
-		return fn(noOpSpan);
+		const spanHandle = new SpanHandle(noOpSpan);
+		return fn(spanHandle);
 	}
 
 	const tracer = getTracer(tracerName, __SDK_VERSION__);
@@ -308,7 +373,8 @@ export function withSpanSync<T>(
 		},
 		(span: Span) => {
 			try {
-				const result = fn(span);
+				const spanHandle = new SpanHandle(span);
+				const result = fn(spanHandle);
 				span.setStatus({ code: otel.SpanStatusCode.OK });
 				return result;
 			} catch (error) {
@@ -321,7 +387,7 @@ export function withSpanSync<T>(
 			} finally {
 				span.end();
 			}
-		}
+		},
 	);
 }
 
@@ -365,18 +431,18 @@ export function setCurrentSpanAttributes(attrs: Record<string, unknown>): void {
 
 /**
  * Execute a function within an observation span that automatically wraps all nested operations
- * 
+ *
  * This creates an active span marked with Basalt metadata that becomes the parent for all
  * child operations. Unlike regular spans, this span allows setting experiment, identity,
  * and evaluation configuration metadata.
- * 
+ *
  * Use this at operation entry points (request handlers, background jobs, CLI commands)
  * to create a span that automatically wraps all nested SDK and manual span operations.
- * 
+ *
  * @param options - Configuration for the observation span
  * @param fn - Async function to execute within the observation span context
  * @returns Result of the function execution
- * 
+ *
  * @example
  * ```typescript
  * await basalt.observe(
@@ -384,7 +450,7 @@ export function setCurrentSpanAttributes(attrs: Record<string, unknown>): void {
  *   async (span) => {
  *     span.setExperiment('recommendation-v2')
  *       .setIdentity({ userId: '123', organizationId: 'acme' });
- *     
+ *
  *     // All operations automatically become child spans
  *     await basalt.prompt.get({ slug: 'greeting' });
  *     await callOpenAI();
@@ -394,138 +460,146 @@ export function setCurrentSpanAttributes(attrs: Record<string, unknown>): void {
  */
 export async function observe<T>(
 	options: ObserveOptions = {},
-	fn: (span: SpanHandle) => Promise<T>
+	fn: (span: SpanHandle) => Promise<T>,
 ): Promise<T> {
-	const {
-		name = 'basalt.observe',
-		attributes = {},
-		spanKind,
-	} = options
+	const { name = "basalt.observe", attributes = {}, spanKind } = options;
 
 	if (!otel) {
 		// Execute without tracing if OTel not available
-		const noOpSpan = createNoOpTracer().startSpan(name)
-		const handle = new SpanHandle(noOpSpan as any)
+		const noOpSpan = createNoOpTracer().startSpan(name);
+		const handle = new SpanHandle(noOpSpan);
 		try {
-			return await fn(handle)
+			return await fn(handle);
 		} finally {
-			noOpSpan.end()
+			noOpSpan.end();
 		}
 	}
 
-	const tracer = getTracer('@basalt-ai/sdk', __SDK_VERSION__)
+	const tracer = getTracer("@basalt-ai/sdk", __SDK_VERSION__);
 
 	// Prepare observation span attributes
 	const observeAttributes = {
 		[BASALT_ATTRIBUTES.TRACE]: true,
-		[BASALT_ATTRIBUTES.SDK_TYPE]: 'nodejs',
+		[BASALT_ATTRIBUTES.SDK_TYPE]: "nodejs",
 		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
-		'basalt.observe': true,
+		"basalt.observe": true,
 		...attributes,
-	}
+	};
 
 	const spanOptions: SpanOptions = {
 		kind: spanKind ?? otel.SpanKind.INTERNAL,
 		attributes: sanitizeAttributes(observeAttributes),
-	}
+	};
 
 	// Use startActiveSpan to automatically make this span the active parent
-	return await tracer.startActiveSpan(
-		name,
-		spanOptions,
-		async (span: Span) => {
-			const handle = new SpanHandle(span as any)
+	return await tracer.startActiveSpan(name, spanOptions, async (span: Span) => {
+		const handle = new SpanHandle(span);
 
-			// Store in Basalt context for additional metadata access
-			const contextWithHandle = BasaltContextManager.setRootSpan(handle as any)
+		// Store in Basalt context for additional metadata access
+		const contextWithHandle = BasaltContextManager.setRootSpan(
+			handle as StartSpanHandle,
+		);
 
-			try {
-				// Execute user function within the active span context
-				return await otel.context.with(contextWithHandle ?? otel.context.active(), async () => {
-					return await fn(handle)
-				})
-			} catch (error) {
-				// Record exception on span
-				span.recordException(error as Error)
-				span.setStatus({
-					code: otel.SpanStatusCode.ERROR,
-					message: error instanceof Error ? error.message : String(error)
-				})
-				throw error
-			} finally {
-				// Span is automatically ended by startActiveSpan
-				span.end()
-			}
+		try {
+			// Execute user function within the active span context
+			return await otel.context.with(
+				contextWithHandle ?? otel.context.active(),
+				async () => {
+					return await fn(handle);
+				},
+			);
+		} catch (error) {
+			// Record exception on span
+			span.recordException(error as Error);
+			span.setStatus({
+				code: otel.SpanStatusCode.ERROR,
+				message: error instanceof Error ? error.message : String(error),
+			});
+			throw error;
+		} finally {
+			// Span is automatically ended by startActiveSpan
+			span.end();
 		}
-	)
+	});
 }
 
 /**
  * Start a root observation span with experiment and identity context
- * 
+ *
  * @param options - Configuration for the root observation span including experiment and identity
  * @returns StartSpanHandle that must be manually ended
  */
 export function startObserve(options: StartObserveOptions): StartSpanHandle {
 	const {
-		name = 'basalt.observe',
-		attributes = {},
+		name = "basalt.observe",
+		metadata,
 		spanKind,
 		featureSlug,
-		experiment,
+		experiment_id,
 		identity,
-	} = options
+		evaluators,
+		evaluationConfig,
+	} = options;
 
 	if (!otel) {
 		// Return a handle wrapping a no-op span if OTel not available
-		const noOpSpan = createNoOpTracer().startSpan(name)
-		return new StartSpanHandle(noOpSpan, featureSlug)
+		const noOpSpan = createNoOpTracer().startSpan(name);
+		return new StartSpanHandle(noOpSpan, featureSlug);
 	}
 
-	const tracer = getTracer('@basalt-ai/sdk', __SDK_VERSION__)
+	const tracer = getTracer("@basalt-ai/sdk", __SDK_VERSION__);
 
 	// Prepare observation span attributes
 	const observeAttributes = {
-		[BASALT_ATTRIBUTES.SDK_TYPE]: 'nodejs',
+		[BASALT_ATTRIBUTES.SDK_TYPE]: "nodejs",
 		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
 		[BASALT_ATTRIBUTES.ROOT]: true,
-		'basalt.observe': true,
-		...attributes,
-	}
+		"basalt.observe": true,
+		...flattenMetadata(metadata, METADATA_PREFIX),
+	};
 
 	const spanOptions: SpanOptions = {
 		kind: spanKind ?? otel.SpanKind.INTERNAL,
 		attributes: sanitizeAttributes(observeAttributes),
-	}
+	};
 
 	// Create span (not active)
-	const span = tracer.startSpan(name, spanOptions)
-	const handle = new StartSpanHandle(span, featureSlug)
+	const span = tracer.startSpan(name, spanOptions);
+	const handle = new StartSpanHandle(span, featureSlug);
 
 	// Auto-apply experiment if provided
-	if (experiment) {
-		handle.setExperiment(experiment)
+	if (experiment_id) {
+		handle.setExperiment(experiment_id);
 	}
 
 	// Auto-apply identity if provided
 	if (identity) {
-		handle.setIdentity(identity)
+		handle.setIdentity(identity);
 	}
-	
+
+	// Auto-apply evaluators if provided
+	if (evaluators && evaluators.length > 0) {
+		handle.setEvaluators(evaluators);
+	}
+
+	// Auto-apply evaluation sample rate if provided
+	if (evaluationConfig?.sample_rate !== undefined) {
+		handle.setSampleRate(evaluationConfig.sample_rate);
+	}
 
 	// Store in context for child span access (but context doesn't become active)
 	try {
-		const newContext = BasaltContextManager.setRootSpan(handle)
+		const newContext = BasaltContextManager.setRootSpan(handle);
 		if (newContext) {
 			otel.context.with(newContext, () => {
 				// Context is active only within this callback
-			})
+			});
 		}
 	} catch {
 		// Continue even if context storage fails
 	}
 
-	return handle
+	return handle;
 }
 
 /**

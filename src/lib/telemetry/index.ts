@@ -8,34 +8,43 @@
  */
 
 export {
+	API_CLIENTS,
+	BASALT_ATTRIBUTES,
+	CACHE_TYPES,
+	METADATA_PREFIX,
+} from "./attributes";
+export { withBasaltSpan, withBasaltSpanSync } from "./basalt-span";
+export { BASALT_ROOT_SPAN, BasaltContextManager } from "./context-manager";
+export { attachEvaluator, withEvaluators } from "./evaluators";
+export type { TelemetryManagerConfig } from "./manager";
+export { TelemetryManager } from "./manager";
+export { withPrompt, withPrompts } from "./prompts";
+export { SpanHandle, StartSpanHandle } from "./span-handle";
+export {
+	extractClientFromPath,
+	flattenMetadata,
+	getCurrentContext,
 	getTracer,
+	isOtelAvailable,
+	observe,
+	sanitizeAttributes,
+	setCurrentSpanAttributes,
+	startObserve,
+	withContext,
 	withSpan,
 	withSpanSync,
-	setCurrentSpanAttributes,
-	getCurrentContext,
-	withContext,
-	isOtelAvailable,
-	sanitizeAttributes,
-	flattenMetadata,
-	extractClientFromPath,
-	observe,
-	startObserve,
-} from './telemetry'
-
-export type { ObserveOptions, StartObserveOptions } from './types'
-
-export { withBasaltSpan, withBasaltSpanSync } from './basalt-span'
-
-export { BasaltContextManager, BASALT_ROOT_SPAN } from './context-manager'
-
-export { SpanHandle, StartSpanHandle } from './span-handle'
-
-export { ObserveKind } from './types'
-
-export { BASALT_ATTRIBUTES, CACHE_TYPES, API_CLIENTS, METADATA_PREFIX } from './attributes'
-
-export { TelemetryManager } from './manager'
-
-export type { BasaltContext, SpanOptions, SpanCallback, AttributeValue, AttributeDict, TraceExperiment } from './types'
-
-export type { TelemetryManagerConfig } from './manager'
+} from "./telemetry";
+export type {
+	AttributeDict,
+	AttributeValue,
+	BasaltContext,
+	EvaluationConfig,
+	ObserveOptions,
+	PromptMetadata,
+	SpanCallback,
+	SpanOptions,
+	StartObserveOptions,
+	TraceExperiment,
+	WithEvaluatorsOptions,
+} from "./types";
+export { ObserveKind } from "./types";

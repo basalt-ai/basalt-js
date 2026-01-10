@@ -1,15 +1,15 @@
-import type { PromptDetailResponse, Result } from '../../resources'
-import { err, ok } from '../../utils/utils'
+import type { PromptDetailResponse, Result } from "../../resources";
+import { err, ok } from "../../utils/utils";
 
 interface Input {
-	slug: string
-	version?: string
-	tag?: string
+	slug: string;
+	version?: string;
+	tag?: string;
 }
 
 interface Output {
-	warning?: string
-	prompt: PromptDetailResponse
+	warning?: string;
+	prompt: PromptDetailResponse;
 }
 
 export default class DescribePromptEndpoint {
@@ -20,29 +20,35 @@ export default class DescribePromptEndpoint {
 				version: dto.version,
 				tag: dto.tag,
 			},
-			method: 'get',
-		} as const
+			method: "get",
+		} as const;
 	}
 
 	static decodeResponse(body: unknown): Result<Output> {
+		if (body === null || typeof body !== "object") {
+			return err({
+				message: "Get Prompt: Failed to decode response (invalid body format)",
+			});
+		}
+
 		if (
-			body === null
-			|| typeof body !== 'object'
+			!("prompt" in body) ||
+			typeof body.prompt !== "object" ||
+			body.prompt === null
 		) {
-			return err({ message: 'Get Prompt: Failed to decode response (invalid body format)' })
+			return err({
+				message: "Get Prompt: Failed to decode response (missing prompt)",
+			});
 		}
 
-		if (!('prompt' in body) || typeof body.prompt !== 'object' || body.prompt === null) {
-			return err({ message: 'Get Prompt: Failed to decode response (missing prompt)' })
-		}
-
-		const warning = 'warning' in body && typeof body.warning === 'string'
-			? body.warning
-			: undefined
+		const warning =
+			"warning" in body && typeof body.warning === "string"
+				? body.warning
+				: undefined;
 
 		return ok({
 			warning,
 			prompt: body.prompt as PromptDetailResponse,
-		})
+		});
 	}
 }

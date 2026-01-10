@@ -1,5 +1,5 @@
-import { Template } from '@huggingface/jinja'
-import { VariablesMap } from '../resources'
+import { Template } from "@huggingface/jinja";
+import type { VariablesMap } from "../resources";
 
 /**
  * Renders a template string using Jinja2 syntax with the provided variables.
@@ -8,7 +8,10 @@ import { VariablesMap } from '../resources'
  * @param variables - A map of variables to be used in the template.
  * @returns The rendered string.
  */
-export function renderTemplate(templateStr: string, variables: VariablesMap): string {
-	const template = new Template(templateStr)
-	return template.render(variables)
+export function renderTemplate(
+	templateStr: string,
+	variables: VariablesMap,
+): string {
+	const template = new Template(templateStr);
+	return template.render(variables);
 }

@@ -1,6 +1,12 @@
-import { Span, SpanStatusCode, SpanStatus, Attributes } from '@opentelemetry/api'
-import { BASALT_ATTRIBUTES } from './attributes'
-import { sanitizeAttributes } from './telemetry'
+import {
+	type Attributes,
+	type Span,
+	type SpanStatus,
+	SpanStatusCode,
+} from "@opentelemetry/api";
+import { BASALT_ATTRIBUTES } from "./attributes";
+import { sanitizeAttributes } from "./telemetry";
+import type { BasaltContext } from "./types";
 
 /**
  * Base handle wrapping an OpenTelemetry Span
@@ -8,10 +14,10 @@ import { sanitizeAttributes } from './telemetry'
  * without exposing the raw OTel Span API
  */
 export class SpanHandle {
-	protected readonly span: Span
+	protected readonly span: Span;
 
 	constructor(span: Span) {
-		this.span = span
+		this.span = span;
 	}
 
 	/**
@@ -19,9 +25,9 @@ export class SpanHandle {
 	 * Values are sanitized before being set
 	 */
 	setAttribute(key: string, value: unknown): void {
-		const sanitized = sanitizeAttributes({ [key]: value })
+		const sanitized = sanitizeAttributes({ [key]: value });
 		if (sanitized[key] !== undefined) {
-			this.span.setAttribute(key, sanitized[key])
+			this.span.setAttribute(key, sanitized[key]);
 		}
 	}
 
@@ -30,8 +36,8 @@ export class SpanHandle {
 	 * Values are sanitized before being set
 	 */
 	setAttributes(attributes: Attributes): void {
-		const sanitized = sanitizeAttributes(attributes)
-		this.span.setAttributes(sanitized)
+		const sanitized = sanitizeAttributes(attributes);
+		this.span.setAttributes(sanitized);
 	}
 
 	/**
@@ -40,7 +46,7 @@ export class SpanHandle {
 	 * Use SpanStatusCode.ERROR for failures
 	 */
 	setStatus(status: SpanStatus): void {
-		this.span.setStatus(status)
+		this.span.setStatus(status);
 	}
 
 	/**
@@ -48,7 +54,7 @@ export class SpanHandle {
 	 * Useful for recording significant moments during span execution
 	 */
 	addEvent(name: string, attributes?: Attributes): void {
-		this.span.addEvent(name, attributes)
+		this.span.addEvent(name, attributes);
 	}
 
 	/**
@@ -57,7 +63,7 @@ export class SpanHandle {
 	 * @param endTime Optional timestamp in milliseconds
 	 */
 	end(endTime?: number): void {
-		this.span.end(endTime)
+		this.span.end(endTime);
 	}
 
 	/**
@@ -65,33 +71,99 @@ export class SpanHandle {
 	 * Automatically marks the span as failed
 	 */
 	recordException(exception: Error): void {
-		this.span.recordException(exception)
-		this.span.setStatus({ code: SpanStatusCode.ERROR, message: exception.message })
+		this.span.recordException(exception);
+		this.span.setStatus({
+			code: SpanStatusCode.ERROR,
+			message: exception.message,
+		});
+	}
+
+	/**
+	 * Set input data for this span
+	 * Input is stored as a JSON string attribute
+	 *
+	 * @param input - The input data (will be JSON stringified)
+	 */
+	setInput(input: unknown): void {
+		try {
+			this.setAttribute(BASALT_ATTRIBUTES.SPAN_INPUT, JSON.stringify(input));
+		} catch {
+			this.setAttribute(BASALT_ATTRIBUTES.SPAN_INPUT, "[Serialization Error]");
+		}
+	}
+
+	/**
+	 * Set output data for this span
+	 * Output is stored as a JSON string attribute
+	 *
+	 * @param output - The output data (will be JSON stringified)
+	 */
+	setOutput(output: unknown): void {
+		try {
+			this.setAttribute(BASALT_ATTRIBUTES.SPAN_OUTPUT, JSON.stringify(output));
+		} catch {
+			this.setAttribute(BASALT_ATTRIBUTES.SPAN_OUTPUT, "[Serialization Error]");
+		}
+	}
+
+	/**
+	 * Set evaluators for this span
+	 * Evaluators are stored as a JSON array of slugs
+	 *
+	 * @param evaluators - Array of evaluator slugs (e.g., ["hallucinations", "clarity"])
+	 * @returns this for method chaining
+	 */
+	setEvaluators(evaluators: string[]): this {
+		// Filter out empty/invalid strings
+		const validEvaluators = evaluators.filter(
+			(e) => e && typeof e === "string" && e.trim().length > 0,
+		);
+
+		if (validEvaluators.length === 0) {
+			return this;
+		}
+
+		try {
+			this.setAttribute(
+				BASALT_ATTRIBUTES.SPAN_EVALUATORS,
+				JSON.stringify(validEvaluators),
+			);
+		} catch {
+			// Skip if JSON serialization fails
+		}
+		return this;
 	}
 
 	/**
 	 * Type guard to check if this is a root span handle
 	 */
 	isRootSpan(): this is StartSpanHandle {
-		return this instanceof StartSpanHandle
+		return this instanceof StartSpanHandle;
 	}
 }
 
 /**
  * Root span handle with additional capabilities for experiment tracking,
  * identity management, and evaluation configuration
- * 
+ *
  * Only root spans (created via startObserve()) have these methods
  */
 export class StartSpanHandle extends SpanHandle {
+	private readonly basaltContext: BasaltContext;
+
 	constructor(span: Span, featureSlug: string) {
-		super(span)
+		super(span);
+		this.basaltContext = {};
+		if (featureSlug) {
+			this.basaltContext.featureSlug = featureSlug;
+		}
+
 		// Root spans always have these markers
-		this.setAttribute(BASALT_ATTRIBUTES.TRACE, true)
-		this.setAttribute(BASALT_ATTRIBUTES.IN_TRACE, 'true')
-		this.setAttribute(BASALT_ATTRIBUTES.SPAN_KIND, 'basalt_trace')
+		this.setAttribute(BASALT_ATTRIBUTES.TRACE, true);
+		this.setAttribute(BASALT_ATTRIBUTES.IN_TRACE, "true");
+		this.setAttribute(BASALT_ATTRIBUTES.SPAN_KIND, "basalt_trace");
 		// Feature slug is mandatory for root spans
-		this.setAttribute(BASALT_ATTRIBUTES.FEATURE_SLUG, featureSlug)
+		this.setAttribute(BASALT_ATTRIBUTES.FEATURE_SLUG, featureSlug);
 	}
 
 	/**
@@ -99,66 +171,126 @@ export class StartSpanHandle extends SpanHandle {
 	 * @internal Used by context manager to set active span
 	 */
 	getSpan(): Span {
-		return this.span
+		return this.span;
 	}
 
 	/**
-	 * Associate this observation with an experiment
-	 * Sets experiment attributes following Python SDK structure
-	 * 
-	 * @param experiment Experiment metadata with id, name, and featureSlug
-	 * @returns this for method chaining
+	 * Get Basalt context captured from root span configuration
+	 * @internal Used by context manager to propagate attributes
 	 */
-	setExperiment(experiment: { id: string; name?: string; featureSlug?: string }): this {
-		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment.id)
-		if (experiment.name) {
-			this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_NAME, experiment.name)
-		}
-		if (experiment.featureSlug) {
-			this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG, experiment.featureSlug)
-		}
-		return this
+	getBasaltContext(): BasaltContext {
+		return this.basaltContext;
+	}
+
+	/**
+     * Associate this observation with an experiment
+     * Sets experiment attributes following Python SDK structure
+     *
+     * @returns this for method chaining
+     * @param experiment_id
+     */
+	setExperiment(experiment_id: string): this {
+		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment_id);
+		this.setAttribute(BASALT_ATTRIBUTES.SHOULD_EVALUATE, true);
+
+		this.basaltContext.experiment_id = experiment_id;
+		this.basaltContext.evaluationConfig = {
+			...(this.basaltContext.evaluationConfig ?? {}),
+			should_evaluate: true,
+		};
+		return this;
 	}
 
 	/**
 	 * Set evaluation configuration for this observation
 	 * Configuration is stored as a JSON string attribute
-	 * 
+	 *
 	 * @param config The evaluation configuration object
 	 * @returns this for method chaining
 	 */
 	setEvaluationConfig(config: Record<string, unknown> | unknown): this {
-		this.setAttribute(BASALT_ATTRIBUTES.EVALUATION_CONFIG, JSON.stringify(config))
-		return this
+		this.setAttribute(
+			BASALT_ATTRIBUTES.EVALUATION_CONFIG,
+			JSON.stringify(config),
+		);
+		return this;
+	}
+
+	/**
+	 * Set evaluation sample rate for this observation
+	 * Sample rate controls what percentage of observations are evaluated
+	 *
+	 * @param sampleRate - Number between 0 and 1 (0% to 100%)
+	 * @returns this for method chaining
+	 */
+	setSampleRate(sampleRate: number): this {
+		// Validate sample rate is a valid number
+		if (typeof sampleRate !== "number" || !Number.isFinite(sampleRate)) {
+			return this;
+		}
+
+		// Clamp to [0, 1] range
+		const clampedRate = Math.max(0, Math.min(1, sampleRate));
+		const shouldEvaluate = this.basaltContext.experiment_id
+			? true
+			: Math.random() < clampedRate;
+
+		this.setAttribute(BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE, clampedRate);
+		this.setAttribute(BASALT_ATTRIBUTES.SHOULD_EVALUATE, shouldEvaluate);
+
+		this.basaltContext.evaluationConfig = {
+			...(this.basaltContext.evaluationConfig ?? {}),
+			sample_rate: clampedRate,
+			should_evaluate: shouldEvaluate,
+		};
+		return this;
 	}
 
 	/**
 	 * Set identity information for this observation
 	 * Sets identity attributes following basalt.{user|organization}.{id|name} format
-	 * 
+	 *
 	 * @param identity Object containing userId, organizationId, userName, organizationName, and optional custom fields
 	 * @returns this for method chaining
 	 */
 	setIdentity(identity: {
-		userId?: string
-		organizationId?: string
-		userName?: string
-		organizationName?: string
-		[key: string]: unknown
+		userId?: string;
+		organizationId?: string;
+		userName?: string;
+		organizationName?: string;
+		[key: string]: unknown;
 	}): this {
 		if (identity.userId) {
-			this.setAttribute(BASALT_ATTRIBUTES.USER_ID, identity.userId)
+			this.setAttribute(BASALT_ATTRIBUTES.USER_ID, identity.userId);
 		}
 		if (identity.userName) {
-			this.setAttribute(BASALT_ATTRIBUTES.USER_NAME, identity.userName)
+			this.setAttribute(BASALT_ATTRIBUTES.USER_NAME, identity.userName);
 		}
 		if (identity.organizationId) {
-			this.setAttribute(BASALT_ATTRIBUTES.ORG_ID, identity.organizationId)
+			this.setAttribute(BASALT_ATTRIBUTES.ORG_ID, identity.organizationId);
 		}
 		if (identity.organizationName) {
-			this.setAttribute(BASALT_ATTRIBUTES.ORG_NAME, identity.organizationName)
+			this.setAttribute(BASALT_ATTRIBUTES.ORG_NAME, identity.organizationName);
 		}
 
-		return this
+		const userId = identity.userId ?? this.basaltContext.user?.id;
+		if (userId) {
+			this.basaltContext.user = {
+				id: userId,
+				name: identity.userName ?? this.basaltContext.user?.name,
+			};
+		}
+
+		const organizationId =
+			identity.organizationId ?? this.basaltContext.organization?.id;
+		if (organizationId) {
+			this.basaltContext.organization = {
+				id: organizationId,
+				name:
+					identity.organizationName ?? this.basaltContext.organization?.name,
+			};
+		}
+
+		return this;
 	}
 }
