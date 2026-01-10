@@ -122,7 +122,7 @@ export namespace BasaltContextManager {
 		// Add evaluator attributes
 		if (ctx.evaluators && ctx.evaluators.length > 0) {
 			const validEvaluators = ctx.evaluators.filter(
-				(e) => e && typeof e === "string" && e.trim().length > 0,
+				(e) => e  && e.trim().length > 0,
 			);
 
 			if (validEvaluators.length > 0) {
@@ -138,9 +138,12 @@ export namespace BasaltContextManager {
 			}
 		}
 
-		if (typeof ctx.evaluationConfig?.should_evaluate === "boolean") {
-			attributes["basalt.span.should_evaluate"] =
-				ctx.evaluationConfig.should_evaluate;
+		const shouldEvaluate = ctx.experiment_id
+			? true
+			: ctx.evaluationConfig?.should_evaluate;
+
+		if (typeof shouldEvaluate === "boolean") {
+			attributes["basalt.span.should_evaluate"] = shouldEvaluate;
 		}
 
 		// Add prompt attributes

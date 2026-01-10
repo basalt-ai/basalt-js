@@ -191,8 +191,13 @@ export class StartSpanHandle extends SpanHandle {
      */
 	setExperiment(experiment_id: string): this {
 		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment_id);
+		this.setAttribute(BASALT_ATTRIBUTES.SHOULD_EVALUATE, true);
 
 		this.basaltContext.experiment_id = experiment_id;
+		this.basaltContext.evaluationConfig = {
+			...(this.basaltContext.evaluationConfig ?? {}),
+			should_evaluate: true,
+		};
 		return this;
 	}
 
@@ -220,13 +225,15 @@ export class StartSpanHandle extends SpanHandle {
 	 */
 	setSampleRate(sampleRate: number): this {
 		// Validate sample rate is a valid number
-		if (Number.isNaN(sampleRate)) {
+		if (typeof sampleRate !== "number" || !Number.isFinite(sampleRate)) {
 			return this;
 		}
 
 		// Clamp to [0, 1] range
 		const clampedRate = Math.max(0, Math.min(1, sampleRate));
-		const shouldEvaluate = Math.random() < clampedRate;
+		const shouldEvaluate = this.basaltContext.experiment_id
+			? true
+			: Math.random() < clampedRate;
 
 		this.setAttribute(BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE, clampedRate);
 		this.setAttribute(BASALT_ATTRIBUTES.SHOULD_EVALUATE, shouldEvaluate);

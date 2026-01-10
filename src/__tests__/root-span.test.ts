@@ -166,6 +166,10 @@ describe("StartSpanHandle", () => {
 				BASALT_ATTRIBUTES.EXPERIMENT_ID,
 				"exp-123",
 			);
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.SHOULD_EVALUATE,
+				true,
+			);
 		});
 
 		it("should set experiment with only required id", () => {
@@ -259,6 +263,19 @@ describe("StartSpanHandle", () => {
 				BASALT_ATTRIBUTES.SHOULD_EVALUATE,
 				true,
 			);
+		});
+
+		it("should always evaluate when experiment is attached", () => {
+			rootSpan.setExperiment("exp-123");
+			rootSpan.setSampleRate(0);
+
+			const shouldEvaluateCalls = mockSpan.setAttribute.mock.calls.filter(
+				(call: string[]) => call[0] === BASALT_ATTRIBUTES.SHOULD_EVALUATE,
+			);
+			const lastShouldEvaluateCall =
+				shouldEvaluateCalls[shouldEvaluateCalls.length - 1];
+
+			expect(lastShouldEvaluateCall?.[1]).toBe(true);
 		});
 
 		it("should skip invalid sample rates", () => {
