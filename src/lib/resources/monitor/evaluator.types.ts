@@ -17,7 +17,7 @@ export interface EvaluationConfig {
 	 * The value must be between 0 and 1.
 	 * If not provided, the default will be 10%.
 	 *
-	 * This is not applied for experimentations where the sample rate is always set to 100%.
+	 * If an experiment is attached to the trace, evaluation always runs (100%) regardless of this value.
 	 */
 	sampleRate?: number | undefined;
 }
