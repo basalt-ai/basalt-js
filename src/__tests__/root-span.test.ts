@@ -244,12 +244,20 @@ describe("StartSpanHandle", () => {
 				BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE,
 				0,
 			);
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.SHOULD_EVALUATE,
+				false,
+			);
 
 			// Test 1
 			rootSpan.setSampleRate(1);
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
 				BASALT_ATTRIBUTES.EVALUATION_SAMPLE_RATE,
 				1,
+			);
+			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
+				BASALT_ATTRIBUTES.SHOULD_EVALUATE,
+				true,
 			);
 		});
 
