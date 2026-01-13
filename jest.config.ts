@@ -1,16 +1,15 @@
-/* eslint-disable */
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 const swcrcPath =
-	typeof __dirname === 'string'
-		? join(__dirname, '.swcrc')
-		: join(process.cwd(), '.swcrc');
+	typeof __dirname === "string"
+		? join(__dirname, ".swcrc")
+		: join(process.cwd(), ".swcrc");
 
 // Reading the SWC compilation config and remove the "exclude"
 // for the test files to be compiled by SWC
 const { exclude: _, ...swcJestConfig } = JSON.parse(
-	readFileSync(swcrcPath, 'utf-8')
+	readFileSync(swcrcPath, "utf-8"),
 );
 
 // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
@@ -25,12 +24,12 @@ if (swcJestConfig.swcrc === undefined) {
 // swcJestConfig.module.noInterop = false;
 
 export default {
-	displayName: 'js-sdk',
+	displayName: "js-sdk",
 	transform: {
-		'^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
+		"^.+\\.[tj]s$": ["@swc/jest", swcJestConfig],
 	},
-	moduleFileExtensions: ['ts', 'js', 'html'],
-	setupFiles: ['<rootDir>/jest.setup.js'],
-	testEnvironment: 'node',
-	coverageDirectory: '../../coverage/packages/js-sdk',
+	moduleFileExtensions: ["ts", "js", "html"],
+	setupFiles: ["<rootDir>/jest.setup.js"],
+	testEnvironment: "node",
+	coverageDirectory: "../../coverage/packages/js-sdk",
 };

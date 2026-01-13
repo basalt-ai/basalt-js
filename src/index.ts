@@ -1,6 +1,6 @@
-import Basalt from './lib/basalt-sdk.facade'
+import Basalt from "./lib/basalt-sdk.facade";
 
-export * from './lib/resources'
-export * from './lib/utils/errors'
-export * from './lib/telemetry'
-export { Basalt }
+export * from "./lib/resources";
+export * from "./lib/telemetry";
+export * from "./lib/utils/errors";
+export { Basalt };
