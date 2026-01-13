@@ -38,14 +38,16 @@ export default class Api implements IApi {
 			'@basalt-ai/sdk',
 			'basalt.api.request',
 			{
-				[BASALT_ATTRIBUTES.API_CLIENT]: client,
-				[BASALT_ATTRIBUTES.API_OPERATION]: requestInfo.method,
-				[BASALT_ATTRIBUTES.INTERNAL_API]: true,
-				[BASALT_ATTRIBUTES.HTTP_METHOD]: requestInfo.method.toUpperCase(),
-				[BASALT_ATTRIBUTES.HTTP_URL]: url.toString(),
-				[BASALT_ATTRIBUTES.SDK_NAME]: '@basalt-ai/sdk',
-				[BASALT_ATTRIBUTES.SDK_VERSION]: this.sdkVersion,
-				[BASALT_ATTRIBUTES.SDK_TARGET]: this.sdkType,
+				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
+					'basalt.api.client': client,
+					'basalt.api.operation': requestInfo.method,
+					'basalt.internal.api': true,
+					'http.method': requestInfo.method.toUpperCase(),
+					'http.url': url.toString(),
+					'basalt.sdk.name': '@basalt-ai/sdk',
+					'basalt.sdk.version': this.sdkVersion,
+					'basalt.sdk.target': this.sdkType,
+				}),
 			},
 			async (span) => {
 				const startTime = performance.now()

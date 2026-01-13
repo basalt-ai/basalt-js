@@ -33,14 +33,19 @@ export default class MonitorSDK implements IMonitorSDK {
 	 * @param params - Parameters for the experiment.
 	 * @returns A new Experiment instance.
 	 */
-	public async createExperiment(featureSlug: string, params: ExperimentParams): AsyncResult<Experiment> {
+	public async createExperiment(featureSlug: string, params: ExperimentParams & { kind?: import('../telemetry/types').ObserveKind }): AsyncResult<Experiment> {
 		return withBasaltSpan(
 			'@basalt-ai/sdk',
 			'basalt.experiment.create',
 			{
-				[BASALT_ATTRIBUTES.OPERATION]: 'create',
-				[BASALT_ATTRIBUTES.EXPERIMENT_FEATURE_SLUG]: featureSlug,
-				[BASALT_ATTRIBUTES.EXPERIMENT_NAME]: params.name,
+				kind: params.kind,
+				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
+					'basalt.api.client': 'experiments',
+					'basalt.api.operation': 'create',
+					'basalt.internal.api': true,
+					'basalt.experiment.feature_slug': featureSlug,
+					'basalt.experiment.name': params.name,
+				}),
 			},
 			async (span) => {
 				const result = await this.api.invoke(CreateExperimentEndpoint, { featureSlug, ...params })
