@@ -2,10 +2,10 @@
  * File source types supported across environments
  */
 export type FileSource =
-	| File              // Browser File API
-	| Blob              // Browser Blob or Node.js Blob
-	| Buffer            // Node.js Buffer
-	| string            // Node.js file path
+	| File // Browser File API
+	| Blob // Browser Blob or Node.js Blob
+	| Buffer // Node.js Buffer
+	| string; // Node.js file path
 
 /**
  * Options for file attachment
@@ -14,12 +14,12 @@ export interface FileAttachmentOptions {
 	/**
 	 * Override the auto-detected content type
 	 */
-	contentType?: string
+	contentType?: string;
 
 	/**
 	 * Optional filename (required for Buffer/Blob sources)
 	 */
-	filename?: string
+	filename?: string;
 }
 
 /**
@@ -44,15 +44,15 @@ export interface FileAttachmentOptions {
  * ```
  */
 export class FileAttachment {
-	public readonly source: FileSource
-	public readonly options: FileAttachmentOptions
+	public readonly source: FileSource;
+	public readonly options: FileAttachmentOptions;
 
 	constructor(source: FileSource, options: FileAttachmentOptions = {}) {
-		this.source = source
-		this.options = options
+		this.source = source;
+		this.options = options;
 
 		// Validation
-		this._validate()
+		this._validate();
 	}
 
 	/**
@@ -60,10 +60,13 @@ export class FileAttachment {
 	 */
 	private _validate(): void {
 		// For Buffer or Blob (but not File), filename is required
-		if ((this.isBuffer() || (this.isBlob() && !this.isFile())) && !this.options.filename) {
+		if (
+			(this.isBuffer() || (this.isBlob() && !this.isFile())) &&
+			!this.options.filename
+		) {
 			throw new Error(
-				'FileAttachment: filename is required when using Buffer or Blob sources',
-			)
+				"FileAttachment: filename is required when using Buffer or Blob sources",
+			);
 		}
 	}
 
@@ -71,28 +74,28 @@ export class FileAttachment {
 	 * Type guard to check if source is a string path
 	 */
 	isPath(): this is { source: string } {
-		return typeof this.source === 'string'
+		return typeof this.source === "string";
 	}
 
 	/**
 	 * Type guard to check if source is a File object
 	 */
 	isFile(): this is { source: File } {
-		return typeof File !== 'undefined' && this.source instanceof File
+		return typeof File !== "undefined" && this.source instanceof File;
 	}
 
 	/**
 	 * Type guard to check if source is a Blob
 	 */
 	isBlob(): this is { source: Blob } {
-		return this.source instanceof Blob
+		return this.source instanceof Blob;
 	}
 
 	/**
 	 * Type guard to check if source is a Buffer
 	 */
 	isBuffer(): this is { source: Buffer } {
-		return Buffer.isBuffer(this.source)
+		return Buffer.isBuffer(this.source);
 	}
 
 	/**
@@ -100,19 +103,19 @@ export class FileAttachment {
 	 */
 	getFilename(): string {
 		if (this.options.filename) {
-			return this.options.filename
+			return this.options.filename;
 		}
 
 		if (this.isFile()) {
-			return this.source.name
+			return this.source.name;
 		}
 
 		if (this.isPath()) {
 			// Extract filename from path (handles both Unix and Windows paths)
-			return this.source.split(/[\\/]/).pop() || 'file'
+			return this.source.split(/[\\/]/).pop() || "file";
 		}
 
-		throw new Error('FileAttachment: Unable to determine filename')
+		throw new Error("FileAttachment: Unable to determine filename");
 	}
 
 	/**
@@ -120,18 +123,18 @@ export class FileAttachment {
 	 */
 	async getSize(): Promise<number | undefined> {
 		if (this.isFile() || this.isBlob()) {
-			return this.source.size
+			return this.source.size;
 		}
 
 		if (this.isBuffer()) {
-			return this.source.length
+			return this.source.length;
 		}
 
 		if (this.isPath()) {
 			// Will be determined by file upload utility using fs.stat
-			return undefined
+			return undefined;
 		}
 
-		return undefined
+		return undefined;
 	}
 }

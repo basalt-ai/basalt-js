@@ -1,18 +1,11 @@
-import CreateExperimentEndpoint from '../endpoints/monitor/create-experiment'
-import { Experiment } from '../objects/experiment'
-import Generation from '../objects/generation'
-import Log from '../objects/log'
-import { Trace } from '../objects/trace'
-import { GenerationParams, LogParams } from '../resources'
-import type { AsyncResult, IApi, Logger } from '../resources/contract'
-import { ExperimentParams } from '../resources/monitor/experiment.types'
-import { IMonitorSDK } from '../resources/monitor/monitor.types'
-import { TraceParams } from '../resources/monitor/trace.types'
-import { withBasaltSpan } from '../telemetry'
-import { BASALT_ATTRIBUTES } from '../telemetry/attributes'
-import Flusher from '../utils/flusher'
-import { ok } from '../utils/utils'
-import { err } from '../utils/utils'
+import CreateExperimentEndpoint from "../endpoints/monitor/create-experiment";
+import type { Experiment } from "../objects/experiment";
+import type { AsyncResult, IApi, Logger } from "../resources/contract";
+import type { ExperimentParams } from "../resources/monitor/experiment.types";
+import type { IMonitorSDK } from "../resources/monitor/monitor.types";
+import { withBasaltSpan } from "../telemetry";
+import { BASALT_ATTRIBUTES } from "../telemetry/attributes";
+import { err, ok } from "../utils/utils";
 export default class MonitorSDK implements IMonitorSDK {
 	/**
 	 * @param api - The API interface for making requests.
@@ -33,103 +26,55 @@ export default class MonitorSDK implements IMonitorSDK {
 	 * @param params - Parameters for the experiment.
 	 * @returns A new Experiment instance.
 	 */
-	public async createExperiment(featureSlug: string, params: ExperimentParams & { kind?: import('../telemetry/types').ObserveKind }): AsyncResult<Experiment> {
+	public async createExperiment(
+		featureSlug: string,
+		params: ExperimentParams & {
+			kind?: import("../telemetry/types").ObserveKind;
+		},
+	): AsyncResult<Experiment> {
 		return withBasaltSpan(
-			'@basalt-ai/sdk',
-			'basalt.experiment.create',
+			"@basalt-ai/sdk",
+			"basalt.experiment.create",
 			{
 				kind: params.kind,
 				[BASALT_ATTRIBUTES.METADATA]: JSON.stringify({
-					'basalt.api.client': 'experiments',
-					'basalt.api.operation': 'create',
-					'basalt.internal.api': true,
-					'basalt.experiment.feature_slug': featureSlug,
-					'basalt.experiment.name': params.name,
+					"basalt.api.client": "experiments",
+					"basalt.api.operation": "create",
+					"basalt.internal.api": true,
+					"basalt.experiment.feature_slug": featureSlug,
+					"basalt.experiment.name": params.name,
 				}),
 			},
 			async (span) => {
-				const result = await this.api.invoke(CreateExperimentEndpoint, { featureSlug, ...params })
+				// Capture input
+				span.setInput({
+					featureSlug,
+					...params,
+				});
+
+				const result = await this.api.invoke(CreateExperimentEndpoint, {
+					featureSlug,
+					...params,
+				});
 
 				if (result.error) {
-					return err(result.error)
+					// Capture error
+					span.setOutput({ error: result.error.message });
+					return err(result.error);
 				}
 
 				// Add experiment ID after creation
-				span.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, result.value.experiment.id)
-				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true)
+				span.setAttribute(
+					BASALT_ATTRIBUTES.EXPERIMENT_ID,
+					result.value.experiment.id,
+				);
+				span.setAttribute(BASALT_ATTRIBUTES.REQUEST_SUCCESS, true);
 
-				return ok(result.value.experiment)
+				// Capture output
+				span.setOutput(result.value.experiment);
+
+				return ok(result.value.experiment);
 			},
-		)
-	}
-
-	/**
-	 * Creates a new trace for monitoring.
-	 *
-	 * @param featureSlug - The unique identifier of the feature.
-	 * @param params - Optional parameters for the trace.
-	 * @returns A new Trace instance.
-	 */
-	public createTrace(featureSlug: string, params: TraceParams = {}) {
-		const trace = this._createTrace(featureSlug, params)
-		return trace
-	}
-
-	/**
-	 * Creates a new generation for monitoring.
-	 *
-	 * @param params - Parameters for the generation.
-	 * @returns A new Generation instance.
-	 */
-	public createGeneration(params: GenerationParams) {
-		return this._createGeneration(params)
-	}
-
-	/**
-	 * Creates a new log for monitoring.
-	 *
-	 * @param params - Parameters for the log.
-	 * @returns A new Log instance.
-	 */
-	public createLog(params: LogParams) {
-		return this._createLog(params)
-	}
-
-	// --
-	// Private methods
-	// --
-
-	/**
-	 * Internal implementation for creating a trace.
-	 *
-	 * @param featureSlug - The unique identifier of the feature.
-	 * @param params - Optional parameters for the trace.
-	 * @returns A new Trace instance.
-	 */
-	private _createTrace(featureSlug: string, params: TraceParams = {}) {
-		const flusher = new Flusher(this.api, this.logger)
-		const trace = new Trace(featureSlug, params, flusher, this.logger)
-
-		return trace
-	}
-
-	/**
-	 * Internal implementation for creating a generation.
-	 *
-	 * @param params - Parameters for the generation.
-	 * @returns A new Generation instance.
-	 */
-	private _createGeneration(params: GenerationParams) {
-		return new Generation(params)
-	}
-
-	/**
-	 * Internal implementation for creating a log.
-	 *
-	 * @param params - Parameters for the log.
-	 * @returns A new Log instance.
-	 */
-	private _createLog(params: LogParams) {
-		return new Log(params)
+		);
 	}
 }

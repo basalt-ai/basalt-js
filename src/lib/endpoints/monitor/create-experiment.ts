@@ -1,14 +1,18 @@
-import { Experiment } from '../../objects/experiment'
-import type { FetchMethod, QueryParamsObject, Result } from '../../resources/contract'
-import { err, ok } from '../../utils/utils'
+import { Experiment } from "../../objects/experiment";
+import type {
+	FetchMethod,
+	QueryParamsObject,
+	Result,
+} from "../../resources/contract";
+import { err, ok } from "../../utils/utils";
 
 export interface Input {
-	featureSlug: string
-	name: string
+	featureSlug: string;
+	name: string;
 }
 
 export interface Output {
-	experiment: Experiment
+	experiment: Experiment;
 }
 
 /**
@@ -21,24 +25,24 @@ export default class CreateExperimentEndpoint {
 	 * @returns The request information
 	 */
 	static prepareRequest(dto: Input): {
-		path: string
-		method: FetchMethod
-		body?: BodyInit
-		query?: QueryParamsObject
+		path: string;
+		method: FetchMethod;
+		body?: BodyInit;
+		query?: QueryParamsObject;
 	} {
-		const { featureSlug, name } = dto
+		const { featureSlug, name } = dto;
 
 		// Convert the body to a JSON string to match BodyInit type
 		const body = JSON.stringify({
 			featureSlug,
 			name,
-		})
+		});
 
 		return {
-			method: 'post',
-			path: '/monitor/experiments',
+			method: "post",
+			path: "/monitor/experiments",
 			body,
-		}
+		};
 	}
 
 	/**
@@ -47,10 +51,12 @@ export default class CreateExperimentEndpoint {
 	 * @returns The decoded response
 	 */
 	static decodeResponse(body: unknown): Result<Output> {
-		if (typeof body !== 'object' || body === null) {
-			return err({ message: 'Failed to decode response (invalid body format)' })
+		if (typeof body !== "object" || body === null) {
+			return err({
+				message: "Failed to decode response (invalid body format)",
+			});
 		}
 
-		return ok({ experiment: new Experiment(body as Experiment) })
+		return ok({ experiment: new Experiment(body as Experiment) });
 	}
 }

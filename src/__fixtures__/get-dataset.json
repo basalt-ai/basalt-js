@@ -1,51 +1,51 @@
 {
-  "validResponse": {
-    "status": 200,
-    "body": {
-      "dataset": {
-        "slug": "test-dataset",
-        "name": "Test Dataset",
-        "columns": ["input", "output"],
-        "rows": [
-          {
-            "values": {
-              "input": "What is the capital of France?",
-              "output": "The capital of France is Paris."
-            },
-            "idealOutput": "Paris",
-            "metadata": {
-              "source": "manual",
-              "category": "geography"
-            }
-          },
-          {
-            "values": {
-              "input": "What is 2+2?",
-              "output": "2+2 = 4"
-            },
-            "idealOutput": "4",
-            "metadata": {
-              "source": "manual",
-              "category": "math"
-            }
-          }
-        ]
-      }
-    }
-  },
-  "emptyRowsResponse": {
-    "status": 200,
-    "body": {
-      "dataset": {
-        "slug": "empty-dataset",
-        "name": "Empty Dataset",
-        "columns": ["input", "output"],
-        "rows": []
-      }
-    }
-  },
-  "falsePositive": {
-    "status": 200,
-    "body": {}
-  }
+	"validResponse": {
+		"status": 200,
+		"body": {
+			"dataset": {
+				"slug": "test-dataset",
+				"name": "Test Dataset",
+				"columns": ["input", "output"],
+				"rows": [
+					{
+						"values": {
+							"input": "What is the capital of France?",
+							"output": "The capital of France is Paris."
+						},
+						"idealOutput": "Paris",
+						"metadata": {
+							"source": "manual",
+							"category": "geography"
+						}
+					},
+					{
+						"values": {
+							"input": "What is 2+2?",
+							"output": "2+2 = 4"
+						},
+						"idealOutput": "4",
+						"metadata": {
+							"source": "manual",
+							"category": "math"
+						}
+					}
+				]
+			}
+		}
+	},
+	"emptyRowsResponse": {
+		"status": 200,
+		"body": {
+			"dataset": {
+				"slug": "empty-dataset",
+				"name": "Empty Dataset",
+				"columns": ["input", "output"],
+				"rows": []
+			}
+		}
+	},
+	"falsePositive": {
+		"status": 200,
+		"body": {}
+	}
 }
