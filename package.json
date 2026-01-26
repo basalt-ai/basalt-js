@@ -19,7 +19,7 @@
 		"type-check": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.3.11",
+		"@biomejs/biome": "2.3.12",
 		"@swc/core": "1.15.10",
 		"@swc/helpers": "0.5.18",
 		"@swc/jest": "0.2.39",
