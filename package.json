@@ -69,6 +69,6 @@
 		}
 	},
 	"optionalDependencies": {
-		"@opentelemetry/instrumentation-openai": "^0.8.0"
+		"@opentelemetry/instrumentation-openai": "^0.9.0"
 	}
 }
