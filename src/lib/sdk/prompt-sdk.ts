@@ -230,7 +230,7 @@ export default class PromptSDK implements IPromptSDK {
 				tag: params.tag,
 			},
 			input: prompt.text,
-			variables: params.variables,
+			variables: params.variables as Record<string, string | null | undefined> | undefined,
 		}, { type: 'single' })
 
 		return generation

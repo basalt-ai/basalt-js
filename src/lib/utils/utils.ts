@@ -19,7 +19,9 @@ export function replaceVariables(str: string, variables: VariablesMap) {
 	Object.keys(variables).forEach((label) => {
 		const value = variables[label]
 
-		str = value === undefined ? str : str.replaceAll(`{{${label}}}`, value)
+		if (value !== undefined && value !== null) {
+			str = str.replaceAll(`{{${label}}}`, String(value))
+		}
 	})
 
 	return str
