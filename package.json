@@ -46,7 +46,7 @@
 		"@aws-sdk/client-bedrock-runtime": "3.984.0",
 		"@traceloop/instrumentation-anthropic": "0.22.6",
 		"@traceloop/instrumentation-bedrock": "0.22.6",
-		"openai": "6.18.0"
+		"openai": "6.19.0"
 	},
 	"peerDependenciesMeta": {
 		"openai": {
