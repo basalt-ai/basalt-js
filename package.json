@@ -42,7 +42,7 @@
 		"mime-types": "3.0.2"
 	},
 	"peerDependencies": {
-		"@anthropic-ai/sdk": "0.71.2",
+		"@anthropic-ai/sdk": "0.74.0",
 		"@aws-sdk/client-bedrock-runtime": "3.984.0",
 		"@traceloop/instrumentation-anthropic": "0.22.6",
 		"@traceloop/instrumentation-bedrock": "0.22.6",
