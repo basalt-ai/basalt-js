@@ -43,7 +43,7 @@
 	},
 	"peerDependencies": {
 		"@anthropic-ai/sdk": "0.74.0",
-		"@aws-sdk/client-bedrock-runtime": "3.986.0",
+		"@aws-sdk/client-bedrock-runtime": "3.989.0",
 		"@traceloop/instrumentation-anthropic": "0.22.6",
 		"@traceloop/instrumentation-bedrock": "0.22.6",
 		"openai": "6.19.0"
