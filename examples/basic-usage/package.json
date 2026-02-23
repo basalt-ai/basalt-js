@@ -1,0 +1,29 @@
+{
+	"name": "basalt-sdk-example",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Example project for testing Basalt SDK against real API",
+	"scripts": {
+		"start": "ts-node --transpile-only index.ts"
+	},
+	"dependencies": {
+		"dotenv": "^17.2.3",
+		"mime-types": "^3.0.2",
+		"openai": "^6.15.0"
+	},
+	"devDependencies": {
+		"@opentelemetry/exporter-trace-otlp-grpc": "^0.208.0",
+		"@opentelemetry/resources": "^2.2.0",
+		"@opentelemetry/sdk-node": "^0.208.0",
+		"@opentelemetry/sdk-trace-base": "^2.2.0",
+		"@opentelemetry/sdk-trace-node": "^2.2.0",
+		"@opentelemetry/semantic-conventions": "^1.38.0",
+		"@types/mime-types": "^3.0.1",
+		"@types/node": "^25.0.3",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.9.3"
+	},
+	"optionalDependencies": {
+		"@opentelemetry/instrumentation-openai": "^0.7.1"
+	}
+}

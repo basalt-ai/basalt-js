@@ -47,7 +47,6 @@ Thumbs.db
 
 # Docker
 .docker/
-examples/
 .github/agents/
 .github/instructions/
 docs/

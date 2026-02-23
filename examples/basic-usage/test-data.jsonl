@@ -1,0 +1,3 @@
+{"input": "Hello", "expected_output": "Hi there!"}
+{"input": "How are you?", "expected_output": "I'm doing well, thanks!"}
+{"input": "What's your name?", "expected_output": "I'm an AI assistant."}
