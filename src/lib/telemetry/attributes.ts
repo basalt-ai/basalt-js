@@ -16,9 +16,6 @@ export const BASALT_ATTRIBUTES = {
 	// Span classification
 	SPAN_KIND: "basalt.span.kind",
 
-	// Root span markers
-	ROOT: 'basalt.root',
-
 	// SDK identification
 	SDK_NAME: "basalt.sdk.name",
 	SDK_VERSION: "basalt.sdk.version",
@@ -58,13 +55,10 @@ export const BASALT_ATTRIBUTES = {
 	EXPERIMENT_FEATURE_SLUG: "basalt.experiment.feature_slug",
 
 	// Identity tracking
-	TRACE_IDENTITY: 'basalt.trace_identity',
-	IDENTITY_USER_ID: 'basalt.identity.user_id',
-	IDENTITY_ORGANIZATION_ID: 'basalt.identity.organization_id',
-	IDENTITY_PREFIX: 'basalt.identity.',
-
-	// Evaluation configuration
-	EVALUATION_CONFIG: 'basalt.evaluation.config',
+	TRACE_IDENTITY: "basalt.trace_identity",
+	IDENTITY_USER_ID: "basalt.identity.user_id",
+	IDENTITY_ORGANIZATION_ID: "basalt.identity.organization_id",
+	IDENTITY_PREFIX: "basalt.identity.",
 
 	// Evaluation configuration
 	EVALUATION_CONFIG: "basalt.evaluation.config",

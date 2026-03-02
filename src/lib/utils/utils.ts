@@ -1,5 +1,22 @@
 import type { VariablesMap } from "../resources";
 
+function stringifyVariableValue(value: unknown): string {
+	if (typeof value === "string") {
+		return value;
+	}
+
+	try {
+		const serialized = JSON.stringify(value);
+		if (serialized !== undefined) {
+			return serialized;
+		}
+	} catch {
+		// Fall through to string coercion for non-serializable values.
+	}
+
+	return String(value);
+}
+
 export function err<T>(e: T): { error: T; value: null } {
 	return { error: e, value: null };
 }
@@ -19,7 +36,11 @@ export function replaceVariables(str: string, variables: VariablesMap) {
 	Object.keys(variables).forEach((label) => {
 		const value = variables[label];
 
-		str = value === undefined ? str : str.replaceAll(`{{${label}}}`, value);
+		if (value === undefined) {
+			return;
+		}
+
+		str = str.replaceAll(`{{${label}}}`, stringifyVariableValue(value));
 	});
 
 	return str;

@@ -7,14 +7,12 @@
 		"start": "ts-node --transpile-only index.ts"
 	},
 	"dependencies": {
-		"openai": "^6.15.0"
+		"@opentelemetry/instrumentation-openai": "^0.7.1",
+		"openai": "6.21.0"
 	},
 	"devDependencies": {
 		"@types/node": "^25.0.3",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.9.3"
-	},
-	"optionalDependencies": {
-		"@opentelemetry/instrumentation-openai": "^0.9.0"
 	}
 }

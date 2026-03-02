@@ -25,7 +25,6 @@ const basalt = new Basalt({
 		enabled: true,
 		endpoint: "https://grpc.otel.getbasalt.ai",
 		insecure: false,
-		serviceName: "simple-openai-example",
 	},
 });
 
@@ -34,7 +33,7 @@ basalt.instrument({
 });
 
 async function main() {
-	const { default: OpenAI } = await import("openai");
+	const OpenAI = require("openai").default;
 	const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 	const rootSpan = basalt.startObserve({

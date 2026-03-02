@@ -39,12 +39,15 @@ describe("getVariableNames", () => {
 
 describe("replaceVariables", () => {
 	it.each([
+		["Hello {{name}}", { name: "Basalt" }, "Hello Basalt"],
+		["{{a}} + {{b}} = {{c}}", { a: 1, b: 2, c: 3 }, "1 + 2 = 3"],
 		[
-			["Hello {{name}}", { name: "Basalt" }, "Hello Basalt"],
-			["{{a}} + {{b}} = {{c}}", { a: 1, b: 2, c: 3 }, "1 + 2 = 3"],
-			["Hello {{missing}}", {}, "Hello {{missing}}"],
-		] as const,
-	])("replaces variables correctly", ([raw, vars, result]) => {
+			"Payload: {{payload}}",
+			{ payload: { id: 1, ok: true } },
+			'Payload: {"id":1,"ok":true}',
+		],
+		["Hello {{missing}}", {}, "Hello {{missing}}"],
+	] as const)("replaces variables correctly", (raw, vars, result) => {
 		const f = replaceVariables(raw, vars);
 
 		expect(f).toBe(result);
