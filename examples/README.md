@@ -7,6 +7,7 @@ This folder contains runnable examples demonstrating how to use the Basalt SDK.
 | Folder / File | Description |
 |---|---|
 | `basic-usage/` | Full working example: prompts, datasets, tracing, OpenAI auto-instrumentation |
+| `simple-openai/` | Minimal OpenAI tracing example with one root trace and two child spans |
 | `evaluators-example.ts` | Standalone examples of `withEvaluators` and `attachEvaluator` |
 
 ---
@@ -90,3 +91,38 @@ basic-usage/
 ├── package.json
 └── tsconfig.json
 ```
+
+---
+
+## simple-openai
+
+A minimal example that sends exactly one root trace to Basalt with two child spans:
+
+- one manual child span via `withBasaltSpan(...)`
+- one OpenAI child span via official OpenTelemetry OpenAI auto-instrumentation
+
+### Setup
+
+1. **Install dependencies**
+
+   ```bash
+   cd examples/simple-openai
+   npm install
+   ```
+
+2. **Create your `.envrc` (not committed)**
+
+   ```bash
+   cat > .envrc <<'EOF'
+   export BASALT_API_KEY=your_basalt_api_key_here
+   export OPENAI_API_KEY=your_openai_api_key_here
+   export BASALT_OTEL_EXPORTER_OTLP_ENDPOINT=https://grpc.otel.getbasalt.ai
+   EOF
+   direnv allow
+   ```
+
+3. **Run the example**
+
+   ```bash
+   npm start
+   ```
