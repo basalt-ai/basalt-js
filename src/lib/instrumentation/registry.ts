@@ -3,6 +3,19 @@ import type {
 	ProviderInstrumentationConfig,
 } from "./types";
 
+function isLikelyModuleLoaded(moduleSegment: string): boolean {
+	const cache = (require as NodeRequire).cache;
+	if (!cache) {
+		return false;
+	}
+
+	const modulePattern = new RegExp(
+		`[\\/]node_modules[\\/]${moduleSegment}(?:[\\/]|$)`,
+	);
+
+	return Object.keys(cache).some((filePath) => modulePattern.test(filePath));
+}
+
 /**
  * Singleton registry for managing GenAI provider instrumentations.
  *
@@ -75,6 +88,11 @@ class InstrumentationRegistry {
 						"Ensure @opentelemetry/instrumentation is installed.",
 				);
 			}
+		} else {
+			console.warn(
+				"[@basalt-ai/sdk] No instrumentations were registered. " +
+					"Check provider packages are installed and config enables at least one provider.",
+			);
 		}
 	}
 
@@ -88,6 +106,13 @@ class InstrumentationRegistry {
 		config: boolean | ProviderInstrumentationConfig,
 	): any {
 		try {
+			if (isLikelyModuleLoaded("openai")) {
+				console.warn(
+					"[@basalt-ai/sdk] OpenAI appears to be loaded before basalt.instrument(...). " +
+						"Auto-instrumentation may miss patches. Call basalt.instrument({ openai: true }) before loading OpenAI.",
+				);
+			}
+
 			const {
 				OpenAIInstrumentation,
 			} = require("@opentelemetry/instrumentation-openai");
@@ -100,7 +125,8 @@ class InstrumentationRegistry {
 		} catch (_error) {
 			console.warn(
 				"[@basalt-ai/sdk] Cannot enable OpenAI instrumentation: package not found.\n" +
-					"Install with: npm install @opentelemetry/instrumentation-openai",
+					"Install with: npm install @opentelemetry/instrumentation-openai\n" +
+					"Also verify your runtime loads OpenAI after basalt.instrument(...).",
 			);
 			return null;
 		}

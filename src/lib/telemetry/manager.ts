@@ -8,6 +8,7 @@ import {
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { BasaltSpanProcessor } from "../instrumentation/basalt-span-processor";
+import { getSdkConstants } from "../runtime/sdk-constants";
 
 export interface TelemetryManagerConfig {
 	apiKey: string;
@@ -40,6 +41,7 @@ export class TelemetryManager {
 
 	private setup(): void {
 		try {
+			const sdkConstants = getSdkConstants();
 			// Create exporter with authentication
 			const grpc = require("@grpc/grpc-js");
 
@@ -69,7 +71,7 @@ export class TelemetryManager {
 				resource: resourceFromAttributes({
 					[ATTR_SERVICE_NAME]: this.config.serviceName,
 					"basalt.sdk.name": "@basalt-ai/sdk",
-					"basalt.sdk.version": __SDK_VERSION__,
+					"basalt.sdk.version": sdkConstants.sdkVersion,
 				}),
 				spanProcessors: consoleProcessor
 					? [basaltProcessor, consoleProcessor, batchProcessor]
@@ -93,7 +95,7 @@ export class TelemetryManager {
 
 		// Add SDK metadata for debugging
 		metadata.add("basalt-sdk-name", "@basalt-ai/sdk");
-		metadata.add("basalt-sdk-version", __SDK_VERSION__);
+		metadata.add("basalt-sdk-version", getSdkConstants().sdkVersion);
 
 		// Add any custom metadata
 		if (this.config.metadata) {

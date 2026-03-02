@@ -54,6 +54,19 @@ const basalt = new Basalt({
 
 All spans include Basalt metadata attributes (e.g. `basalt.sdk`, `basalt.version`, `basalt.span_type`, and `basalt.meta.*`) and propagate trace context headers (`traceparent`, etc.) on outgoing Basalt API requests.
 
+#### Integration Modes
+
+- Recommended: consume the published package (`npm install @basalt-ai/sdk`).
+- Advanced (source/submodule): if you bundle SDK source in your own build pipeline, make sure SDK compile-time constants are provided (`__PUBLIC_API_URL__`, `__SDK_VERSION__`, `__SDK_TARGET__`) or keep runtime fallbacks enabled.
+
+#### Troubleshooting: No Traces in UI
+
+1. Check `BASALT_API_KEY` is set and valid.
+2. Check exporter endpoint (`BASALT_OTEL_EXPORTER_OTLP_ENDPOINT`) points to your collector.
+3. Ensure telemetry is enabled (`telemetry.enabled !== false`).
+4. If using OpenAI auto-instrumentation, install `@opentelemetry/instrumentation-openai` and call `basalt.instrument({ openai: true })` before loading OpenAI.
+5. For local debugging in Node, set `BASALT_DEBUG_STDOUT_SPANS=1` to print exported spans.
+
 #### Add Custom Attributes
 
 To add custom attributes to the current active span:

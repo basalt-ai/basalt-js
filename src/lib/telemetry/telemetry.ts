@@ -5,6 +5,7 @@ import type {
 	SpanOptions,
 	Tracer,
 } from "@opentelemetry/api";
+import { getSdkConstants } from "../runtime/sdk-constants";
 import { BASALT_ATTRIBUTES, METADATA_PREFIX } from "./attributes";
 import { BasaltContextManager } from "./context-manager";
 import { SpanHandle, StartSpanHandle } from "./span-handle";
@@ -19,6 +20,7 @@ import type {
  * Cached OpenTelemetry API instance
  */
 let otelCache: typeof import("@opentelemetry/api") | undefined;
+const sdkConstants = getSdkConstants();
 
 /**
  * Safely import OpenTelemetry API
@@ -304,7 +306,7 @@ export async function withSpan<T>(
 		return fn(spanHandle);
 	}
 
-	const tracer = getTracer(tracerName, __SDK_VERSION__);
+	const tracer = getTracer(tracerName, sdkConstants.sdkVersion);
 	const sanitized = sanitizeAttributes(attributes);
 
 	return tracer.startActiveSpan(
@@ -362,7 +364,7 @@ export function withSpanSync<T>(
 		return fn(spanHandle);
 	}
 
-	const tracer = getTracer(tracerName, __SDK_VERSION__);
+	const tracer = getTracer(tracerName, sdkConstants.sdkVersion);
 	const sanitized = sanitizeAttributes(attributes);
 
 	return tracer.startActiveSpan(
@@ -475,13 +477,13 @@ export async function observe<T>(
 		}
 	}
 
-	const tracer = getTracer("@basalt-ai/sdk", __SDK_VERSION__);
+	const tracer = getTracer("@basalt-ai/sdk", sdkConstants.sdkVersion);
 
 	// Prepare observation span attributes
 	const observeAttributes = {
 		[BASALT_ATTRIBUTES.TRACE]: true,
 		[BASALT_ATTRIBUTES.SDK_TYPE]: "nodejs",
-		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
+		[BASALT_ATTRIBUTES.SDK_VERSION]: sdkConstants.sdkVersion,
 		"basalt.observe": true,
 		...attributes,
 	};
@@ -547,12 +549,12 @@ export function startObserve(options: StartObserveOptions): StartSpanHandle {
 		return new StartSpanHandle(noOpSpan, featureSlug);
 	}
 
-	const tracer = getTracer("@basalt-ai/sdk", __SDK_VERSION__);
+	const tracer = getTracer("@basalt-ai/sdk", sdkConstants.sdkVersion);
 
 	// Prepare observation span attributes
 	const observeAttributes = {
 		[BASALT_ATTRIBUTES.SDK_TYPE]: "nodejs",
-		[BASALT_ATTRIBUTES.SDK_VERSION]: __SDK_VERSION__,
+		[BASALT_ATTRIBUTES.SDK_VERSION]: sdkConstants.sdkVersion,
 		[BASALT_ATTRIBUTES.ROOT]: true,
 		"basalt.observe": true,
 		...flattenMetadata(metadata, METADATA_PREFIX),

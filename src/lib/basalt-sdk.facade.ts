@@ -3,9 +3,11 @@ import BasaltSDK from "./basalt-sdk";
 import type { InstrumentationConfig } from "./instrumentation";
 import { instrument as instrumentProviders } from "./instrumentation";
 import type { BasaltConfig, IBasaltSDK, ICache } from "./resources/contract";
+import { getSdkConstants } from "./runtime/sdk-constants";
 import DatasetSDK from "./sdk/dataset-sdk";
 import MonitorSDK from "./sdk/monitor-sdk";
 import PromptSDK from "./sdk/prompt-sdk";
+import { validateTelemetryConfig } from "./telemetry/config-validation";
 import { TelemetryManager } from "./telemetry/manager";
 import type { SpanHandle, StartSpanHandle } from "./telemetry/span-handle";
 import { observe, startObserve } from "./telemetry/telemetry";
@@ -34,6 +36,15 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 
 	constructor(config: BasaltConfig) {
 		const logger = new Logger(config.logLevel ?? "warning");
+		const sdkConstants = getSdkConstants();
+
+		if (sdkConstants.usedFallback) {
+			logger.warn(
+				"SDK runtime constants fallback activated for fields: " +
+					sdkConstants.fallbackFields.join(", ") +
+					". This usually means your bundler did not replace __SDK_* constants.",
+			);
+		}
 
 		// Initialize telemetry first (if enabled)
 		if (config.telemetry?.enabled !== false) {
@@ -60,10 +71,21 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 					endpointSource = "default";
 				}
 
-				this._telemetryManager = TelemetryManager.initialize({
-					apiKey: config.telemetry?.apiKey ?? config.apiKey,
+				const telemetryApiKey = config.telemetry?.apiKey ?? config.apiKey;
+				const validatedTelemetry = validateTelemetryConfig(
+					config.telemetry,
 					endpoint,
-					insecure: config.telemetry?.insecure ?? false,
+					telemetryApiKey,
+				);
+
+				for (const warning of validatedTelemetry.warnings) {
+					logger.warn(`Telemetry warning: ${warning}`);
+				}
+
+				this._telemetryManager = TelemetryManager.initialize({
+					apiKey: telemetryApiKey,
+					endpoint: validatedTelemetry.endpoint,
+					insecure: validatedTelemetry.insecure,
 					metadata: config.telemetry?.metadata,
 					serviceName: config.telemetry?.serviceName ?? "basalt-sdk-app",
 				});
@@ -82,11 +104,11 @@ export default class BasaltSDKFacade implements IBasaltSDK {
 		const networker = new Networker();
 
 		const api = new Api(
-			new URL(__PUBLIC_API_URL__),
+			new URL(sdkConstants.publicApiUrl),
 			networker,
 			config.apiKey,
-			__SDK_VERSION__,
-			__SDK_TARGET__,
+			sdkConstants.sdkVersion,
+			sdkConstants.sdkTarget,
 		);
 
 		const queryCache = new MemoryCache();

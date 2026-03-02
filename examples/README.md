@@ -68,6 +68,14 @@ A complete Node.js example that connects to a real Basalt API and demonstrates:
    npm start
    ```
 
+4. **Optional debug mode (stdout spans)**
+
+   ```bash
+   BASALT_DEBUG_STDOUT_SPANS=1 npm start
+   ```
+
+   This prints exported spans locally to help diagnose missing traces in the UI.
+
 ### Optional: OpenAI auto-instrumentation
 
 To enable automatic OpenTelemetry spans for every OpenAI API call:

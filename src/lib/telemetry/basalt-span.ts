@@ -1,3 +1,4 @@
+import { getSdkConstants } from "../runtime/sdk-constants";
 import { BASALT_ATTRIBUTES } from "./attributes";
 import { BasaltContextManager } from "./context-manager";
 import type { SpanHandle } from "./span-handle";
@@ -12,6 +13,7 @@ type BasaltSpanAttributes = {
 
 const DEFAULT_SPAN_KIND: ObserveKind = ObserveKind.SPAN;
 const EMPTY_ATTRIBUTES: BasaltSpanAttributes = {};
+const sdkConstants = getSdkConstants();
 
 function buildBasaltAttributes(
 	tracerName: string,
@@ -26,7 +28,7 @@ function buildBasaltAttributes(
 		[BASALT_ATTRIBUTES.IN_TRACE]: "true",
 		[BASALT_ATTRIBUTES.SPAN_KIND]: kind ?? DEFAULT_SPAN_KIND,
 		[BASALT_ATTRIBUTES.SDK]: tracerName,
-		[BASALT_ATTRIBUTES.VERSION]: __SDK_VERSION__,
+		[BASALT_ATTRIBUTES.VERSION]: sdkConstants.sdkVersion,
 		[BASALT_ATTRIBUTES.SPAN_TYPE]: spanName,
 		...BasaltContextManager.extractAttributes(),
 		...restAttributes,
