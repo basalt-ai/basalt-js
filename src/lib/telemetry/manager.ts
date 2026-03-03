@@ -44,6 +44,7 @@ export class TelemetryManager {
 			const sdkConstants = getSdkConstants();
 			// Create exporter with authentication
 			const grpc = require("@grpc/grpc-js");
+			const otelApi = require("@opentelemetry/api");
 
 			const exporter = new OTLPTraceExporter({
 				url: this.config.endpoint,
@@ -67,19 +68,38 @@ export class TelemetryManager {
 			// Create TracerProvider with resource and processors
 			// IMPORTANT: BasaltSpanProcessor must be registered BEFORE BatchSpanProcessor
 			// so that attributes are added before export
-			this.provider = new NodeTracerProvider({
-				resource: resourceFromAttributes({
-					[ATTR_SERVICE_NAME]: this.config.serviceName,
-					"basalt.sdk.name": "@basalt-ai/sdk",
-					"basalt.sdk.version": sdkConstants.sdkVersion,
-				}),
-				spanProcessors: consoleProcessor
-					? [basaltProcessor, consoleProcessor, batchProcessor]
-					: [basaltProcessor, batchProcessor],
-			});
+			const processors = consoleProcessor
+				? [basaltProcessor, consoleProcessor, batchProcessor]
+				: [basaltProcessor, batchProcessor];
 
-			// Register as global provider
-			this.provider.register();
+			// Check if a global TracerProvider already exists (e.g. Sentry, Datadog).
+			// If so, inject our processors into its pipeline instead of creating a new
+			// provider — calling register() on a second provider is silently ignored by
+			// the OTel API when a global provider is already set.
+			// In OTel SDK v2, addSpanProcessor() was removed from the public API, so we
+			// access the internal MultiSpanProcessor._spanProcessors array directly.
+			const globalProvider = otelApi.trace.getTracerProvider();
+			const delegate = (globalProvider as any)?._delegate;
+			const existingProcessors: unknown[] | undefined = (delegate as any)
+				?._activeSpanProcessor?._spanProcessors;
+
+			if (delegate && Array.isArray(existingProcessors)) {
+				for (const processor of processors) {
+					existingProcessors.push(processor);
+				}
+				this.provider = delegate;
+			} else {
+				// No existing provider — create and register our own
+				this.provider = new NodeTracerProvider({
+					resource: resourceFromAttributes({
+						[ATTR_SERVICE_NAME]: this.config.serviceName,
+						"basalt.sdk.name": "@basalt-ai/sdk",
+						"basalt.sdk.version": sdkConstants.sdkVersion,
+					}),
+					spanProcessors: processors,
+				});
+				this.provider.register();
+			}
 		} catch (error) {
 			// Failed to setup - will fall back to no-op tracer
 			console.warn("Telemetry setup failed:", error);

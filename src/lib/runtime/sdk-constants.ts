@@ -25,17 +25,17 @@ export function getSdkConstants(): SdkConstants {
 
 	const sdkVersion = resolveSdkVersion();
 	if (!sdkVersion) {
-		fallbackFields.push("__SDK_VERSION__");
+		fallbackFields.push("SDK_VERSION");
 	}
 
 	const sdkTarget = resolveSdkTarget();
 	if (!sdkTarget) {
-		fallbackFields.push("__SDK_TARGET__");
+		fallbackFields.push("SDK_TARGET");
 	}
 
 	const publicApiUrl = resolvePublicApiUrl();
 	if (!publicApiUrl) {
-		fallbackFields.push("__PUBLIC_API_URL__");
+		fallbackFields.push("PUBLIC_API_URL");
 	}
 
 	return {
