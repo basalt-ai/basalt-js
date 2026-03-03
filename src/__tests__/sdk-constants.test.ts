@@ -43,8 +43,8 @@ describe("getSdkConstants", () => {
 		expect(constants.sdkVersion).toBe("dev");
 		expect(constants.sdkTarget).toBe("nodejs");
 		expect(constants.usedFallback).toBe(true);
-		expect(constants.fallbackFields).toContain("__PUBLIC_API_URL__");
-		expect(constants.fallbackFields).toContain("__SDK_VERSION__");
-		expect(constants.fallbackFields).toContain("__SDK_TARGET__");
+		expect(constants.fallbackFields).toContain("PUBLIC_API_URL");
+		expect(constants.fallbackFields).toContain("SDK_VERSION");
+		expect(constants.fallbackFields).toContain("SDK_TARGET");
 	});
 });
