@@ -39,7 +39,7 @@
 		"@opentelemetry/resources": "2.5.1",
 		"@opentelemetry/sdk-trace-base": "2.5.1",
 		"@opentelemetry/sdk-trace-node": "2.5.1",
-		"@opentelemetry/semantic-conventions": "1.39.0",
+		"@opentelemetry/semantic-conventions": "1.40.0",
 		"mime-types": "3.0.2"
 	},
 	"peerDependencies": {
