@@ -17,6 +17,9 @@ if (!OPENAI_API_KEY) {
 	process.exit(1);
 }
 
+console.log(BASALT_API_KEY);
+console.log(process.env.FEATURE_SLUG);
+
 // Required SDK globals when running directly from source.
 (globalThis as any).__PUBLIC_API_URL__ =
 	process.env.BASALT_PUBLIC_API_URL ?? "https://api.getbasalt.ai";
@@ -71,7 +74,8 @@ const getWeather = tool({
 async function main() {
 	console.log(`\nUser: ${input}\n`);
 
-	agent(input, {basalt});
+	await agent(input, {basalt});
+	await basalt.shutdown();
 }
 
 main().catch((error) => {
