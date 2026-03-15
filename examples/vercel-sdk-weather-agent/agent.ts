@@ -39,7 +39,7 @@ export async function agent(input: string, deps: {basalt: Basalt}, ctx?: {experi
 	const rootSpan = deps.basalt.startObserve({
 		name: "weather-agent-root",
 		featureSlug: FEATURE_SLUG,
-		experiment_id: ctx.experimentId,
+		experiment_id: ctx?.experimentId,
 		identity: {
 			userId: "example-user",
 			organizationId: "example-org",
