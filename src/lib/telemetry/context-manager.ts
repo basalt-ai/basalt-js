@@ -1,7 +1,7 @@
-import type {Context} from "@opentelemetry/api";
-import type {StartSpanHandle} from "./span-handle";
-import {flattenMetadata, getCurrentContext} from "./telemetry";
-import type {BasaltContext, PromptMetadata} from "./types";
+import type { Context } from "@opentelemetry/api";
+import type { StartSpanHandle } from "./span-handle";
+import { flattenMetadata, getCurrentContext } from "./telemetry";
+import type { BasaltContext, PromptMetadata } from "./types";
 
 /**
  * Symbol key for storing Basalt context in OpenTelemetry context
@@ -80,14 +80,14 @@ export namespace BasaltContextManager {
 	 */
 	export function extractAttributes(): Record<
 		string,
-		string | number | boolean
+		string | number | boolean | string[]
 	> {
 		const ctx = getContext();
 		if (!ctx) {
 			return {};
 		}
 
-		const attributes: Record<string, string | number | boolean> = {};
+		const attributes: Record<string, string | number | boolean | string[]> = {};
 
 		// User attributes
 		if (ctx.user?.id) {
@@ -122,11 +122,11 @@ export namespace BasaltContextManager {
 		// Add evaluator attributes
 		if (ctx.evaluators && ctx.evaluators.length > 0) {
 			const validEvaluators = ctx.evaluators.filter(
-				(e) => e  && e.trim().length > 0,
+				(e) => e && e.trim().length > 0,
 			);
 
 			if (validEvaluators.length > 0) {
-				attributes["basalt.span.evaluators"] = JSON.stringify(validEvaluators);
+				attributes["basalt.span.evaluators"] = validEvaluators;
 			}
 		}
 
@@ -134,7 +134,10 @@ export namespace BasaltContextManager {
 		if (ctx.evaluationConfig?.sample_rate !== undefined) {
 			const sampleRate = ctx.evaluationConfig.sample_rate;
 			if (!Number.isNaN(sampleRate)) {
-				attributes["basalt.span.evaluation.sample_rate"] = Math.max(0, Math.min(1, sampleRate));
+				attributes["basalt.span.evaluation.sample_rate"] = Math.max(
+					0,
+					Math.min(1, sampleRate),
+				);
 			}
 		}
 
@@ -149,9 +152,7 @@ export namespace BasaltContextManager {
 		// Add prompt attributes
 		if (ctx.prompts && ctx.prompts.length > 0) {
 			const validPrompts = ctx.prompts.filter(
-				(prompt) =>
-					prompt &&
-					prompt.slug.trim().length > 0,
+				(prompt) => prompt && prompt.slug.trim().length > 0,
 			);
 
 			if (validPrompts.length > 0) {

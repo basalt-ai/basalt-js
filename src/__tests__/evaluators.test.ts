@@ -253,12 +253,10 @@ describe("attachEvaluator", () => {
 });
 
 describe("Context attribute extraction", () => {
-	it("should extract evaluators as JSON array attribute", () => {
+	it("should extract evaluators as OTEL arrayValue attribute", () => {
 		withEvaluators(["eval1", "eval2"], () => {
 			const attrs = BasaltContextManager.extractAttributes();
-			expect(attrs["basalt.span.evaluators"]).toBe(
-				JSON.stringify(["eval1", "eval2"]),
-			);
+			expect(attrs["basalt.span.evaluators"]).toEqual(["eval1", "eval2"]);
 		});
 	});
 

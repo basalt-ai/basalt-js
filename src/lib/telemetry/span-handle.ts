@@ -108,7 +108,7 @@ export class SpanHandle {
 
 	/**
 	 * Set evaluators for this span
-	 * Evaluators are stored as a JSON array of slugs
+	 * Evaluators are stored as an OTEL arrayValue of string slugs
 	 *
 	 * @param evaluators - Array of evaluator slugs (e.g., ["hallucinations", "clarity"])
 	 * @returns this for method chaining
@@ -123,14 +123,7 @@ export class SpanHandle {
 			return this;
 		}
 
-		try {
-			this.setAttribute(
-				BASALT_ATTRIBUTES.SPAN_EVALUATORS,
-				JSON.stringify(validEvaluators),
-			);
-		} catch {
-			// Skip if JSON serialization fails
-		}
+		this.setAttribute(BASALT_ATTRIBUTES.SPAN_EVALUATORS, validEvaluators);
 		return this;
 	}
 
@@ -183,12 +176,12 @@ export class StartSpanHandle extends SpanHandle {
 	}
 
 	/**
-     * Associate this observation with an experiment
-     * Sets experiment attributes following Python SDK structure
-     *
-     * @returns this for method chaining
-     * @param experiment_id
-     */
+	 * Associate this observation with an experiment
+	 * Sets experiment attributes following Python SDK structure
+	 *
+	 * @returns this for method chaining
+	 * @param experiment_id
+	 */
 	setExperiment(experiment_id: string): this {
 		this.setAttribute(BASALT_ATTRIBUTES.EXPERIMENT_ID, experiment_id);
 		this.setAttribute(BASALT_ATTRIBUTES.SHOULD_EVALUATE, true);

@@ -464,14 +464,14 @@ describe("SpanHandle", () => {
 	});
 
 	describe("setEvaluators", () => {
-		it("should set evaluators as JSON array string", () => {
+		it("should set evaluators as OTEL arrayValue", () => {
 			const evaluators = ["hallucinations", "clarity"];
 			const result = rootSpan.setEvaluators(evaluators);
 
 			expect(result).toBe(rootSpan); // Method chaining
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
 				BASALT_ATTRIBUTES.SPAN_EVALUATORS,
-				JSON.stringify(evaluators),
+				evaluators,
 			);
 		});
 
@@ -488,7 +488,7 @@ describe("SpanHandle", () => {
 
 			expect(mockSpan.setAttribute).toHaveBeenCalledWith(
 				BASALT_ATTRIBUTES.SPAN_EVALUATORS,
-				JSON.stringify(["hallucinations", "clarity"]),
+				["hallucinations", "clarity"],
 			);
 		});
 
@@ -771,7 +771,7 @@ describe("startObserve() API with inline experiment/identity", () => {
 		const mockSpan = otel.trace.getTracer().startSpan();
 		expect(mockSpan.setAttribute).toHaveBeenCalledWith(
 			BASALT_ATTRIBUTES.SPAN_EVALUATORS,
-			expect.stringContaining("toxicity"),
+			expect.arrayContaining(["toxicity"]),
 		);
 
 		span.end();
