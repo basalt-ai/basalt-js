@@ -3,7 +3,7 @@ import type { IMonitorSDK } from "./monitor/monitor.types";
 import type { IPromptSDK } from "./prompt/prompt.types";
 
 /**
- * Interface for the Basalt SDK.
+ * Interface for Basalt SDK.
  */
 export interface IBasaltSDK {
 	readonly prompt: IPromptSDK;
@@ -50,11 +50,11 @@ export interface ErrObj {
 }
 
 /**
- * Interface for the Networker
+ * Interface for Networker
  */
 export interface INetworker {
 	/**
-	 * Fetch an endpoint over the network
+	 * Fetch an endpoint over network
 	 *
 	 * @param url - The URL to query
 	 * @param method - The HTTP method to use
@@ -73,16 +73,16 @@ export interface INetworker {
  */
 export interface ICache {
 	/**
-	 * Get a value from the cache
-	 * @param key - The key of the value to get
+	 * Get a value from cache
+	 * @param key - The key of value to get
 	 */
 	get<T = unknown>(key: string): T | undefined;
 
 	/**
-	 * Set a value in the cache
-	 * @param key - The key of the value to set
+	 * Set a value in cache
+	 * @param key - The key of value to set
 	 * @param value - The value to set
-	 * @param duration - Optional duration for the cache entry
+	 * @param duration - Optional duration for cache entry
 	 */
 	set(key: string, value: unknown, duration?: number): void;
 }
@@ -94,12 +94,13 @@ export interface ICache {
 export type QueryParamsObject = Record<string, any>;
 
 /**
- * Interface for the API.
+ * Interface for API.
  */
 export interface IApi {
 	invoke<Input, Output>(
 		endpoint: IEndpoint<Input, Output>,
 		dto?: Input,
+		options?: { traceRequestSpan?: boolean },
 	): AsyncResult<Output>;
 }
 

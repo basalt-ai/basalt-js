@@ -285,7 +285,9 @@ export default class PromptSDK implements IPromptSDK {
 		}
 
 		// 2. If no cache, fetch from the API
-		const result = await this.api.invoke(GetPromptEndpoint, opts);
+		const result = await this.api.invoke(GetPromptEndpoint, opts, {
+			traceRequestSpan: true,
+		});
 
 		if (result.value) {
 			span.setAttribute(BASALT_ATTRIBUTES.CACHE_HIT, false);

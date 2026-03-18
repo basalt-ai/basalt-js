@@ -199,4 +199,50 @@ describe("API", () => {
 			"X-BASALT-SDK-TYPE": "test-runner",
 		});
 	});
+
+	describe("traceRequestSpan option", () => {
+		beforeEach(() => {
+			mockedNetwork.fetch.mockReset();
+			fakeEndpoint.prepareRequest.mockReset();
+			fakeEndpoint.decodeResponse.mockReset();
+		});
+
+		test("defaults to false and does not create basalt.api.request span", async () => {
+			mockedNetwork.fetch.mockImplementationOnce(() => ok({}));
+			fakeEndpoint.prepareRequest.mockImplementationOnce(() => ({
+				path: "",
+				method: "get",
+			}));
+			fakeEndpoint.decodeResponse.mockImplementationOnce(() => ok({}));
+
+			const api = new Api(
+				new URL("http://test/"),
+				mockedNetwork,
+				"some-api-key",
+			);
+
+			await api.invoke(fakeEndpoint, {});
+
+			expect(mockedNetwork.fetch.mock.calls).toHaveLength(1);
+		});
+
+		test("when true, creates basalt.api.request span", async () => {
+			mockedNetwork.fetch.mockImplementationOnce(() => ok({}));
+			fakeEndpoint.prepareRequest.mockImplementationOnce(() => ({
+				path: "",
+				method: "get",
+			}));
+			fakeEndpoint.decodeResponse.mockImplementationOnce(() => ok({}));
+
+			const api = new Api(
+				new URL("http://test/"),
+				mockedNetwork,
+				"some-api-key",
+			);
+
+			await api.invoke(fakeEndpoint, {}, { traceRequestSpan: true });
+
+			expect(mockedNetwork.fetch.mock.calls).toHaveLength(1);
+		});
+	});
 });

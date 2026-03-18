@@ -25,16 +25,33 @@ export default class Api implements IApi {
 	 * Invokes an API endpoint
 	 *
 	 * @param endpoint - The endpoint to invoke
-	 * @param dto - Data for the endpoint
-	 * @returns A promise of the result containing the decoded response or an error
+	 * @param dto - Data for endpoint
+	 * @param options - Optional invocation options
+	 * @returns A promise of a result containing decoded response or an error
 	 */
 	async invoke<Input, Output>(
 		endpoint: IEndpoint<Input, Output>,
 		dto: Input,
+		options: { traceRequestSpan?: boolean } = {},
 	): AsyncResult<Output> {
 		const requestInfo = endpoint.prepareRequest(dto);
 		const url = this._buildUrl(requestInfo.path, requestInfo.query ?? {});
 		const client = extractClientFromPath(requestInfo.path);
+
+		if (options.traceRequestSpan !== true) {
+			const startTime = performance.now();
+
+			const result = await this.network.fetch(
+				url,
+				requestInfo.method,
+				requestInfo.body,
+				this._buildHeaders(),
+			);
+
+			const decoded = endpoint.decodeResponse(result.value);
+
+			return decoded;
+		}
 
 		return withBasaltSpan(
 			"@basalt-ai/sdk",
