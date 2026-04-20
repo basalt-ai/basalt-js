@@ -28,7 +28,7 @@
 		"@types/mime-types": "3.0.1",
 		"jest": "30.2.0",
 		"ts-node": "10.9.2",
-		"typescript": "5.9.3"
+		"typescript": "6.0.3"
 	},
 	"dependencies": {
 		"@grpc/grpc-js": "1.14.3",
